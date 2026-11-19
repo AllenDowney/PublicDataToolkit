@@ -153,3 +153,23 @@ def test_codes_in_range_and_without_cases(tmp_path):
     omitted = entries(diff.diff(Repo.load(root), "r1", "r2", omitted_codes_have_no_cases=True))
     assert omitted["order"]["relations"] == ["same_item"]                      # 1 case: zero in r1 is chance
     assert omitted["stat"]["relations"] == ["codes_changed"]                   # 2,800 cases can't vanish by chance
+
+
+def test_sources_list_only_occurring_codes(tmp_path):
+    import yaml
+    dataset = dict(DATASET, releases=[
+        {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
+        {"id": "r2", "label": "R2", "status": "current", "sources": ["cb"]}])
+    a = rec("r1", "order", "Order", [V(1, "1", n=3000)])
+    b = rec("r2", "order", "Order", [V(1, "1", n=2500), V(2, "2", n=1)])
+    for r in (a, b):
+        r["source_location"] = {"source": "cb"}
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "variables.jsonl", [a])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl", [b])
+    assert entries(diff.diff(Repo.load(root), "r1", "r2"))["order"]["relations"] == ["codes_changed"]
+    sources = yaml.safe_load((root / "sources.yaml").read_text())
+    sources["sources"][0]["lists_only_occurring_codes"] = True
+    (root / "sources.yaml").write_text(yaml.safe_dump(sources))
+    e = entries(diff.diff(Repo.load(root), "r1", "r2"))["order"]
+    assert e["relations"] == ["same_item"] and e["changes"]["codes"]["no_cases_in_other"][0]["code"] == 2

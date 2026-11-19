@@ -30,3 +30,11 @@ def test_compare_text(a, b, how):
 def test_helpers():
     assert norm("  A — b ") == "a-b"
     assert strip_refs("IC-9 How (FC A-2b) important") == "how important"
+
+
+def test_absent_by_chance():
+    from pdt.compare import absent_by_chance, total_cases
+    assert absent_by_chance(1, 8000, 10000)                 # PREGORDR 15: 1 case
+    assert not absent_by_chance(2820, 6000, 5500)            # MARSTAT 6: a recoding
+    assert not absent_by_chance(None, 10, 10) and not absent_by_chance(3, 0, 10)
+    assert total_cases({"values": [{"n": 2}, {"n": 3}, {}]}) == 5

@@ -179,3 +179,13 @@ def test_code_diff():
         "removed <code>3</code> Gone",
         'added <code>7</code> New <span class="origin">valid</span>',
         "<code>9</code> Unknown → Reported as Unknown"]
+
+
+def test_cases_column_when_n_present(tmp_path):
+    from test_check import VARIABLES as VS
+    with_n = dict(VS[0], values=[dict(v, n=k) for v, k in zip(VS[0]["values"], (1204, 7))])
+    root = make_repo(tmp_path, variables=[with_n, VS[1]])
+    site.build(root)
+    page = read(root, "variables/r1/q1.html")
+    assert "<th>Cases</th>" in page and '<span class="num">1,204</span>' in page
+    assert "<th>Cases</th>" not in read(root, "variables/r1/q2.html")

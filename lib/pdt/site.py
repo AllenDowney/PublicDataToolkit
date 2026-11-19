@@ -324,15 +324,25 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         if values:
             default = (rec.get("provenance") or {}).get("codes")
             body.append("<h2>Codes</h2>")
+            counts = any("n" in v for v in values)
             rows = []
             for i, v in enumerate(values):
                 origin = v.get("origin") or (default if v.get("kind") != "valid" else None)
-                rows.append([f"<code>{esc(v.get('code'))}</code>",
-                             esc(v.get("label")) + mark(applied, f"/values/{i}/label"),
-                             f'<span class="kind-{esc(v.get("kind"))}">{esc(v.get("kind"))}</span>',
-                             esc(", ".join(v.get("missing_types") or [])),
-                             f'<span class="origin">{esc(origin_text(origin))}</span>' if origin else ""])
-            body.append(table(["Code", "Label", "Kind", "Missing types", "Classified by"], rows))
+                row = [f"<code>{esc(v.get('code'))}</code>",
+                       esc(v.get("label")) + mark(applied, f"/values/{i}/label"),
+                       f'<span class="kind-{esc(v.get("kind"))}">{esc(v.get("kind"))}</span>',
+                       esc(", ".join(v.get("missing_types") or [])),
+                       f'<span class="origin">{esc(origin_text(origin))}</span>' if origin else ""]
+                if counts:
+                    row.insert(2, f'<span class="num">{v["n"]:,}</span>' if isinstance(v.get("n"), int) else "")
+                rows.append(row)
+            headers = ["Code", "Label", "Kind", "Missing types", "Classified by"]
+            if counts:
+                headers.insert(2, "Cases")
+            body.append(table(headers, rows))
+            if counts:
+                body.append('<p class="origin">Cases: how many the publisher\'s codebook counts for each '
+                            "code in this release.</p>")
         if rec.get("valid_range"):
             vr = rec["valid_range"]
             body.append(dl([("Valid range", esc(", ".join(f"{k} {v}" for k, v in vr.items())))]))
@@ -698,6 +708,7 @@ table.numeric td + td, table.numeric th + th { text-align: right; font-variant-n
 code { font-size: 90%; }
 .origin { color: var(--muted); font-size: 13px; }
 .gap { white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
 ul.diff { margin: 0; padding-left: 18px; }
 blockquote { margin: 4px 0 8px; padding: 4px 10px; border-left: 3px solid var(--line);
   color: var(--muted); white-space: pre-wrap; }

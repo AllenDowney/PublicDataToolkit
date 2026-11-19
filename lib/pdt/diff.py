@@ -29,10 +29,11 @@ With --proposals DIR it also writes, for review:
 
 Codes on one side only are explained, when the records allow, instead of counted as
 changes: a code inside the other release's valid_range (NSFG 2017-2019 prints AGE_R
-49 and 50 as a range row, "49-50") is `in_other_range`. With --omitted-codes-have-no-cases,
-for documentation that lists only codes that occur (the NSFG's codebooks), a code on one
-side only is `no_cases_in_other` when its absence is plausible as chance: it has a count
-`n`, and n scaled to the other release's total for the variable is under EXPECTED_MAX.
+49 and 50 as a range row, "49-50") is `in_other_range`. When the release missing the code is
+documented by a source with `lists_only_occurring_codes: true` in sources.yaml (the NSFG's
+codebooks), a code on one side only is `no_cases_in_other` if its absence is plausible as
+chance (pdt.compare.absent_by_chance: n scaled to the other release, under 5).
+--omitted-codes-have-no-cases forces this for every source.
 PREGORDR 15 (1 case) passes; MARSTAT 6 "Never been married" (2,820 cases in 2017-2019,
 gone from 2022-2023's coding) doesn't, so a recoding still reads as codes changed.
 Added and dropped codes show their `n` (cases, as the codebook prints them) when the
@@ -50,12 +51,11 @@ from pathlib import Path
 
 from . import __version__
 from .check import Repo
-from .compare import compare_text, norm
+from .compare import absent_by_chance, compare_text, norm, total_cases
 
 RULE = "release_diff"
 RULE_VERSION = "0.1"
 RENAME_THRESHOLD = 0.6
-EXPECTED_MAX = 5      # P(0 cases | Poisson mean 5) is under 1%
 
 
 def question(rec):
@@ -83,20 +83,21 @@ def code_entry(v):
     return out
 
 
-def code_changes(a, b, omitted_codes_have_no_cases=False):
-    """Differences between two value lists, as a dict of lists."""
+def code_changes(a, b, omits=(False, False)):
+    """Differences between two value lists, as a dict of lists.
+
+    omits: whether a's and b's documentation lists only codes that occur."""
     va = {code_key(v["code"]): v for v in a.get("values") or []}
     vb = {code_key(v["code"]): v for v in b.get("values") or []}
     out = {"added": [], "dropped": [], "in_other_range": [], "no_cases_in_other": [],
            "relabeled": [], "relabeled_text_only": [], "kind_changed": []}
-    totals = [sum(v.get("n") or 0 for v in r.get("values") or []) for r in (a, b)]
+    totals = (total_cases(a), total_cases(b))
 
     def plausibly_absent(v, side):
-        """Its count, scaled to the other release, is small enough that zero cases there is chance."""
-        if "n" not in v or not all(totals):
-            return False
-        mine, other = (totals[1], totals[0]) if side == "added" else (totals[0], totals[1])
-        return v["n"] * other / mine < EXPECTED_MAX
+        """The release lacking the code lists only occurring codes, and zero there is chance."""
+        if side == "added":                          # missing from a
+            return omits[0] and absent_by_chance(v.get("n"), totals[1], totals[0])
+        return omits[1] and absent_by_chance(v.get("n"), totals[0], totals[1])
     for k in sorted(set(va) | set(vb), key=lambda k: (k[0], k[1])):
         x, y = va.get(k), vb.get(k)
         if x is None or y is None:
@@ -104,7 +105,7 @@ def code_changes(a, b, omitted_codes_have_no_cases=False):
             entry = code_entry(v)
             if in_range(v["code"], other):
                 out["in_other_range"].append({**entry, "side": side})
-            elif omitted_codes_have_no_cases and plausibly_absent(v, side):
+            elif plausibly_absent(v, side):
                 out["no_cases_in_other"].append({**entry, "side": side})
             else:
                 out[side].append(entry)
@@ -121,7 +122,7 @@ def code_changes(a, b, omitted_codes_have_no_cases=False):
     return {k: v for k, v in out.items() if v}
 
 
-def compare_pair(a, b, omitted_codes_have_no_cases=False):
+def compare_pair(a, b, omits=(False, False)):
     """Every difference between two records of the same variable."""
     out = {}
     for field, getter in (("label", lambda r: r.get("label")), ("question", question),
@@ -130,7 +131,7 @@ def compare_pair(a, b, omitted_codes_have_no_cases=False):
         how = compare_text(getter(a), getter(b))
         if how != "same":
             out[field] = {"how": how, "from": getter(a), "to": getter(b)}
-    codes = code_changes(a, b, omitted_codes_have_no_cases)
+    codes = code_changes(a, b, omits)
     if codes:
         out["codes"] = codes
     if a.get("measure") != b.get("measure"):
@@ -202,6 +203,16 @@ def merge_split_candidates(only_a, only_b, ra, rb, renamed, threshold=RENAME_THR
     return out
 
 
+def lists_only_occurring(repo, record):
+    """Whether the source documenting a record's codes lists only codes that occur."""
+    sources = {s["id"]: s for s in (repo.sources or {}).get("sources", [])}
+    prov = record.get("provenance") or {}
+    ids = [(record.get("source_location") or {}).get("source"),
+           ((prov.get("fields") or {}).get("values") or {}).get("source"),
+           (prov.get("record") or {}).get("source")]
+    return any(sources.get(i, {}).get("lists_only_occurring_codes") for i in ids if i)
+
+
 def waves_span(records):
     waves = sorted({a["wave"] for r in records for a in r.get("availability") or [] if "wave" in a
                     and isinstance(a["wave"], int)})
@@ -235,7 +246,9 @@ def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
         only_b = [rb[n] for n in rb if n not in paired_b]
         both = []
         for na, nb in pairs:
-            changes = compare_pair(ra[na], rb[nb], omitted_codes_have_no_cases)
+            omits = (omitted_codes_have_no_cases or lists_only_occurring(repo, ra[na]),
+                     omitted_codes_have_no_cases or lists_only_occurring(repo, rb[nb]))
+            changes = compare_pair(ra[na], rb[nb], omits)
             entry = {"from": na, "to": nb, "relations": relations(changes), "changes": changes}
             if na != nb:
                 entry["name_case_changed"] = True
@@ -385,7 +398,8 @@ def main(argv=None):
     parser.add_argument("--table", help="only this table")
     parser.add_argument("--json", action="store_true", help="print the full comparison as JSON")
     parser.add_argument("--omitted-codes-have-no-cases", action="store_true",
-                        help="the documentation lists only codes that occur (as the NSFG codebooks do)")
+                        help="treat every source as listing only codes that occur (overrides sources.yaml's "
+                             "lists_only_occurring_codes)")
     parser.add_argument("--proposals", metavar="DIR",
                         help="write proposed links.jsonl and histories.jsonl here, for review")
     args = parser.parse_args(argv)

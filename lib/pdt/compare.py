@@ -47,3 +47,28 @@ def compare_text(a, b):
 def is_change(how):
     """Whether a compare_text result is a change of meaning."""
     return how == "changed"
+
+
+# ---------------------------------------------------------------- codes on one side only
+
+EXPECTED_MAX = 5      # P(0 cases | Poisson mean 5) is under 1%
+
+
+def absent_by_chance(n, total_here, total_there, expected_max=EXPECTED_MAX):
+    """Could a code with n cases here have had none there, by chance?
+
+    For documentation that lists only codes that occur (sources.yaml
+    `lists_only_occurring_codes`), a code missing from the other release either had no
+    cases there or no longer exists. Scale n to the other release's total for the
+    variable: if fewer than expected_max cases would be expected, zero is plausible.
+    NSFG PREGORDR 15 (1 case) passes; MARSTAT 6 "Never been married" (2,820 cases,
+    then recoded away) doesn't. Without counts, nothing can be said: returns False.
+    """
+    if n is None or not total_here or not total_there:
+        return False
+    return n * total_there / total_here < expected_max
+
+
+def total_cases(record):
+    """The cases the record's codes account for, from values[].n (0 if none has n)."""
+    return sum(v.get("n") or 0 for v in record.get("values") or [])
