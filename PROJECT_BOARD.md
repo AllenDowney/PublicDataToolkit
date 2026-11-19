@@ -147,7 +147,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 36 — Non-survey data in the library
 
-`DOING (orange)`. `data_waves`, dataset `kind`, `terms.notice` and live sources in `pdt check` and `pdt download`, applied to the five dataset repos. Details: [`planning/tasks/task-36.md`](planning/tasks/task-36.md).
+`DONE (orange)`. `data_waves`, dataset `kind`, `terms.notice` and live sources in `pdt check` and `pdt download`, applied to the five dataset repos; four need their views regenerated. Details: [`planning/tasks/task-36.md`](planning/tasks/task-36.md).
 ### Task 37 — Count test in the NSFG rule; occurring-codes field; Cases column
 
 `DOING (red)`. NSFG rule `nsfg_identical_documentation` 0.5 with the count test (OUTCOME_I linked `codes_changed`); `lists_only_occurring_codes` read from `sources.yaml` by `pdt diff` and the rule; a Cases column on the site. Details: [`planning/tasks/task-37.md`](planning/tasks/task-37.md).
