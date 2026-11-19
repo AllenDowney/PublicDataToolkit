@@ -191,7 +191,8 @@
               "description",
               "variable_type",
               "flag_for",
-              "implied_decimals"
+              "implied_decimals",
+              "code_list"
             ]
           },
           "additionalProperties": {
