@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/sources.schema.json",
   "title": "Sources manifest",
-  "description": "sources.yaml at the root of a dataset repo: every file the repo depends on. Hand-edited; download.py fills in fetched_on, sha256 and bytes. See STANDARD.md §2.",
+  "description": "sources.yaml at the root of a dataset repo: every file the repo depends on. Hand-edited; download.py fills in fetched_on, sha256 and bytes. See STANDARD.md \u00a72.",
   "type": "object",
   "properties": {
     "sources": {
@@ -50,6 +50,10 @@
         },
         "path": {
           "description": "Where download.py puts the file, relative to the repo root. Under data/ for anything build-only.",
+          "type": "string"
+        },
+        "convert": {
+          "description": "How the downloaded file is converted to the file at `path`, with the tool's version, e.g. \"pdftotext -layout (poppler 24.02)\". sha256 and bytes are then of the converted file, which depends on the converter's version.",
           "type": "string"
         },
         "releases": {

@@ -368,6 +368,7 @@ Rules:
 - A data release holds two things: the publisher's files, unchanged, so anyone can verify them against the publisher; and the same data in the common format, written by the build, so the shared library reads every dataset the same way.
 - **The common format** is one parquet file per release ([design](planning/missing_codes_design.md)):
   - There is one file per release, or one per table for a release with tables; the file metadata names the table.
+  - The file holds the variables the repo has records for, not every column of the publisher's file. When the terms allow, the publisher's file ships unchanged beside it, with the rest.
   - Each variable has a **value column** with its valid answers, typed as in its record, and null wherever the answer is missing or unresolved. Codes the publisher lists as valid stay in the value column.
   - Each variable that has any codes also has a **code column**, `<name>__code`. It holds the code as text, exactly as in the record's `values` (`".d"`, `"98"`, `"."`), and is null where the answer is valid. Dimension columns such as year and ballot are variables like any other.
   - A `_row` column numbers the rows in the publisher's order. Names ending in `__code`, and `_row`, are reserved.
@@ -378,7 +379,7 @@ Rules:
 
   The shared library (`pdt.data`) does the splitting, writing, rebuilding and recoding; each dataset supplies only a reader for the publisher's format.
 - `scripts/extract.py` reads the common format and writes the extract the user asks for, recoding missing values by type with the shared library.
-- `download.py` refuses to run until the user passes a flag accepting the publisher's terms, as MarriageNSFG's `--i-accept-nchs-terms` does.
+- `download.py` (`pdt download`) refuses to fetch until the user passes `--accept-terms`. Without it, it prints the terms' URL and summary from `dataset.yaml`. The flag is the same for every dataset. A source converted after download (a PDF codebook to text) names its converter in `sources.yaml`'s `convert`, because the checksum depends on it.
 - When `metadata` is `build-only`, the repo ships the build code and not the records; users build the records locally.
 - When `llm_processing` is not `allowed`, no record may have `origin: model`.
 
