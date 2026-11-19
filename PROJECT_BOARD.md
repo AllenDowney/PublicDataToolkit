@@ -437,6 +437,14 @@ There are also renames (88 elements, above) and 338 labels with year notes insid
 
 *Test.* Once Allen downloads the 2017 national CSV (step 3), check the matrix's 2017 column against the 2017 data's codes and labels. The data should say "Unknown" for `LGT_COND` 9 in 2017 and "Reported as Unknown" in 2024.
 
+**Step 2, built (fars thread, 2026-11-19).** The coordinator approved the proposal and added it to the standard (§5.4, `schema/history.schema.json`, commit `832696f`). pdt-fars commit `01f920a` adds `metadata/histories.jsonl`, with 42 histories: the 40 variables in the slice, plus `WEATHER1` and `WEATHER2` from the discontinued Atmospheric Conditions element. `pdt check` passes.
+- `LGT_COND` matches the manual's matrix (p. 78): "Unknown" is `[9, 9, 9, 9, null]` and "Reported as Unknown" is `[null, null, null, null, 9]`.
+- **The records agree with their histories:** the build compares each record's codes with the last period of its history, and all 27 records with values agree.
+- **Several matrices for one element:** 9 of the slice's elements have more than one (`HARM_EV` prints 1975–1981 separately from 1982–Later). Their periods are joined in order, and the rows aren't matched across matrices, because the manual doesn't match them; each such history's `note` says so.
+- **Names:** successive names are kept with their years (`OCUPANTS` 2005–2008, `NUMOCCS` 2009, `PNUMOCCS` from 2010). Names printed on one line are parallel variables (`WEATHER1`, `WEATHER2`). Each gets its own history, and both list the element's earlier name `WEATHER` (1975–2006).
+- **Ambiguous in the source:** the current `WEATHER` (C26, a derived element) also claims the name `WEATHER` for 1975–2006, so that name appears in two histories for the same years. That's what the manual says.
+- **Limit:** a label can change inside a period. `WEATHER` "Unknown/Reported as Unknown (Since 2018)" is code 99 for the whole 2013–Later period. A change like that stays only in the label's year note; 338 labels have one. Parsing those notes would be a further step.
+
 ## Task 14 — Agent views: `agent/` index and shards
 
 **Status:** `DONE` (views thread, 2026-11-19; not pushed)
