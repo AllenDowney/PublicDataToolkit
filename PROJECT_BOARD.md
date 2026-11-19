@@ -44,7 +44,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 24:** Agent instructions and skills. `DOING (instructions)`
 - **Task 25:** Standard changes from the findings so far. Main thread only.
 
-- **Task 26:** The full GSS release (all 6,943 variables).
+- **Task 26:** The full GSS release (all 6,943 variables). `DOING (gss)`
 
 **Withdrawn:** Task 7.
 
@@ -772,7 +772,7 @@ Findings that need a decision or a change to STANDARD.md and the schemas:
 
 ## Task 26 — The full GSS release
 
-**Status:** `TODO` — assigned to the gss thread (2026-11-19)
+**Status:** `DOING (gss)`
 
 Build all of release 7224r3a in `pdt-gss`, not just the 50-variable slice. Eval's topic test needs a full release: on the slices, agents just read everything (Task 23).
 
