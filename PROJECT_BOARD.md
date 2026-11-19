@@ -360,7 +360,16 @@ The non-survey case Allen chose. Allen downloaded the 2024 national CSV and SAS 
 - code tables that continue onto the next page lose their codes, so the report's 220 "unresolved" codes, such as `STATE` 1–22, are artifacts;
 - `WEATHER` finds no 2024 column.
 
-The comparison of the manual's labels with the data's labels already works, and shows only small differences: dashes, case, "(Since 2011)". Next: fix the parser, `dataset.yaml` (tables, keys, references) and `sources.yaml`, then `pdt check`.
+The comparison of the manual's labels with the data's labels already works, and shows only small differences: dashes, case, "(Since 2011)". **Update (2026-11-19, later):** the parser is fixed, and the slice is committed locally in `pdt-fars`. `pdt check` passes.
+- **Parser fixes:**
+  - a table continued on the next page repeats its year header, and now continues the same block;
+  - wrapped labels are recognized by indentation;
+  - a discontinued element that shares a SAS name with the current one (`WEATHER`) no longer replaces it.
+- **Codes:** 0 unresolved, down from 220. All of those were parser artifacts.
+- **Labels:** compared with the CSV's label columns. After ignoring case, punctuation, year notes and added examples, 8 codes differ in wording. For example, `DR_DRINK` is "Drinking" in the manual and "Yes" in the data. For code 99, the manual's "Unknown/Reported as Unknown (Since 2018)" puts the year's change inside one label.
+- **Tables and keys:** `accident`, `vehicle` and `person`, with keys and references checked against the data. Person → vehicle can't be declared: 9,020 non-motorists have `VEH_NO` 0, and 426 occupants of parked or working vehicles refer to the PARKWORK file. That's a conditional reference, which the standard can't express (Task 25).
+- **Common format:** all three full tables round-trip exactly; CSV is the third source format, after Stata and SAS.
+- **Still open:** terms (Allen); only the 2024 column of each element's year-range matrix is used. A second year (2017, before the 2018 code changes) would test release comparison.
 
 **Terms:** NHTSA's manual has a disclaimer, no license, and "available to the public"; it's a US government work. Recommendation: everything `ship`. **Allen to confirm.**
 
@@ -507,6 +516,8 @@ Findings that need a decision or a change to STANDARD.md and the schemas:
 - **Rules for release ids.**
 - **The size of per-code provenance.**
 - **Systemic source artifacts fixed by a named rule:** gssrdoc's doubled apostrophes.
+- **Conditional references between tables:** a FARS person's `VEH_NO` refers to a vehicle in transport, a parked vehicle, or nothing (non-motorists).
+- **Histories inside one label:** FARS writes "Unknown/Reported as Unknown (Since 2018)" for a code whose meaning changed. The record for a single year should probably say only what that year means.
 
 **Files:** `STANDARD.md`, `schema/`, and the `lib/` code that enforces them.
 
