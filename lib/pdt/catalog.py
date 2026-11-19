@@ -54,8 +54,9 @@ QUESTION_CHARS = 160
 
 # ---------------------------------------------------------------- repos
 
-def discover(paths):
-    """[(path, dataset.yaml or None)] for each repo named or found one level under a directory."""
+def discover(paths, skip=()):
+    """Repos named, or found one level under a directory (skip: the catalog's own output)."""
+    skip = {Path(p).expanduser().resolve() for p in skip}
     out = []
     for p in map(Path, paths):
         p = p.expanduser()
@@ -65,6 +66,8 @@ def discover(paths):
         if not p.is_dir():
             raise SystemExit(f"{p}: not a directory")
         for child in sorted(p.iterdir()):
+            if child.resolve() in skip:
+                continue
             if child.is_dir() and ((child / "dataset.yaml").exists() or child.name.startswith("pdt-")):
                 out.append(child)
     seen, unique = set(), []
@@ -75,10 +78,10 @@ def discover(paths):
     return unique
 
 
-def load(paths):
+def load(paths, skip=()):
     """(included [(path, Repo)], left out [(path, reason)])."""
     included, left_out = [], []
-    for path in discover(paths):
+    for path in discover(paths, skip):
         if not (path / "dataset.yaml").exists():
             left_out.append((path, "no dataset.yaml (not a dataset repo; nothing in it was read)"))
             continue
@@ -142,7 +145,7 @@ def line(entry):
 def build(paths, out, all_releases=False):
     """Write the catalog in out. Returns the manifest."""
     out = Path(out).expanduser()
-    included, left_out = load(paths)
+    included, left_out = load(paths, skip=[out])
     if out.exists():
         if any(out.iterdir()) and not (out / "manifest.json").exists():
             raise SystemExit(f"{out} exists and wasn't written by pdt catalog; not overwriting")
@@ -173,7 +176,7 @@ def build(paths, out, all_releases=False):
             "terms": {k: (ds.get("terms") or {}).get(k) for k in ("url", "data", "metadata", "llm_processing")},
             "wave_label": ((ds.get("dimensions") or {}).get("wave") or {}).get("label", "wave"),
             "releases": [{"id": r, "status": next((x.get("status") for x in ds["releases"] if x["id"] == r), None),
-                          "waves": wave_list(waves.get(r, [])),
+                          "waves": wave_list(waves.get(r, [])).replace(",", ", "),
                           "variables": sum(len(v) for v in repo.tables.get(r, {}).values())} for r in scope],
             "variables": len(rows), "files": files, "inputs_sha256": inputs_hash(path),
         })

@@ -97,3 +97,9 @@ def test_cli(home, tmp_path, capsys):
     assert result["count"] == 1 and result["completeness"] == "approximate"
     with pytest.raises(SystemExit):
         main(["search", str(home / "pdt-a"), str(home / "pdt-b"), "--filter", "{}"])
+
+
+def test_output_directory_isnt_a_repo(home):
+    m = catalog.build([home], home / "pdt-catalog")
+    m = catalog.build([home], home / "pdt-catalog")                  # again, with its manifest in place
+    assert not any(x["path"].endswith("pdt-catalog") for x in m["left_out"])
