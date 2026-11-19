@@ -9,6 +9,8 @@ A filter is a dict; every key given must match (AND):
     subject          a subject group's label, case-insensitive (groups of kind subject)
     topic            a topic annotation value, case-insensitive
     derived          {property: value}, e.g. {"scale_signature": "yes_no"}
+    available        {"wave": W, "form": F}, form optional: an availability entry for wave W
+                     with form F or with no form (no form means everyone in that wave)
     field            {"pointer": "/measure", "equals": "categorical"}
     text             a substring of the name, label or question text, case-insensitive
 
@@ -134,6 +136,25 @@ def field_origin(record, pointer):
     return origin
 
 
+def origin_label(origin):
+    """The label a filter on a field with this origin supports, and {rule: version} if any."""
+    kind = origin.get("origin")
+    if kind in SOURCE_ORIGINS:
+        return "complete", {}
+    if kind == "rule":
+        return "complete_by_rule", {origin["rule"]: origin.get("rule_version")}
+    return "approximate", {}
+
+
+def available_matches(entry, want):
+    """An availability entry for the wanted wave, with the wanted form or no form at all."""
+    if str(entry.get("wave")) != str(want["wave"]):
+        return False
+    if "form" not in want or "form" not in entry:
+        return True
+    return str(entry["form"]) == str(want["form"])
+
+
 def question_text(record):
     return " ".join(q.get("text", "") for q in record.get("questions", []))
 
@@ -167,7 +188,7 @@ class Result:
 def search(index, filt):
     """Apply a filter to an Index and return a labeled Result."""
     unknown = set(filt) - {"release", "table", "name", "group", "subject", "topic", "derived",
-                         "field", "text"}
+                         "available", "field", "text"}
     if unknown:
         raise ValueError(f"unknown filter keys: {sorted(unknown)}")
 
@@ -225,6 +246,20 @@ def search(index, filt):
                 rules[d["rule"]] = d["rule_version"]
         preds.append(lambda r, t, rec, rows=rows: any(
             target_matches(d["target"], r, t, rec["name"]) for d in rows))
+
+    if "available" in filt:
+        want = filt["available"]
+        if "wave" not in want or set(want) - {"wave", "form"}:
+            raise ValueError('available takes {"wave": W} or {"wave": W, "form": F}')
+        for r, t, rec in scope:
+            label, rule = origin_label(field_origin(rec, "/availability"))
+            labels.append(label)
+            if rule:
+                rules.update(rule)
+
+        def available_pred(r, t, rec, want=want):
+            return any(available_matches(a, want) for a in rec.get("availability") or [])
+        preds.append(available_pred)
 
     if "field" in filt:
         pointer, value = filt["field"]["pointer"], filt["field"]["equals"]

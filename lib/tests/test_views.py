@@ -251,3 +251,59 @@ def test_wave_summary_names_gaps_and_forms():
     assert views.wave_summary(rec, waves) == "all 1985,1987; form A,C 1988-1989 (not 1986)"
     rec = {"availability": [{"wave": w} for w in (1985, 1987)]}
     assert views.wave_summary(rec, waves) == "1985,1987 (not 1986)"
+
+
+def test_available_filter(tmp_path):
+    rule_avail = {"origin": "rule", "rule": "avail_rule", "rule_version": "2"}
+    variables = [
+        dict(VARIABLES[0], availability=[{"wave": 1987}, {"wave": 1988, "form": "A"}]),
+        dict(VARIABLES[1], availability=[{"wave": 1988, "form": "B"}]),
+        dict(VARIABLES[0], name="q3", availability=[{"wave": 1988}]),
+        dict(VARIABLES[0], name="q4", availability=[{"wave": 1988, "form": "A"}],
+             provenance={"record": {"origin": "publisher", "source": "cb"},
+                         "fields": {"availability": rule_avail}}),
+    ]
+    root = make_repo(tmp_path, variables=variables, groups=[], corrections=[])
+    idx = index_of(root)
+    full = search(idx, {"available": {"wave": 1988, "form": "A"}})
+    assert names(full) == ["q1", "q3", "q4"]          # q3: no form, so everyone in 1988
+    assert full.label == "complete_by_rule" and full.rule_versions == {"avail_rule": "2"}
+    only = search(idx, {"available": {"wave": 1988, "form": "A"}, "name": "q1"})
+    assert only.label == "complete_by_rule"           # the label covers the whole scope
+    (tmp_path / "b").mkdir()
+    no_rule = make_repo(tmp_path / "b", variables=variables[:3], groups=[], corrections=[])
+    result = search(index_of(no_rule), {"available": {"wave": 1988}})
+    assert names(result) == ["q1", "q2", "q3"] and result.label == "complete"
+    with pytest.raises(ValueError):
+        search(idx, {"available": {"form": "A"}})
+
+
+EVAL_KEYS = Path(__file__).resolve().parents[2] / "eval" / "keys"
+
+
+def key_check(repo, key_file, filt, label):
+    import yaml
+    key = yaml.safe_load((EVAL_KEYS / key_file).read_text())
+    hits = {i["name"] for i in key["items"] if i["status"] == "hit"}
+    allowed = hits | {i["name"] for i in key["items"] if i["status"] == "neutral"}
+    result = search(index_of(repo), filt)
+    found = set(names(result))
+    assert hits <= found <= allowed
+    assert result.label == label
+
+
+@pytest.mark.skipif(not (EVAL_KEYS / "gss_ballot_a_1988.yaml").exists() or not (GSS / "dataset.yaml").exists(),
+                    reason="eval keys or pdt-gss missing")
+def test_gss_ballot_a_1988_matches_eval_key():
+    key_check(GSS, "gss_ballot_a_1988.yaml", {"available": {"wave": 1988, "form": "A"}}, "complete")
+
+
+ANES = GSS.parent / "pdt-anes-cdf"
+
+
+@pytest.mark.skipif(not (EVAL_KEYS / "anes_therm_1978.yaml").exists() or not (ANES / "dataset.yaml").exists(),
+                    reason="eval keys or pdt-anes-cdf missing")
+def test_anes_thermometers_1978_matches_eval_key():
+    key_check(ANES, "anes_therm_1978.yaml",
+              {"derived": {"scale_signature": "thermometer"}, "available": {"wave": 1978}},
+              "complete_by_rule")
