@@ -492,6 +492,8 @@ Part of Task 11. `scripts/extract.py` in a dataset repo: the user names the vari
 
 **Files:** `lib/pdt/data.py` (owned by this task while `DOING`), new `lib/pdt/extract.py`, tests, `scripts/` in the dataset repos.
 
+**Also (from Task 20, STANDARD.md §5.3):** when `recode` classifies a code because of an `inferred` correction (e.g. ANES 2024 `-1` → inap), it must say so: warn, or report the codes and corrections it relied on.
+
 ## Task 20 — ANES codebook errors
 
 **Status:** `DOING (anes-errata)`
