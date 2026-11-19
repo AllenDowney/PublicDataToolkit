@@ -44,3 +44,14 @@ Task 8 decided that dataset repos are generated from `templates/` with Copier, b
 
 
 **Decision 2 implemented (fars thread, 2026-11-19):** with no git remote, `pdt check` now reports restricted tracked files and records tracked under unknown terms instead of failing them; with a remote they fail as before, and model output without permission fails either way (`lib/pdt/check.py`, 4 tests, `8f5d35e`). Refusing non-`ship` data in `pdt.release` is with views + site, which owns `release.py` (Task 18).
+
+**Decision 1 implemented (instructions thread, 2026-11-19):** `copier.yml` is at the toolkit's root with `_subdirectory: templates/template` (`5d0a992`), and the toolkit is tagged `v0.1.0` locally at that commit. The tag isn't pushed; Allen pushes.
+- **Updated:** `templates/test_template.py` copies from the root with `--vcs-ref HEAD`, so it tests the working tree, not the last tag (4 tests pass). `templates/README.md` explains `copier copy --vcs-ref v0.1.0 /abs/path/to/PublicDataToolkit` and `copier update`. In `instructions/`, step 2 uses the new command, the README says how to upgrade a repo, and the C9 text follows decision 2 (steps 2 and 8, and the template README).
+- **Tested in the scratchpad, with absolute paths:**
+  - A repo copied from the real toolkit at `v0.1.0` records `_commit: v0.1.0` and the toolkit's path. `pdt check` fails only C6, as before, and `copier update` with no newer tag changes nothing.
+  - In a clone of the toolkit, a repo copied at `v0.1.0` was updated to a `v0.1.1` tag made only in the clone. The template's Makefile change came through, and a local edit to the same file was kept.
+- **Findings:**
+  - Without `--vcs-ref`, Copier copies the latest tag, not the working tree. Tests and anyone trying an unreleased template change need `--vcs-ref HEAD`. Conversely, a change to `templates/template/` reaches dataset repos only through a new tag.
+  - The rename was swept into another thread's commit (`9daad38`) while it was staged, and HEAD briefly had `copier.yml` at the root with the old `_subdirectory: template`. A staged `git mv` is exposed to anyone who runs `git commit` without paths. Commit renames right away.
+  - `download --check` now exits 1 when a source is missing (Task 18), so the template test checks only that it runs and reports the source.
+  - **Not done here:** the one-line note in CLAUDE.md's layout that `copier.yml` is at the root. This thread doesn't edit CLAUDE.md files at another thread's request; the coordinator or Allen can add it.

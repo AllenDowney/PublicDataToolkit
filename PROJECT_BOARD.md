@@ -116,7 +116,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 28 — The Copier template for dataset repos
 
-`DOING (instructions)`. The Copier template (`templates/`). Allen decided: move `copier.yml` to the root and tag releases; C9 blocks only publishing (fars). Details: [`planning/tasks/task-28.md`](planning/tasks/task-28.md).
+`DONE (instructions)`. The Copier template: `copier.yml` at the toolkit's root, `templates/template/`, tagged `v0.1.0` locally (not pushed); `copier copy` and `copier update` tested. Details: [`planning/tasks/task-28.md`](planning/tasks/task-28.md).
 
 ## Working in parallel
 
