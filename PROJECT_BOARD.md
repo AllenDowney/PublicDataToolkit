@@ -32,7 +32,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 13:** FARS slice. The parser for the manual needs work.
 
 **To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
-- **Task 15:** Human-readable site: `docs/`.
+- **Task 15:** Human-readable site: `docs/`. `DOING (views + site)`
 - **Task 16:** Export data-dict YAML and validate it with data-dict.
 - **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
 - **Task 18:** `download.py` and the data-release workflow.
@@ -422,7 +422,7 @@ Remaining friction from test 3: the agent first misread the release's wave list 
 
 ## Task 15 — Human-readable site: `docs/`
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (views + site)`
 
 A static site per dataset repo, from STANDARD.md §7: a page per variable, per group and per release, with codes, missing types, availability, corrections and provenance. MkDocs is the suggested generator. The site goes in `docs/`, so GitHub Pages can serve it.
 
