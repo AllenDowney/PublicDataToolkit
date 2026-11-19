@@ -362,3 +362,25 @@ def test_c8_views_current(repo_dir):
     (repo_dir / "docs" / "variables" / "r1" / "q1.html").unlink()
     assert c8(check(repo_dir)) == ["C8: docs/ is missing 1 generated file(s), e.g. variables/r1/q1.html; "
                                    "run `make views`"]
+
+
+def test_across_releases_file(tmp_path):
+    dataset = dict(DATASET, releases=[
+        {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
+        {"id": "r2", "label": "R2", "status": "current", "sources": ["cb"]}])
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "variables.jsonl", [dict(VARIABLES[0], release="r1")])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl",
+                [dict(VARIABLES[0], release="r2", name="q1new")])
+    write_jsonl(root / "metadata" / "links.jsonl", [
+        {"from": {"release": "r1", "name": "q1"}, "to": {"release": "r2", "name": "q1new"},
+         "relations": ["same_item", "renamed"], "origin": {"origin": "publisher", "source": "cb"}}])
+    manifest = views.build(root)
+    assert manifest["across_releases"] == [{"path": "variables.txt", "variables": 1,
+                                            "tokens": manifest["across_releases"][0]["tokens"]}]
+    text = (root / "agent" / "variables.txt").read_text()
+    assert "q1 r1 → q1new r2 | " in text
+    assert "## Across releases" in (root / "agent" / "index.md").read_text()
+    from pdt.check import run
+    (root / "agent" / "variables.txt").unlink()
+    assert any("C8" in f and "agent/" in f for f in run(root).failures)

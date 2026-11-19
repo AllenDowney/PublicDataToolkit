@@ -13,9 +13,15 @@ read: records, dataset.yaml, sources.yaml. No data file.
 What it writes in --out:
     index.html              the datasets: title, publisher, kind, terms, releases, waves, variables
     agent/index.md          the same for agents, how to search, and what was left out
-    agent/<dataset>.txt     one line per variable of the releases in scope, split at ~20k tokens:
-                            release[/table].name | waves | label | question text, truncated
-    catalog.jsonl           the same, one JSON object per variable
+    agent/<dataset>.txt     one line per variable across the releases in scope, split at ~20k tokens:
+                            [table.]names and releases | waves | label | question text, truncated
+    catalog.jsonl           the same, one JSON object per variable, with each release's name
+
+One line per variable: records in several releases joined by links that keep the meaning
+(same_item, renamed, relabeled; pdt.chains) are one line, with their names and release
+span ("ADDEPEV2 2011–2018 → ADDEPEV3 2019–2023"). A link that changes the meaning
+(codes, wording or universe changed) keeps two lines, the later right under the earlier,
+marked "↳ codes_changed:".
     manifest.json           pdt version, and each repo's path and input hash
 
 Scope: each dataset's current releases (status current; all of them when none is
@@ -46,8 +52,9 @@ import yaml
 
 from . import __version__
 from .check import Repo
+from . import chains as chains_mod
 from .search import Index, question_text, search, worst
-from .views import MAX_TOKENS, inputs_hash, line_question, sort_key, split, tokens, wave_list, wave_summary
+from .views import MAX_TOKENS, inputs_hash, line_question, runs, sort_key, split, tokens, wave_list
 
 QUESTION_CHARS = 160
 
@@ -121,25 +128,42 @@ def release_waves(repo):
 # ---------------------------------------------------------------- catalog
 
 def entries(repo, all_releases=False):
-    """One dict per variable of the releases in scope."""
+    """One dict per variable (a chain across the releases in scope), related chains adjacent."""
     ds = repo.dataset
-    waves = release_waves(repo)
     index = Index.from_repo(repo)
-    scope = set(releases_in_scope(ds, all_releases))
-    for rel, tab, rec in index.entries:
-        if rel not in scope:
-            continue
-        q = " ".join(line_question(rec).split())
-        yield {"dataset": ds["id"], "release": rel, "table": tab, "name": rec["name"],
-               "label": rec.get("label"), "measure": rec.get("measure"),
-               "waves": sorted({a["wave"] for a in rec.get("availability") or [] if "wave" in a}, key=sort_key),
-               "waves_text": wave_summary(rec, waves[rel]),
+    records = {(rel, tab, rec["name"]): rec for rel, tab, rec in index.entries}
+    chains, order = chains_mod.build(repo, releases_in_scope(ds, all_releases))
+    by_release = release_waves(repo)
+    all_waves = sorted({w for r in order for w in by_release.get(r, [])}, key=sort_key)
+    for chain, relation in chains_mod.ordered_with_related(chains):
+        last = records[chain.last]
+        waves = sorted({a["wave"] for m in chain.members for a in records[m].get("availability") or []
+                        if "wave" in a}, key=sort_key)
+        q = " ".join(line_question(last).split())
+        yield {"dataset": ds["id"], "id": chain.id, "table": chain.table,
+               "names": chains_mod.names_text(chain, order),
+               "members": [{"release": r, "table": t, "name": n} for r, t, n in chain.members],
+               "related_above": relation,
+               "related": [{"relations": rels, "id": other.id, "direction": d} for rels, other, d in chain.related],
+               "label": last.get("label"), "measure": last.get("measure"),
+               "waves": waves, "waves_text": waves_text(waves, all_waves),
                "question": q[:QUESTION_CHARS - 3] + "..." if len(q) > QUESTION_CHARS else q}
 
 
+def waves_text(waves, all_waves):
+    """Runs over the waves of the releases in scope, as the agent view writes them."""
+    if not waves:
+        return "-"
+    text = runs(set(waves), all_waves).replace(",", ", ")
+    return text + " (all)" if len(waves) == len(all_waves) and len(all_waves) > 1 else text
+
+
 def line(entry):
-    where = entry["release"] + (f"/{entry['table']}" if entry["table"] else "")
-    return " | ".join([f"{where}.{entry['name']}", entry["waves_text"], entry["label"] or "-", entry["question"] or "-"])
+    where = (f"{entry['table']}." if entry["table"] else "") + entry["names"]
+    text = " | ".join([where, entry["waves_text"], entry["label"] or "-", entry["question"] or "-"])
+    if entry["related_above"]:
+        text = f"  ↳ {', '.join(entry['related_above'])}: " + text
+    return text
 
 
 def build(paths, out, all_releases=False):
@@ -164,7 +188,9 @@ def build(paths, out, all_releases=False):
         for i, lines in enumerate(parts, 1):
             name = f"{ds['id']}.txt" if len(parts) == 1 else f"{ds['id']}.part{i}.txt"
             text = (f"# {ds.get('title', ds['id'])}" + (f" (part {i} of {len(parts)})" if len(parts) > 1 else "")
-                    + f"\n# columns: release[/table].name | waves | label | question text, truncated"
+                    + "\n# columns: [table.]names and releases | waves | label | question text, truncated"
+                    + "\n# one line per variable across releases; \u21b3 marks a later variable whose meaning "
+                      "changed (codes, wording or universe), under the one it continues"
                     + f"\n# generated by pdt {__version__} from {path}; do not edit\n" + "\n".join(lines) + "\n")
             (out / "agent" / name).write_text(text)
             files.append({"path": f"agent/{name}", "variables": len(lines), "tokens": tokens(text)})
@@ -267,7 +293,7 @@ For agents: <a href="agent/index.md">agent/index.md</a>, and one line per variab
 def search_catalog(paths, filt, all_releases=False):
     """Run a filter in every included repo. Returns a dict like pdt search's, across datasets."""
     included, left_out = load(paths)
-    labels, parts, notes, results, in_scope = [], [], [], [], 0
+    labels, parts, notes, results, variables, in_scope = [], [], [], [], [], 0
     filt = dict(filt)
     fields = filt.pop("text_in", ["name", "label", "question"])
     unknown = set(fields) - {"name", "label", "question"}
@@ -296,15 +322,27 @@ def search_catalog(paths, filt, all_releases=False):
         except ValueError as e:
             notes.append(f"{ds['id']}: {e}; no match there")
             continue
+        chains, order = chains_mod.build(repo, f["release"] if isinstance(f["release"], list) else [f["release"]])
+        by_member = {m: c for c in chains for m in c.members}
         labels.append(result_label)
         in_scope += n_scope
         parts.append({"dataset": ds["id"], "completeness": result_label, "count": len(matches),
                       "n_in_scope": n_scope, "rule_versions": rule_versions})
         results += [{"dataset": ds["id"], "release": rel, "table": tab, "name": rec["name"],
-                     "label": rec.get("label")} for rel, tab, rec in matches]
+                     "label": rec.get("label"), "variable": by_member[(rel, tab, rec["name"])].id}
+                    for rel, tab, rec in matches]
+        seen = {}
+        for rel, tab, rec in matches:
+            c = by_member[(rel, tab, rec["name"])]
+            seen.setdefault(c.id, {"dataset": ds["id"], "id": c.id, "table": c.table,
+                                   "names": chains_mod.names_text(c, order), "label": rec.get("label"),
+                                   "related": [{"relations": rels, "direction": d,
+                                                "names": chains_mod.names_text(o, order), "id": o.id}
+                                               for rels, o, d in c.related]})
+        variables += list(seen.values())
     return {"completeness": worst(*labels) if labels else "complete", "filter": filt,
             "datasets": parts, "n_in_scope": in_scope, "notes": notes, "count": len(results),
-            "results": results, "left_out": [{"path": str(p), "reason": r} for p, r in left_out]}
+            "variables": variables, "variable_count": len(variables), "results": results, "left_out": [{"path": str(p), "reason": r} for p, r in left_out]}
 
 
 def main(argv=None):

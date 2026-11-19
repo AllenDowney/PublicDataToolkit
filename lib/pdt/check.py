@@ -719,7 +719,8 @@ def view_files(manifest):
     """The files a view's manifest lists, relative to the view's directory."""
     if "files" in manifest:
         return manifest["files"]
-    return [f["path"] for s in manifest.get("shards", []) for f in s["files"]] + ["index.md", "SKILL.md"]
+    return ([f["path"] for s in manifest.get("shards", []) for f in s["files"]] + ["index.md", "SKILL.md"]
+            + [f["path"] for f in manifest.get("across_releases", [])])
 
 
 def check_views(repo, result):

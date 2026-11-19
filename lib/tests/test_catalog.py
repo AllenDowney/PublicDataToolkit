@@ -51,10 +51,10 @@ def test_build(home, tmp_path):
     assert "terms.metadata is 'unknown'" in reasons["pdt-c"] and "no dataset.yaml" in reasons["pdt-private"]
     assert "other" not in reasons
     lines = (out / "agent" / "a.txt").read_text()
-    assert "r1.sad | 2018-2020 (all) | Felt sad? | -" in lines
+    assert "\nsad | 2018-2020 (all) | Felt sad? | -" in lines
     rows = [json.loads(l) for l in (out / "catalog.jsonl").read_text().splitlines()]
-    assert {(r["dataset"], r["name"]) for r in rows} == {("a", "sad"), ("a", "povcol"), ("a", "marital"),
-                                                         ("b", "DEPRESS")}
+    assert {(r["dataset"], r["members"][0]["name"]) for r in rows} == {
+        ("a", "sad"), ("a", "povcol"), ("a", "marital"), ("b", "DEPRESS")}
     index = (out / "agent" / "index.md").read_text()
     assert "## Left out" in index and "pdt-c" in index
     assert "secret" not in (out / "index.html").read_text() and "<h2>Left out</h2>" in (out / "index.html").read_text()
@@ -103,3 +103,37 @@ def test_output_directory_isnt_a_repo(home):
     m = catalog.build([home], home / "pdt-catalog")
     m = catalog.build([home], home / "pdt-catalog")                  # again, with its manifest in place
     assert not any(x["path"].endswith("pdt-catalog") for x in m["left_out"])
+
+
+def test_chains_across_releases(tmp_path):
+    """Same-meaning links join lines; a change of meaning keeps them apart, the later one under the earlier."""
+    root = tmp_path / "pdt-s"
+    ds = dict(DATASET, id="s", releases=[{"id": y, "label": y, "status": "current", "sources": ["cb"]}
+                                         for y in ("2011", "2012", "2013")])
+    root.mkdir()
+    make_repo(root, dataset=ds, variables=[], groups=[], corrections=[])
+    def v(rel, name, label):
+        return dict(var(name, label, waves=(int(rel),)), dataset="s", release=rel)
+    write_jsonl(root / "metadata" / "releases" / "2011" / "variables.jsonl", [v("2011", "DEP2", "Depressive"),
+                                                                              v("2011", "ROLL", "Rollover")])
+    write_jsonl(root / "metadata" / "releases" / "2012" / "variables.jsonl", [v("2012", "DEP2", "Depressive"),
+                                                                              v("2012", "ROLL", "Rollover")])
+    write_jsonl(root / "metadata" / "releases" / "2013" / "variables.jsonl", [v("2013", "DEP3", "Depressive"),
+                                                                              v("2013", "ROLL", "Rollover type")])
+    link = lambda a, an, b, bn, rels: {"from": {"release": a, "name": an}, "to": {"release": b, "name": bn},
+                                       "relations": rels, "origin": PUB}
+    write_jsonl(root / "metadata" / "links.jsonl", [
+        link("2011", "DEP2", "2012", "DEP2", ["same_item"]), link("2012", "DEP2", "2013", "DEP3", ["renamed"]),
+        link("2011", "ROLL", "2012", "ROLL", ["same_item"]), link("2012", "ROLL", "2013", "ROLL", ["codes_changed"])])
+    catalog.build([root], tmp_path / "out")
+    lines = [l for l in (tmp_path / "out" / "agent" / "s.txt").read_text().splitlines() if not l.startswith("#")]
+    assert lines[0].startswith("DEP2 2011\u20132012 \u2192 DEP3 2013 | 2011-2013 (all) | Depressive")
+    assert lines[1].startswith("ROLL 2011\u20132012 | 2011-2012 | Rollover")
+    assert lines[2].startswith("  \u21b3 codes_changed: ROLL 2013 | 2013 | Rollover type")
+    r = catalog.search_catalog([root], {"text": "depressive"})
+    assert r["count"] == 3 and r["variable_count"] == 1
+    assert r["variables"][0]["names"] == "DEP2 2011\u20132012 \u2192 DEP3 2013"
+    roll = catalog.search_catalog([root], {"text": "rollover"})["variables"]
+    assert [v["names"] for v in roll] == ["ROLL 2011\u20132012", "ROLL 2013"]
+    assert roll[0]["related"] == [{"relations": ["codes_changed"], "direction": "to", "names": "ROLL 2013",
+                                   "id": "ROLL@2013"}]
