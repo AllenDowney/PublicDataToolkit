@@ -125,7 +125,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 - **Claim a task** by changing its status to `DOING (thread name)`. Work on one task at a time.
 - **Write details in the task's file,** `planning/tasks/task-NN.md`: progress, findings, proposals. On the board, change only your task's block, and keep it to a sentence or two.
 - **Stay in your task's files.** Each task file lists the files it may change. Read anything.
-- **The shared checkout:** threads share this repo's working tree. Stage only the files you changed (`git add <path>`, never `git add -A` or `git commit -a`), check `git diff --cached` before committing, and never write a shared file you haven't read in full. If a shared file looks wrong, restore it from git; don't rewrite it.
+- **The shared checkout:** threads share this repo's working tree. Stage only the files you changed (`git add <path>`, never `git add -A` or `git commit -a`), commit with `git commit -- <paths>` so entries other threads staged stay out of your commit, check `git diff --cached` first, and never write a shared file you haven't read in full. If a shared file looks wrong, restore it from git; don't rewrite it.
 - **`lib/`:** add new modules freely. Only one thread at a time changes an existing module.
 - **Commit locally** with the task number in the message, run `pytest` here first, and **don't push**. Allen checks before anything goes public.
 - **Report** to the coordinator with SendMessage (find it with ListAgents): questions, proposals for the standard, record changes that need the views regenerated, and a short report when a task is done.
