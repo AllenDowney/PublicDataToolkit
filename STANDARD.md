@@ -283,6 +283,8 @@ Every link names a `source`: a crosswalk, release notes, or a documented naming 
 
 **Corrections the publisher prints** in its own documentation, such as the NSFG's margin box "Corrected universe for MFLASTP", aren't errata of ours. They're what the publisher says. The record holds the corrected value, with the publisher as its origin and the box as its location, and keeps the superseded text in `notes`.
 
+**A correction can classify a code.** It can change an `unresolved` code to `missing` (with its types) or to `valid`, when the evidence is strong, even if the publisher hasn't confirmed it. An example is the ANES 2024 codes that the cumulative codebook doesn't list but that match the 2024 study's own coding. Such a correction is `inferred` until the publisher confirms it, cites its evidence, and records the report to the publisher in `upstream`. Tools that rely on it say so: the views mark the corrected code, and recoding by missing type reports which codes it classified from an `inferred` correction. A code with too little evidence, like a single unexplained case, stays `unresolved`.
+
 Source records keep the original of *our* corrections. The library applies corrections when it builds the views, and every view shows that a value was corrected. If the original no longer appears in the record, `pdt check` fails (§9, C7): usually upstream has fixed it, and the correction should be retired.
 
 ## 6. Derived properties and annotations
