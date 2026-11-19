@@ -26,7 +26,8 @@ def repo(tmp_path):
         {"id": "data", "kind": "data", "url": (remote / "data.csv").as_uri(), "path": "data/raw/data.csv",
          "redistribution": "ship", "acquisition": "automated", "sha256": sha("a,b\n1,2\n")},
         {"id": "cb", "kind": "codebook", "url": (remote / "codebook.pdf").as_uri(),
-         "path": "data/raw/codebook.txt", "redistribution": "ship", "acquisition": "automated"},
+         "path": "data/raw/codebook.txt", "redistribution": "ship", "acquisition": "automated",
+         "convert": "pdftotext -layout (poppler 24.02)"},
         {"id": "portal", "kind": "data", "redistribution": "ship", "acquisition": "manual",
          "manual_steps": "Log in and click Download.", "path": "data/raw/portal.zip"},
     ]}
@@ -49,7 +50,10 @@ def test_check_reports_without_network(repo, capsys):
 
 
 def test_fetch_verify_and_convert(repo, capsys, monkeypatch):
-    monkeypatch.setattr(download, "pdftotext", lambda pdf, txt: txt.write_text("text of " + pdf.read_text()))
+    def fake_convert(src, downloaded, out, log=print):
+        assert download.parse_convert(src["convert"]) == (["pdftotext", "-layout"], "24.02")
+        out.write_text("text of " + downloaded.read_text())
+    monkeypatch.setattr(download, "convert", fake_convert)
     assert download.main([str(repo), "--accept-terms"]) == 0
     out = capsys.readouterr().out
     assert (repo / "data" / "raw" / "data.csv").read_text() == "a,b\n1,2\n"
@@ -226,3 +230,10 @@ def test_code_column_even_when_no_code_occurs(tmp_path):
     table = data.read(path)
     assert list(table.columns) == ["_row", "q1", "q1__code", "q2"]
     assert table["q1__code"].isna().all()
+
+
+def test_parse_convert():
+    assert download.parse_convert("pdftotext -layout (poppler 24.02)") == (["pdftotext", "-layout"], "24.02")
+    assert download.parse_convert("pdftotext -layout") == (["pdftotext", "-layout"], None)
+    with pytest.raises(ValueError, match="by hand"):
+        download.parse_convert("rm -rf / (evil 1.0)")

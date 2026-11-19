@@ -18,14 +18,17 @@ A fetched file whose checksum differs from the record is kept beside the target 
 
 Manual sources (`acquisition: manual`) are never fetched; their `manual_steps` are printed.
 
-Converted sources: when the URL is a PDF and the path isn't (NSFG's codebooks, recorded
-as the text of `pdftotext -layout`), the PDF is fetched next to the path and converted;
-the checksum is of the text. The schema doesn't record conversions yet, so this is
-inferred from the two suffixes (proposed for Task 25).
+Converted sources: a source's `convert` names the converter and its version, e.g.
+"pdftotext -layout (poppler 24.02)" (STANDARD.md §8). The download is kept beside the
+path (a PDF as <path stem>.pdf) and converted to the path; the checksum is of the result.
+Only known converters run (pdftotext); the installed version is compared with the
+recorded one, since a different version can change the output.
 """
 
 import argparse
 import hashlib
+import re
+import shlex
 import os
 import shutil
 import subprocess
@@ -47,10 +50,24 @@ def sha256(path):
     return h.hexdigest()
 
 
-def is_converted(src):
-    """A PDF fetched and kept as its text (pdftotext -layout)."""
-    url, path = src.get("url") or "", src.get("path") or ""
-    return url.lower().split("?")[0].endswith(".pdf") and not path.lower().endswith(".pdf")
+CONVERTERS = {"pdftotext"}
+
+
+def parse_convert(text):
+    """'pdftotext -layout (poppler 24.02)' -> (['pdftotext', '-layout'], '24.02')."""
+    m = re.match(r"\s*([^()]+?)\s*(?:\(\s*\S+\s+([^)]+?)\s*\))?\s*$", text or "")
+    if not m:
+        raise ValueError(f"can't read convert: {text!r}")
+    args = shlex.split(m.group(1))
+    if not args or args[0] not in CONVERTERS:
+        raise ValueError(f"convert {text!r}: only {sorted(CONVERTERS)} can run; convert it by hand")
+    return args, m.group(2)
+
+
+def installed_version(tool):
+    out = subprocess.run([tool, "-v"], capture_output=True, text=True)
+    m = re.search(r"version\s+(\S+)", out.stdout + out.stderr)
+    return m.group(1) if m else None
 
 
 def status(root, src):
@@ -101,10 +118,16 @@ def fetch(url, dest):
     Path(tmp.name).replace(dest)
 
 
-def pdftotext(pdf, txt):
-    if not shutil.which("pdftotext"):
-        raise RuntimeError("pdftotext (poppler-utils) is needed to convert " + str(pdf))
-    subprocess.run(["pdftotext", "-layout", str(pdf), str(txt)], check=True)
+def convert(src, downloaded, out, log=print):
+    """Run the source's converter on the downloaded file, writing out."""
+    args, version = parse_convert(src["convert"])
+    if not shutil.which(args[0]):
+        raise RuntimeError(f"{args[0]} is needed to convert {downloaded.name} ({src['convert']})")
+    have = installed_version(args[0])
+    if version and have and have != version:
+        log(f"  note      {src['id']}: {args[0]} {have} is installed; the checksum was recorded "
+            f"with {version}, so it may not match")
+    subprocess.run([*args, str(downloaded), str(out)], check=True)
 
 
 def get(root, src, force=False, log=print):
@@ -120,10 +143,11 @@ def get(root, src, force=False, log=print):
         return state
     log(f"  fetching  {src['id']}: {src['url']}")
     staged = target.with_name(target.name + ".new")
-    if is_converted(src):
-        pdf = target.with_suffix(".pdf")
-        fetch(src["url"], pdf)
-        pdftotext(pdf, staged)
+    if src.get("convert"):
+        suffix = Path(src["url"].split("?")[0]).suffix or ".download"
+        downloaded = target.with_suffix(suffix)
+        fetch(src["url"], downloaded)
+        convert(src, downloaded, staged, log=log)
     else:
         fetch(src["url"], staged)
     got, want = sha256(staged), src.get("sha256")

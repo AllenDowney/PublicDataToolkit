@@ -282,13 +282,21 @@ EVAL_KEYS = Path(__file__).resolve().parents[2] / "eval" / "keys"
 
 
 def key_check(repo, key_file, filt, label):
+    """The filter finds every hit in the key, and nothing the key marks as a miss.
+
+    The repo can cover more than the key (the full GSS against a 50-variable key), so
+    names the key doesn't mention are ignored, and the search is scoped to its release.
+    """
     import yaml
     key = yaml.safe_load((EVAL_KEYS / key_file).read_text())
     hits = {i["name"] for i in key["items"] if i["status"] == "hit"}
     allowed = hits | {i["name"] for i in key["items"] if i["status"] == "neutral"}
-    result = search(index_of(repo), filt)
+    known = {i["name"] for i in key["items"]}
+    release = next(iter(key["scope"].values()))["release"]
+    result = search(index_of(repo), {"release": str(release), **filt})
     found = set(names(result))
-    assert hits <= found <= allowed
+    assert hits <= found
+    assert found & known <= allowed
     assert result.label == label
 
 
