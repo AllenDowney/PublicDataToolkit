@@ -34,7 +34,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 11:** Data releases, download scripts and extract builders. The common data format is accepted and implemented (`lib/pdt/data.py`); the rest is in Tasks 18 and 19.
 
 **To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
-- **Task 13:** FARS, continued: the PARKWORK table, history across years, a second release. `DOING (fars)`
+- **Task 13:** FARS, continued: the PARKWORK table, history across years, a second release. `DONE (fars)`
 - **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
 - **Task 19:** `extract.py`, the extract builder.
 - **Task 20:** ANES codebook errors: verify and record as corrections. `DONE (anes-errata)`; report sent.
@@ -351,7 +351,7 @@ Likely shape: `metadata/releases/<release>/<table>/variables.jsonl`, a `table` f
 
 ## Task 13 — FARS slice
 
-**Status:** `DOING (fars)` — claimed by the worker thread "fars" (2026-11-19). The main thread built the preliminary slice and handed the rest off
+**Status:** `DONE (fars)` (2026-11-19): PARKWORK, code histories, the 2017 release and links. Worked by the thread "fars". The main thread built the preliminary slice and handed the rest off
 
 The non-survey case Allen chose. Allen downloaded the 2024 national CSV and SAS files, the auxiliary files, the Analytical User's Manual 1975–2024 (823 pages), and NHTSA's Q&A on the auxiliary files. They're in `../pdt-fars/data/raw/`; the manual's text is `data/interim/manual.txt`.
 
@@ -449,6 +449,19 @@ There are also renames (88 elements, above) and 338 labels with year notes insid
 - **Names:** successive names are kept with their years (`OCUPANTS` 2005–2008, `NUMOCCS` 2009, `PNUMOCCS` from 2010). Names printed on one line are parallel variables (`WEATHER1`, `WEATHER2`). Each gets its own history, and both list the element's earlier name `WEATHER` (1975–2006).
 - **Ambiguous in the source:** the current `WEATHER` (C26, a derived element) also claims the name `WEATHER` for 1975–2006, so that name appears in two histories for the same years. That's what the manual says.
 - **Limit:** a label can change inside a period. `WEATHER` "Unknown/Reported as Unknown (Since 2018)" is code 99 for the whole 2013–Later period. A change like that stays only in the label's year note; 338 labels have one. Parsing those notes would be a further step.
+
+**Step 3, done (fars thread, 2026-11-19):** the 2017 release. pdt-fars commit `acf7f12`.
+- **Sources.** Allen downloaded the 2017 national CSV, SAS and auxiliary files, and the release note. They're in `data/raw/fars2017/`, recorded in `sources.yaml` with sha256. The release note shows the 2017 files were reissued until 2022-03-02. The CSV's NAME label columns arrived only in the 12/18/2020 update, so the "2017" labels were written in 2020 or later. Even so, they use 2017's wording ("Unknown", not "Reported as Unknown").
+- **Release 2017** has the same four tables and the same 40 variables, all under the same names. Codes come from each history's column for 2017, and labels from the 2017 CSV. All keys and references hold, including person → parkwork for 358 rows.
+- **The histories against the data:** every code that occurs in the 2017 and 2024 data is in the history's column for its year. Most labels match exactly or differ only in detail (case, punctuation, year notes). The rest are listed in `build/report.md`: 18 codes in 2017 and 15 in 2024. They're the wording differences seen before (`DR_DRINK` "Drinking" vs "Yes"), plus labels whose year notes describe a change inside a period.
+- **The test case:** `LGT_COND` 9 is "Unknown" in the 2017 data (133 crashes) and "Reported as Unknown" in 2024, as the history says.
+- **The limit in §5.4, confirmed by data:** `WEATHER`, `SEAT_POS` and `REST_USE` code 99 have one row, "Unknown/Reported as Unknown (Since 2018)", across 2017 and 2024. The data say "Unknown" in 2017 and "Reported as Unknown" in 2024. `BODY_TYP` 81 "Moped (Since 2022)" and 96 "(Since 2024)" are the same kind.
+- **Links:** `metadata/links.jsonl` has 40 links from 2017 to 2024, made by rule `fars_links_from_history` 0.1 from the histories, with the manual as their source. 24 are `same_item`, 15 `labels_changed` and 8 `codes_changed`; each link's `note` lists the changed codes.
+  - `labels_changed`: a code moves to a row with another label (`LGT_COND` 9), or its row's label says "(Since Y)" with Y after 2017 and no later than 2024. Without the second case, the rule would miss `WEATHER`, `SEAT_POS` and `REST_USE`.
+  - `codes_changed`: the set of codes changes, or a row's code does. For example, `ROLLOVER` replaced 1, 2 and 9 with 3 ("Rollover") and 8 in 2022, and the data agree.
+  - No `renamed`: none of the 40 variables changed name between 2017 and 2024. The PARKWORK renames were in 2010.
+- **Build:** `build/slice.yaml` now lists releases and their data files. The 2024 records changed only in the values' provenance note, which now names the period used ("column for 2018-Later"). Scale signatures name their release.
+- **Not done:** the release note's data revisions (12/18/2020: body type, rollover, restraint use and more in many States) happened inside the 2017 release, so they aren't links. A record of revisions within a release would need another form.
 
 ## Task 14 — Agent views: `agent/` index and shards
 
