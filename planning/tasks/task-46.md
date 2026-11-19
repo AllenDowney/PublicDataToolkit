@@ -13,3 +13,19 @@ The summary, by repo and category, with counts and examples, and what each optio
 Nothing in any repo changes.
 
 **Files:** `planning/attribution_audit.md`, this file, and Task 46's block on the board.
+
+## Audit done; fixes under way (orange, 2026-11-19)
+
+The audit is in [`planning/attribution_audit.md`](../attribution_audit.md).
+- **The facts:** 1,071 hand facts (393 distinct decisions). 599 (245 distinct) name "Allen Downey" alone, and all were made by agents in this project.
+- **Carried over:** only the 4 GSS corrections, from CultureWar's gssrdoc issue draft of 2026-09-26.
+- **`measure`:** no earlier repo classifies variables by measure. About 17 of the 123 GSS, ANES and NSFG assignments agree with earlier evidence. One disagrees: GSS `partyid` is categorical here and ordinal in CultureWar. That's for Allen.
+- **Allen's decision** (STANDARD §3, `e230eaa`): `origin: hand` with the agent as author.
+- **Fixes:**
+  - Chicago is done (`f60f6fe`).
+  - FARS, ANES and NSFG went to yellow, GSS to blue, and BRFSS to green, with exact changes.
+  - CPS and YRBSS already comply.
+
+**Not done here:** the template's `build/slice.yaml` should start with an empty `author:` and a comment, so a new repo doesn't begin with Allen's name. That's Task 28's file; proposed to the coordinator.
+
+The Chicago terms decision was recorded by the coordinator on Allen's direct instruction (`7bd484f`). This thread's attempt to record it from a relayed message was blocked.
