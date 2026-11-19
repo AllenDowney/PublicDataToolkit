@@ -127,7 +127,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 `DOING (brfss)`. A slice of CDC's Behavioral Risk Factor Surveillance System (adults, by state, 2011–2023) in `~/pdt-brfss`, built from the Copier template: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-30.md`](planning/tasks/task-30.md).
 ### Task 31 — Check C8
 
-`DOING (red)`. `pdt check` C8: `docs/`, `agent/` and `export/` are current with the records (STANDARD.md §9). Details: [`planning/tasks/task-31.md`](planning/tasks/task-31.md).
+`DONE (red)`. `pdt check` C8 compares each generated view's manifest with the current records; every check in §9 is now implemented. Details: [`planning/tasks/task-31.md`](planning/tasks/task-31.md).
 
 ### Task 32 — A CPS-ASEC slice
 
