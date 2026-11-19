@@ -19,6 +19,7 @@
           "wording_changed",
           "codes_changed",
           "universe_changed",
+          "data_revised",
           "derived_from",
           "split_from",
           "merged_into"

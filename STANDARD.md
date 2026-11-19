@@ -264,6 +264,7 @@ Groups the publisher defines have `origin: publisher` or `upstream_package`. Gro
 | `wording_changed` | The question text changed |
 | `codes_changed` | The value set changed |
 | `universe_changed` | Who was asked changed |
+| `data_revised` | The same item, but its values in the data were revised between releases: recoded missing codes, restored or corrected data, reassigned cases. Release notes are the usual source |
 | `derived_from` | `from` is built from `to`, as a cumulative-file variable is built from single-year items |
 | `split_from`, `merged_into` | One variable became several, or several became one |
 
