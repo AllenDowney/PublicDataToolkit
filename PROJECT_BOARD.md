@@ -152,6 +152,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (red)`. NSFG rule `nsfg_identical_documentation` 0.5 with the count test (OUTCOME_I linked `codes_changed`); `lists_only_occurring_codes` read from `sources.yaml` by `pdt diff` and the rule; a Cases column on the site. Details: [`planning/tasks/task-37.md`](planning/tasks/task-37.md).
 
+### Task 38 — Code lists as tables, and retired codes
+
+`DOING (orange)`. A design, not code: [`planning/code_lists_design.md`](planning/code_lists_design.md). Details: [`planning/tasks/task-38.md`](planning/tasks/task-38.md).
+
 
 
 ## Working in parallel
