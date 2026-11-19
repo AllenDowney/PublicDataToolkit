@@ -12,7 +12,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 2:** Recover the earlier planning session — `DONE`. Found as CultureWar Task 186 and copied to [`planning/`](planning/).
 - **Task 3:** Inventory the GSS and ANES work in CultureWar — `DONE`. [`planning/inventory.md`](planning/inventory.md).
 - **Task 4:** Publish the repo on GitHub — `DONE`. https://github.com/AllenDowney/PublicDataToolkit
-- **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Steps 1–2 done: the standard and schemas, and a 45-variable GSS slice in a local `pdt-gss` repo (not pushed). Next: the ANES slice.
+- **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Steps 1–3 done: the standard and schemas, a 45-variable GSS slice (`pdt-gss`) and a 32-variable ANES CDF slice (`pdt-anes-cdf`), both local, with terms recorded. Next: move the shared check into `lib/`, then MTF.
 - **Task 6:** Talk to Hadley Wickham about data-dict — `DOING`. Note to share: [`planning/data_dict.md`](planning/data_dict.md).
 - **Task 7:** Withdrawn.
 - **Task 9:** Remove private information so the repo can be public — `DONE`.
@@ -143,6 +143,39 @@ Findings from the GSS slice:
 - **Per-code provenance is bulky.** Every missing code repeats the same long origin. A default origin for missing codes per variable would shrink the records a lot, which matters for files LLMs read.
 - **A possible documentation error, not verified:** the spending stem repeats a clause ("name some of these problems, and for each one I'd like you to name some of these problems…").
 - **Only one extension so far:** `gss.modules`. Every slice variable is `Core`, so a module group would say nothing.
+
+**Progress (2026-11-19), step 3, the ANES CDF slice:** a new local repo, `pdt-anes-cdf`, not pushed. It has 32 variables from the February 5, 2026 release:
+- design variables;
+- ten thermometers;
+- ideology scales;
+- abortion, gay-rights and death-penalty items;
+- pre- and post-election vote items.
+
+`build/build_slice.py` parses the HTML codebook's Valid, Missing, Sources and Notes sections, with block regexes taken from ExtractANES. Unlike the old script, it keeps the codebook's own valid/missing split, types each missing code, and doesn't compute a valid range from listed codes. The Stata file is read only through pandas' public API. The same `check_metadata.py` passes, with no extensions needed.
+
+ANES terms, decided by Allen on 2026-11-19: everything `ship`. electionstudies.org is behind a Cloudflare bot check, so neither the agent nor a headless browser could read the terms (an archive.org request was blocked as a way around the check). Allen saved the three pages from a browser; they're kept in `pdt-anes-cdf/data/raw/terms/` and recorded as source `anes-terms-pages`. They say:
+- use the data only for research or statistical purposes, make no use of respondents' identities, and cite ANES;
+- public release datasets are "public goods," and derived datasets may be shared with a link back to the original;
+- no login is needed any more.
+
+They don't address mirroring the original files or LLM processing; Allen decided both may ship. The README links back to the original dataset, as the FAQ asks.
+
+**For the instructions:** when a publisher's site blocks scripts, the agent asks the person to save the terms pages from a browser, stores them in `data/raw/terms/`, records them as a source, and quotes them in `dataset.yaml`. That worked here, and it keeps the evidence for each terms decision.
+
+Findings from the ANES slice:
+- **The checks against the data find codebook errors:**
+  - VCF0878 (gays adopting) has 1,130 cases of code 2, which the codebook doesn't list, and 2016 has data but is missing from its Sources. It looks like 2016 was coded 1/2 instead of 1/5; CultureWar's `harmonize_vcf0878_adopt` recodes 5 to 2 for the same reason.
+  - VCF0704 (presidential vote) has 2016 data, but 2016 is missing from its Sources.
+  - VCF0104 and VCF0301 have 1954 data that isn't in their Sources; VCF0830 has 2012 data that isn't.
+  - There are undocumented codes: `-1` in VCF0806 and VCF9236 (245 cases each), `-8` in VCF0218 and VCF0224, `-4` in VCF0206. They're marked `unresolved`.
+
+  These are candidates for `corrections.jsonl` once checked against the PDF codebook and the ANES errata.
+- **The standard fits without extensions.** Three wordings by year and mode (VCF0803), INAP as Stata's system missing (`.`), codes listed under Valid that look like DK (VCF0803 code 9, VCF0876 code 8), and ranges with labeled codes beyond them (thermometers 0–96 plus 97) all fit the schema.
+- **Missing labels mix several reasons in one code** ("NA; no Post IW; form III,IV (1972)"). Splitting at ";" and typing each part works. Parts the rule can't type ("don't recognize", "breakoff", "'other' vote") are listed in the build report.
+- **Pre/post phase is mostly not recorded.** Only one variable's notes say "This is a pre var." The rest is implied by labels ("no Post IW"), so `phase` is nearly empty.
+- **No marijuana item in the CDF,** so the cross-survey topic query (spike step 5) needs another subject. Abortion, gay rights and the death penalty are in both the GSS and ANES slices.
+- **No groups.** The CDF has 92 thermometers whose shared question text sits in a preamble before VCF0201, which the variable parser doesn't see. A `thermometer` scale signature, from the "Degrees" range, supports the structural query instead (`complete_by_rule`).
+- **The shared library is overdue.** `check_metadata.py` was copied from `pdt-gss` into `pdt-anes-cdf`, which is exactly the drift between repos the plan warned about. It should move into `lib/` here before MTF.
 
 ## Task 6 — Talk to Hadley Wickham about data-dict
 
