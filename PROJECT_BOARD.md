@@ -31,7 +31,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 11:** Data releases, download scripts and extract builders. The common data format is accepted and implemented (`lib/pdt/data.py`); the rest is in Tasks 18 and 19.
 
 **To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
-- **Task 13:** FARS, continued: the PARKWORK table, history across years, a second release.
+- **Task 13:** FARS, continued: the PARKWORK table, history across years, a second release. `DOING (fars)`
 - **Task 15:** Human-readable site: `docs/`. `DOING (views + site)`
 - **Task 16:** Export data-dict YAML and validate it with data-dict.
 - **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
@@ -346,7 +346,7 @@ Likely shape: `metadata/releases/<release>/<table>/variables.jsonl`, a `table` f
 
 ## Task 13 — FARS slice
 
-**Status:** `TODO` — ready for a worker thread. The main thread built the preliminary slice and handed the rest off (2026-11-19)
+**Status:** `DOING (fars)` — claimed by the worker thread "fars" (2026-11-19). The main thread built the preliminary slice and handed the rest off
 
 The non-survey case Allen chose. Allen downloaded the 2024 national CSV and SAS files, the auxiliary files, the Analytical User's Manual 1975–2024 (823 pages), and NHTSA's Q&A on the auxiliary files. They're in `../pdt-fars/data/raw/`; the manual's text is `data/interim/manual.txt`.
 
