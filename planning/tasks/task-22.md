@@ -3,7 +3,7 @@
 Moved from [`PROJECT_BOARD.md`](../../PROJECT_BOARD.md) on 2026-11-19. The board has the current status; this file holds the task's description, progress, findings and decisions.
 
 
-**Status:** `DONE (nsfg)` 2026-11-19. Committed in `pdt-nsfg` (896791f, 7ab721e, 2038396, 3c13d85); not pushed. The views need regenerating after 2038396. The report of the BABYSEX error to NCHS is drafted for Allen to send.
+**Status:** `DONE (nsfg)` 2026-11-19. Committed in `pdt-nsfg` (896791f, 7ab721e, 2038396, 3c13d85, 787fd4a); not pushed. The views need regenerating after 787fd4a. The report of the BABYSEX error to NCHS is drafted for Allen to send.
 
 - **Question text:** the codebooks give item references ("AD-7b") but no wording. Find the CAPI questionnaire documents on the CDC site, and add `questions` to records by item reference.
 - **Earlier cycles:** add 2017–2019 as a second release (data and download code in MarriageNSFG; codebooks from CDC), and link items across cycles.
@@ -34,25 +34,45 @@ New in `pdt-nsfg/build/`: `capilite.py` (rule `nsfg_capilite_text` 0.2) and `icp
 Allen's brief: link only as NCHS's documentation supports. NCHS's only statement linking the two cycles is the "Summary of NSFG Questionnaire Changes for 2022-2023 (relative to 2017-2019 NSFG)". No crosswalk covers 2022-2023, and the FAQ urges caution comparing 2022-2023 with earlier cycles (multimode design). The coordinator decided:
 
 - (a) **From the change summary**, `origin: publisher`: MARSTAT, female and male, `wording_changed` + `codes_changed` (codes 1–6 in 2017-2019, 1–3 in 2022-2023; the note says the codes come from the codebooks). The summary also names LMARSTAT, RELNOW and birth weight, but no 2017-2019 variable in the slice that it says they replace. In 2017-2019, AD-7c is FMARSTAT, not LMARSTAT.
-- (b) **Rule `nsfg_identical_documentation`**, `origin: rule`, `same_item`. Version 0.1 required the same name (ignoring case), item reference, question text, codes and labels; it gave 4 links. Version 0.2 (the coordinator's decision) allows three documentation artifacts, and each link's note lists the ones it used:
-  - labels that differ only in case;
-  - codes listed by only one codebook, because the codebooks list only codes that occur; the note records which side lacked them;
-  - different item references, when nothing else differs.
+- (b) **Rule `nsfg_identical_documentation`**, `origin: rule`, `same_item`. It went through three versions, each the coordinator's decision. Each link's note lists the allowances it used.
+  - **0.1** required the same name (ignoring case), item reference, question text, codes and labels. It gave 4 links.
+  - **0.2** allowed three artifacts of the documentation:
+    - labels that differ only in case;
+    - codes listed by only one codebook, because the codebooks list only codes that occur;
+    - different item references, when nothing else differs.
+  - **0.3** narrows the second allowance. It applies only when one release's codes are a subset of the other's. When each side has codes the other lacks, the codes changed: HIEDUC_I (1 "multiple regression" vs 2 "logical") and male MFLASTP (7 vs 8, 9).
+- **Rule `nsfg_count_labels_reworded` 0.1**, `origin: rule`, `labels_changed`. A pair qualifies when everything else passes `nsfg_identical_documentation` 0.3, and every label that differs is a count label in both cycles: the code alone, or with an ordinal or a unit ("15" vs "15 years", "1" vs "1ST BIRTH").
 - Not (c): silence in the summary isn't evidence.
 
-**Result: 18 links,** 2 from the summary and 16 by the rule: CASEID (3 tables), EVRMARRY (female, male), FMARITAL (female, male), RELDLIFE (female, male; item numbers differ), FMARIT, HIEDUC_I, MFLASTP, male RELIGION, AGEPREG, OUTCOME_I and PMARPREG.
+**Result: 21 links.**
 
-Note that HIEDUC_I and OUTCOME_I link even though their imputation codes don't overlap (2017-2019 lists code 1, "multiple regression", and 2022-2023 lists code 2, "logical"). That's the second allowance at work: each codebook lists only the codes that occurred.
+| Source | Relation | Links |
+|---|---|---|
+| The change summary | `wording_changed`, `codes_changed` | 2: MARSTAT (female, male) |
+| `nsfg_identical_documentation` 0.3 | `same_item` | 14: CASEID (3 tables), EVRMARRY (female, male), FMARITAL (female, male), RELDLIFE (female, male; item numbers differ), FMARIT, male RELIGION, AGEPREG, OUTCOME_I, PMARPREG |
+| `nsfg_count_labels_reworded` 0.1 | `labels_changed` | 5: AGE_R (female, male), RSCRAGE, BIRTHORD, PREGORDR |
 
-**22 shared names stay unlinked.** `pdt-nsfg/build/report.md` lists each with what differs.
+OUTCOME_I still links under 0.3. 2017-2019 lists codes 0 and 1, and 2022-2023 lists only 0, so one is a subset of the other: no 2022-2023 pregnancy outcome was imputed by regression. HIEDUC_I's codes go both ways, so it doesn't link.
 
-| What differs | Variables |
+**19 shared names stay unlinked.** `pdt-nsfg/build/report.md` lists each with what differs.
+
+## Follow-up: a later pass with `codes_changed` and `labels_changed`
+
+These pairs are the same variable with real changes. A pass with an NCHS source, or a rule that records the change, could link them:
+
+| Variable | What changed |
 |---|---|
-| Changes that look real | HIEDUC (recoded); RMARITAL (code 6 became "Never been married to, nor currently cohabiting with a person of the opposite-sex"); POT12 ("smoked" → "used" marijuana; code 7 only in 2017-2019); OUTCOME ("INDUCED ABORTION" → "Abortion"); HISPRACE2 code 1; RELIGION code 4 (female and pregnancy) |
-| Count labels reworded | AGE_R and RSCRAGE ("15 years" → "15"), SAMLIFENUM and CURRPRTS ("1 PARTNER" → "1"), BIRTHORD and PREGORDR ("1ST BIRTH" → "1") |
-| Question text: card number | ATTND14 and ATTNDNOW ("Card 79" → "Card 77"), with item numbers changed too |
-
-The rule doesn't allow reworded count labels or card numbers, so those stay unlinked.
+| HIEDUC (female, male) | recoded: 2017-2019 codes 5–15, 2022-2023 codes 1–11, with different categories |
+| HIEDUC_I (female) | imputation codes: 1 "multiple regression" in 2017-2019, 2 "logical" in 2022-2023 |
+| MFLASTP (male) | codes: 7 "Not ascertained" in 2017-2019; 8 "Refused" and 9 "Don't know" in 2022-2023 |
+| RMARITAL (female, male) | labels for codes 2, 5 and 6; code 6 became "Never been married to, nor currently cohabiting with a person of the opposite-sex" |
+| OUTCOME (pregnancy) | code 2: "INDUCED ABORTION" → "Abortion" |
+| HISPRACE2 (female, male) | code 1: "Hispanic" → "Hispanic (regardless of race reporting)" |
+| RELIGION (female, pregnancy) | code 4: "OTHER RELIGIONS" → "Other religion" |
+| POT12 (female, male) | wording: "smoked" → "used" marijuana; male item KC-3 → KC-6 |
+| ATTND14, ATTNDNOW (female, male) | the show card: "Card 79" → "Card 77", and item numbers |
+| SAMLIFENUM (female) | count labels reworded, and the top code: "10 OR MORE PARTNERS" → "10 or more" |
+| CURRPRTS (female) | count labels reworded, and code 0: "NONE" → "0" |
 
 ## Limitations
 
