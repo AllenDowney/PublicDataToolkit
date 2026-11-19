@@ -72,7 +72,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 17 — Data checks C3–C5 in `pdt check`
 
-`TODO`. Data checks in `pdt check`: C3–C5 and C12 (keys and references) against the data. Details: [`planning/tasks/task-17.md`](planning/tasks/task-17.md).
+`DOING (fars)`. Data checks in `pdt check`: C3–C5 and C12 (keys and references) against the data. Details: [`planning/tasks/task-17.md`](planning/tasks/task-17.md).
 
 ### Task 18 — `download.py` and the data release
 
