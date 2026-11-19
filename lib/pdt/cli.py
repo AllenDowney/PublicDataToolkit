@@ -1,4 +1,4 @@
-"""Command line: `pdt check [PATH]`, `pdt views [PATH]`, `pdt search PATH --filter JSON`."""
+"""Command line: `pdt check [PATH]`, `pdt views [PATH] [--only agent|site]`, `pdt search PATH --filter JSON`."""
 
 import argparse
 import json
@@ -14,18 +14,24 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     check = sub.add_parser("check", help="check a dataset repo against the standard")
     check.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
-    views = sub.add_parser("views", help="generate agent/ for a dataset repo")
+    views = sub.add_parser("views", help="generate agent/ and docs/ for a dataset repo")
     views.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
+    views.add_argument("--only", choices=["agent", "site"], help="generate just one of them")
     search = sub.add_parser("search", help="search a dataset repo's records; prints a labeled result")
     search.add_argument("path", help="the dataset repo")
     search.add_argument("--filter", required=True, help='a JSON filter, e.g. \'{"topic": "Abortion"}\'')
     args = parser.parse_args(argv)
 
     if args.command == "views":
-        from .views import build
-        manifest = build(args.path)
-        n = sum(len(s["files"]) for s in manifest["shards"])
-        print(f"agent/: {len(manifest['shards'])} shards, {n} files")
+        if args.only in (None, "agent"):
+            from .views import build
+            manifest = build(args.path)
+            n = sum(len(s["files"]) for s in manifest["shards"])
+            print(f"agent/: {len(manifest['shards'])} shards, {n} files")
+        if args.only in (None, "site"):
+            from .site import build as build_site
+            manifest = build_site(args.path)
+            print(f"docs/: {len(manifest['files'])} files")
         return 0
     if args.command == "search":
         from .check import Repo
