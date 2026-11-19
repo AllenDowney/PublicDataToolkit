@@ -678,7 +678,7 @@ Either way, `sources.yaml` should stop calling 0.8.2 a 7224r3a source once 0.9 i
 - **Links (50 written).**
   - racopen r3→r3a (`same_item`, `data_revised`), from the R3a notes, p. 1.
   - `same_item` for the other 49, by rule `gss_same_name_same_item`. A name in two consecutive releases that the notes don't mention is unchanged; NORC lists the exceptions in its notes.
-  - Still pending, because they need r1 or r2 records: 427 links from the notes, plus 48 within-release `derived_from` links whose ends (`migage`/`mighist`, `vote_ts`/`pres_ts` and their sources) are not in the slice.
+  - Still pending (477, listed in `build/links_report.md`): 445 cross-release links from the notes, which need r1 or r2 records or name variables outside the slice, and 32 within-release `derived_from` links (`migage`/`mighist`, `vote_ts`/`pres_ts`) whose ends are outside the slice.
 - **The slice is unchanged:** 50 variables per release.
 - **Deferred:** `vote_ts` and `pres_ts` (and every name gssrdoc lacks) need a fallback to the R3a codebook and Stata file. That fallback goes with the full-release build, where it can be tested on all 40 names (coordinator, 2026-11-19).
 - **For the eval thread:**
