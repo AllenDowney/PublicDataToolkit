@@ -410,6 +410,16 @@ Search results label themselves `complete`, `complete_by_rule` or `approximate`,
 - **Line form** uses question text, else `[description]`, else `[notes]`.
 - **SKILL.md** now uses §7's wording: when two filters return the same set, report the stronger label.
 
+**Blind tests on `pdt-gss/agent/`** (Sonnet, given only a copy of `agent/`; questions: the abortion items with years and ballots, `abany`'s codes and their origin, and from test 3 on, whether `abany` was asked in 1986):
+
+| Test | Shards | Tokens read | Result |
+|---|---|---|---|
+| 1 | full JSONL | about 3,000 | 7 items, `complete`; said "1986 has no survey" (wrong) |
+| 2 | compact JSONL | about 8,000 (also read JSONL for codes) | all correct except "the release has no 1986 wave" (wrong again) |
+| 3 | line form with waves by form and `(not 1986)` | about 6,000 | all correct: 1986 is a release wave and `abany` skipped it; asked of everyone through 1987, forms A and C from 1988 |
+
+Remaining friction from test 3: the agent first misread the release's wave list (`1982-1991`) and then corrected itself; it isn't sure which of two identical shards to cite until it reads SKILL.md; and `abany` also sits in the "Split Ballots" subject shard, which looks off-topic.
+
 ## Task 15 — Human-readable site: `docs/`
 
 **Status:** `TODO` — ready for a second thread
