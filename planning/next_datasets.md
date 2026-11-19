@@ -90,5 +90,5 @@ Results are recorded in [`missing_codes_design.md`](missing_codes_design.md) §9
 - **NSFG tables:** done; see the board, Task 12.
 - **Full-file round trips:** done for the GSS (6,943 variables), the ANES (1,030) and the NSFG (all three files). All exact. Results are in [`missing_codes_design.md`](missing_codes_design.md) §9. The GSS data file has 6,943 variables, but gssrdoc documents 6,904, so 39 are missing from gssrdoc.
 - **Religion:** added to the GSS and ANES slices for the topic query. The ANES missing-type rule went to version 0.2, to type "form B", "short form" and similar questionnaire versions as `not_asked`.
-- **FARS:** Allen downloaded the 2024 national data (CSV and SAS, with the auxiliary files), the Analytical User's Manual (1975–2024), and NHTSA's Q&A on the auxiliary files (DOT HS 811 364). They're in `~/pdt-fars/data/raw/`. nhtsa.gov and icpsr.umich.edu block headless browsers too.
+- **FARS:** Allen downloaded the 2024 national data (CSV and SAS, with the auxiliary files), the Analytical User's Manual (1975–2024), and NHTSA's Q&A on the auxiliary files (DOT HS 811 364). They're in `../pdt-fars/data/raw/`. nhtsa.gov and icpsr.umich.edu block headless browsers too.
 - **ICPSR contact:** icpsr-help@umich.edu, with a copy to mtfinformation@umich.edu, both from search results and added to the email draft.

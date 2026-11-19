@@ -348,7 +348,7 @@ Likely shape: `metadata/releases/<release>/<table>/variables.jsonl`, a `table` f
 
 **Status:** `DOING` (main thread)
 
-The non-survey case Allen chose. Allen downloaded the 2024 national CSV and SAS files, the auxiliary files, the Analytical User's Manual 1975–2024 (823 pages), and NHTSA's Q&A on the auxiliary files. They're in `~/pdt-fars/data/raw/`; the manual's text is `data/interim/manual.txt`.
+The non-survey case Allen chose. Allen downloaded the 2024 national CSV and SAS files, the auxiliary files, the Analytical User's Manual 1975–2024 (823 pages), and NHTSA's Q&A on the auxiliary files. They're in `../pdt-fars/data/raw/`; the manual's text is `data/interim/manual.txt`.
 
 **What FARS tests:**
 - **Tables:** 33 data files, keyed by `ST_CASE`, `VEH_NO` and `PER_NO`.
@@ -374,7 +374,7 @@ The comparison of the manual's labels with the data's labels already works, and 
 
 **Terms:** NHTSA's manual has a disclaimer, no license, and "available to the public"; it's a US government work. Allen decided on 2026-11-19: everything `ship`.
 
-**Files:** `~/pdt-fars/` only.
+**Files:** `../pdt-fars/` only.
 
 ## Task 14 — Agent views: `agent/` index and shards
 
@@ -474,9 +474,9 @@ The ANES build found likely errors (Task 5, step 3):
 - some Sources omit 1954 or 2012;
 - there are undocumented codes: `-1` (VCF0806, VCF9236), `-8` and `-4`.
 
-Check each one against the PDF codebook (`~/pdt-anes-cdf/data/raw/`) and ANES's "Data Alerts" (a person may need to open the page). Record the confirmed ones in `metadata/corrections.jsonl` with evidence, and draft a report to anes-project@umich.edu for Allen to send.
+Check each one against the PDF codebook (`../pdt-anes-cdf/data/raw/`) and ANES's "Data Alerts" (a person may need to open the page). Record the confirmed ones in `metadata/corrections.jsonl` with evidence, and draft a report to anes-project@umich.edu for Allen to send.
 
-**Files:** `~/pdt-anes-cdf/` only; the draft goes in this task's section or a new `planning/` file.
+**Files:** `../pdt-anes-cdf/` only; the draft goes in this task's section or a new `planning/` file.
 
 ## Task 21 — GSS follow-ups
 
@@ -486,7 +486,7 @@ Check each one against the PDF codebook (`~/pdt-anes-cdf/data/raw/`) and ANES's 
 - **Pin gssrdoc,** or decide to build from NORC sources (plan §10 item 3; ask Allen).
 - **Links between releases:** parse the "What's New" and Release Variables PDFs (in CultureWar's `data/raw/`) to build `links.jsonl` between 7224r3 and 7224r3a.
 
-**Files:** `~/pdt-gss/` only.
+**Files:** `../pdt-gss/` only.
 
 ## Task 22 — NSFG question text and earlier cycles
 
@@ -495,7 +495,7 @@ Check each one against the PDF codebook (`~/pdt-anes-cdf/data/raw/`) and ANES's 
 - **Question text:** the codebooks give item references ("AD-7b") but no wording. Find the CAPI questionnaire documents on the CDC site, and add `questions` to records by item reference.
 - **Earlier cycles:** add 2017–2019 as a second release (data and download code in MarriageNSFG; codebooks from CDC), and link items across cycles.
 
-**Files:** `~/pdt-nsfg/` only.
+**Files:** `../pdt-nsfg/` only.
 
 ## Task 23 — Answer keys for the topic and structural queries
 
