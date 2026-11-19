@@ -142,3 +142,20 @@ def test_correction_evidence_quote(tmp_path):
     root = make_repo(tmp_path, corrections=[c])
     site.build(root)
     assert "<blockquote>code 9: 1,204 cases</blockquote>" in read(root, "variables/r1/q2.html")
+
+
+def test_code_history_table(repo_dir):
+    history = {"id": "q1", "table": None, "name": "q1", "names": [{"name": "Q1OLD", "waves": {"from": 1975, "to": 1979}},
+                                                               {"name": "q1", "waves": {"from": 1980}}],
+               "periods": [{"from": 1975, "to": 1979}, {"from": 1980, "to": 1980}, {"from": 1981}],
+               "attributes": [{"label": "Unknown", "codes": [9, 9, None]},
+                              {"label": "Reported as Unknown", "codes": [None, None, 9]}],
+               "origin": {"origin": "publisher", "source": "cb", "location": "p. 78"}}
+    write_jsonl(repo_dir / "metadata" / "histories.jsonl", [history])
+    site.build(repo_dir)
+    page = read(repo_dir, "variables/r1/q1.html")
+    assert "Code history" in page and "p. 78" in page
+    assert "<th>1975–1979</th><th>1980</th><th>1981–</th>" in page
+    assert "<td>Reported as Unknown</td><td>—</td><td>—</td><td><code>9</code></td>" in page
+    assert "Q1OLD (1975–1979)" in page
+    assert "Code history" not in read(repo_dir, "variables/r1/q2.html")

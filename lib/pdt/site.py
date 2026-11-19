@@ -57,6 +57,13 @@ class Site:
                      for a in rec.get("availability") or [] if "wave" in a}
             self.waves[rel] = sorted(found, key=sort_key)
         self.corrections = {c["id"]: c for c in self.repo.corrections}
+        self.histories = {}
+        hist = self.root / "metadata" / "histories.jsonl"
+        if hist.exists():
+            for line in hist.read_text().splitlines():
+                if line.strip():
+                    h = json.loads(line)
+                    self.histories[(h.get("table"), h["name"])] = h
         self.signature = {}
         for d in self.repo.derived:
             for rel, tab, rec in self.index.entries:
@@ -327,6 +334,10 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             body.append(f"<h2>Availability</h2><p>{esc(availability_line(rec, self.waves[rel], self.dim_label("form")))}</p>")
             body.append(self.availability_table(rec, self.waves[rel]))
 
+        history = self.histories.get((tab, rec["name"]))
+        if history:
+            body.append(self.history_table(history))
+
         if rec.get("notes"):
             notes = rec["notes"] if isinstance(rec["notes"], list) else [rec["notes"]]
             body.append(f"<h2>Notes{mark(applied, '/notes')}</h2>" + "".join(text_block(n) for n in notes))
@@ -424,6 +435,27 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             rows.append(row)
         note = '<p class="origin">Cells give the number of non-missing responses when known.</p>'
         return table([self.dim_label("wave")] + cols, rows, numeric=True) + note
+
+    def history_table(self, h):
+        """The publisher's code history (STANDARD.md §5.4): periods across, attributes down."""
+        def period(p):
+            if "to" not in p:
+                return f"{p['from']}–"
+            return str(p["from"]) if p["to"] == p["from"] else f"{p['from']}–{p['to']}"
+        rows = [[esc(a["label"])] + [f"<code>{esc(c)}</code>" if c is not None else "—" for c in a["codes"]]
+                for a in h.get("attributes", [])]
+        parts = [f"<h2>Code history</h2><p>Codes by {esc(self.dim_label('wave'))} range, as the "
+                 f"publisher documents them; — where it shows none. "
+                 f'<span class="origin">{esc(origin_text(h["origin"]))}'
+                 f'{", " + esc(h["origin"]["location"]) if h["origin"].get("location") else ""}</span></p>']
+        renamed = [n for n in h.get("names", []) if n.get("name") != h["name"]]
+        if renamed:
+            parts.append(dl([("Earlier names", esc("; ".join(
+                f"{n['name']} ({period(n['waves'])})" for n in renamed)))]))
+        if h.get("note"):
+            parts.append(f"<p>{esc(h['note'])}</p>")
+        parts.append(table(["Attribute"] + [period(p) for p in h.get("periods", [])], rows))
+        return "\n".join(parts)
 
     def links_for(self, rel, tab, name):
         out = []
