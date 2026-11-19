@@ -283,10 +283,65 @@ def check_references(repo, result):
                 for col in ref["columns"]:
                     if names_here and col not in names_here:
                         result.fail("C2", f"table {r['id']}/{t['id']}: reference column {col} has no record")
+                if "target_columns" in ref and len(ref["target_columns"]) != len(ref["columns"]):
+                    result.fail("C2", f"table {r['id']}/{t['id']}: reference to {ref['table']} has "
+                                      f"{len(ref['columns'])} columns but {len(ref['target_columns'])} target_columns")
+                target_names = {rec["name"] for rec in repo.tables[r["id"]].get(ref["table"], [])} if same else set()
+                for col in ref.get("target_columns", []):
+                    if target_names and col not in target_names:
+                        result.fail("C2", f"table {r['id']}/{t['id']}: target column {col} has no record "
+                                          f"in table {ref['table']}")
+    check_name_reuse(repo, result)
     used = {d["source"] for d in walk([repo.records, repo.groups, repo.links, repo.annotations])
             if isinstance(d.get("source"), str)}
     for s in sorted(used - source_ids):
         result.fail("C2", f"provenance names unknown source {s}")
+
+
+def check_name_reuse(repo, result):
+    """C2 (warns): a name in two releases whose records aren't linked to each other, while one of
+    them is linked to a different name in the other release.
+
+    In a dataset that renumbers its variables in each release (the YRBSS combined datasets:
+    q26 is "Considered suicide" in sadc-2021 and "Sad or hopeless" in sadc-2023), the same
+    name can mean different items, and a user who matches by name gets the wrong one.
+    """
+    dataset_id = repo.dataset.get("id")
+
+    def end(ref):
+        return ref["release"], ref.get("table"), ref["name"]
+
+    pairs = set()
+    for link in repo.links:
+        a, b = link["from"], link["to"]
+        if a.get("dataset", dataset_id) != dataset_id or b.get("dataset", dataset_id) != dataset_id:
+            continue
+        if a["release"] != b["release"]:
+            pairs.add((end(a), end(b)))
+            pairs.add((end(b), end(a)))
+    partners = {}
+    for x, y in pairs:
+        partners.setdefault((x, y[0]), set()).add(y)            # (record, other release) -> linked records
+    where = {}
+    for rel, ts in repo.tables.items():
+        for tab, recs in ts.items():
+            for r in recs:
+                where.setdefault((tab, r["name"]), []).append(rel)
+    for (tab, name), rels in sorted(where.items(), key=lambda kv: (str(kv[0][0]), kv[0][1])):
+        for i, ra in enumerate(rels):
+            for rb in rels[i + 1:]:
+                a, b = (ra, tab, name), (rb, tab, name)
+                if (a, b) in pairs:
+                    continue
+                others = [(x, y) for x, y in ((a, partners.get((a, rb), set())), (b, partners.get((b, ra), set())))
+                          if any(p[2] != name for p in y)]
+                if others:
+                    x, y = others[0]
+                    to = sorted(f"{p[0]}/{p[2]}" for p in y)
+                    label = f"{tab}/{name}" if tab else name
+                    result.report("C2", f"warning: {label} is in {ra} and {rb}, but the two aren't linked; "
+                                        f"{x[0]}/{name} is linked to {', '.join(to)}, so the name may mean "
+                                        "a different item in each release")
 
 
 def check_provenance(repo, result):
@@ -619,14 +674,15 @@ def check_keys_in_data(release, tables, frames, result):
                 continue
             target, _ = frames[(release, ref["table"])]
             cols, when = ref["columns"], ref.get("when")
+            tcols = ref.get("target_columns", cols)   # the target's names, when they differ (CPS FH_SEQ -> H_SEQ)
             needed = cols + ([when["column"]] if when else [])
-            if absent := [c for c in needed if c not in frame] + [c for c in cols if c not in target]:
+            if absent := [c for c in needed if c not in frame] + [c for c in tcols if c not in target]:
                 result.report("C12", f"{name} -> {ref['table']}: skipped, columns not in the data: {listed(absent)}")
                 continue
             rows = frame
             if when:
                 rows = frame[frame[when["column"]].map(lambda x: any(same_value(x, v) for v in when["in"]))]
-            have = set(map(tuple, target[cols].dropna().astype(object).itertuples(index=False)))
+            have = set(map(tuple, target[tcols].dropna().astype(object).itertuples(index=False)))
             unmatched = sum(tuple(k) not in have for k in rows[cols].astype(object).itertuples(index=False))
             if unmatched:
                 cond = f" when {when['column']} in {when['in']}" if when else ""

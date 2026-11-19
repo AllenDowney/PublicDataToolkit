@@ -218,3 +218,22 @@ def test_c5_data_waves_limits_the_check(tmp_path):
     tables = [dict(TABLES[0], data_waves=["2020", "2021"]), TABLES[1]]
     root = make_data_repo(tmp_path / "b", crash_recs=recs, tables=tables)
     assert not [m for m in reports(run(root), "C5") if "crash" in m]
+
+
+def test_c12_reference_with_target_columns(tmp_path):
+    """A reference whose columns have other names in the target (CPS FH_SEQ -> H_SEQ) is checked,
+    not skipped: here person's PNO refers to crash's ID."""
+    tables = [TABLES[0], dict(TABLES[1], references=[{"columns": ["PNO"], "table": "crash",
+                                                      "target_columns": ["ID"]}])]
+    result = run(make_data_repo(tmp_path, tables=tables))
+    assert not failures(result, "C12") and not failures(result, "C2")
+    assert not [r for r in reports(result, "C12") if "skipped" in r]
+    person = PERSON.assign(PNO=[1, 2, 1, 8])
+    msgs = failures(run(make_data_repo(tmp_path / "b", tables=tables, person=person)), "C12")
+    assert msgs == ["C12: r1/person (PNO) -> crash: 1 of 4 rows without a match"]
+
+
+def test_c2_target_columns_need_records(tmp_path):
+    tables = [TABLES[0], dict(TABLES[1], references=[{"columns": ["PNO"], "table": "crash",
+                                                      "target_columns": ["NOPE"]}])]
+    assert any("target column NOPE" in f for f in failures(run(make_data_repo(tmp_path, tables=tables)), "C2"))

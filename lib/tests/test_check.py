@@ -351,3 +351,43 @@ def test_history_ids_unique(tmp_path):
     write_jsonl(root / "metadata" / "histories.jsonl", [HISTORY, HISTORY])
     assert any("duplicate id" in f for f in failed(run(root), "C1"))
 
+
+
+def renumbered_repo(root, links):
+    """Two releases that renumber their items, as the YRBSS combined datasets do."""
+    root.mkdir(parents=True, exist_ok=True)
+    dataset = dict(DATASET, releases=[dict(DATASET["releases"][0], id="r1"),
+                                      dict(DATASET["releases"][0], id="r2", label="Release 2")])
+    def rec(release, name, text):
+        return {"dataset": "toy", "release": release, "name": name, "questions": [{"text": text}],
+                "provenance": {"record": PUBLISHER}}
+    make_repo(root, dataset=dataset, variables=[rec("r1", "q25", "Sad?"), rec("r1", "q26", "Suicide?"),
+                                                 rec("r1", "q1", "Agree?"), rec("r1", "q2", "And this?")],
+              groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl",
+                [rec("r2", "q26", "Sad?"), rec("r2", "q27", "Suicide?")])
+    rule = {"origin": "rule", "rule": "crosswalk", "source": "cb"}
+    write_jsonl(root / "metadata" / "links.jsonl",
+                [{"from": {"release": "r1", "name": a}, "to": {"release": "r2", "name": b},
+                  "relations": ["same_item", "renamed"] if a != b else ["same_item"], "origin": rule}
+                 for a, b in links])
+    return root
+
+
+def name_reuse(result):
+    return [r for r in result.reports if r.startswith("C2: warning")]
+
+
+def test_c2_warns_on_name_reuse_across_releases(tmp_path):
+    result = run(renumbered_repo(tmp_path, [("q25", "q26"), ("q26", "q27")]))
+    assert result.ok, result.failures
+    assert name_reuse(result) == [
+        "C2: warning: q26 is in r1 and r2, but the two aren't linked; r1/q26 is linked to r2/q27, "
+        "so the name may mean a different item in each release"]
+
+
+def test_c2_no_warning_when_the_name_is_linked_or_nothing_is(tmp_path):
+    assert not name_reuse(run(renumbered_repo(tmp_path / "a", [("q26", "q26")])))
+    assert not name_reuse(run(renumbered_repo(tmp_path / "b", [])))       # no links: nothing to compare
+    # Only one direction linked elsewhere is enough: r2's q26 is linked from r1's q25.
+    assert len(name_reuse(run(renumbered_repo(tmp_path / "c", [("q25", "q26")])))) == 1
