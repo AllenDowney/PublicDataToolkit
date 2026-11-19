@@ -177,6 +177,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (red)`. The catalog, and the agent index where it fits, collapse a variable's lines across releases by its links (same item, renamed, relabeled), showing its names and release span; a change of meaning keeps lines apart but shows them together. Details: [`planning/tasks/task-44.md`](planning/tasks/task-44.md).
 
+### Task 45 — A PISA slice
+
+`DOING (purple)`. The OECD's PISA student questionnaire (2012, 2015, 2018, 2022) in `~/pdt-pisa`: design and replicate weights, demographics, sense of belonging, one plausible-value set, for a few countries. Details: [`planning/tasks/task-45.md`](planning/tasks/task-45.md).
+
 
 
 
