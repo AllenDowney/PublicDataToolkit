@@ -118,6 +118,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DONE (instructions)`. The Copier template: `copier.yml` at the toolkit's root, `templates/template/`, tagged `v0.1.0` locally (not pushed); `copier copy` and `copier update` tested. Details: [`planning/tasks/task-28.md`](planning/tasks/task-28.md).
 
+### Task 29 — A YRBSS slice
+
+`DOING (yrbss)`. A slice of CDC's Youth Risk Behavior Survey (high school, 1991–2023) in `~/pdt-yrbss`, built from the Copier template: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-29.md`](planning/tasks/task-29.md).
+
 ## Working in parallel
 
 Several Claude threads work at once. The coordinator is the thread named **"main: standard + FARS"**. It assigns tasks, decides questions about the standard (or takes them to Allen), and owns `STANDARD.md`, `schema/`, `PROPOSAL.md`, `planning/plan.md` and this board's structure.
