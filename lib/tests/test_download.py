@@ -173,14 +173,47 @@ def test_release_splits_with_corrected_records(tmp_path):
 
 
 @pytest.mark.parametrize("terms, redistribution", [("unknown", "ship"), ("ship", "build-only")])
-def test_release_refuses_unless_ship(tmp_path, terms, redistribution):
+def test_local_build_always_package_only_ship(tmp_path, terms, redistribution):
     root = make_repo(tmp_path, dataset=dict(DATASET, terms=dict(DATASET["terms"], data=terms)))
     sources = yaml.safe_load((root / "sources.yaml").read_text())
-    sources["sources"][0]["redistribution"] = redistribution
+    sources["sources"][0].update(redistribution=redistribution, path="data/raw/cb.pdf")
     (root / "sources.yaml").write_text(yaml.safe_dump(sources))
-    reader = lambda rel, tab, names: (raw_frame(), "cb")
-    with pytest.raises(ValueError, match="ship"):
-        release.write_release(root, reader, log=lambda *a: None)
-    assert not (root / "data" / "processed").exists() or not any((root / "data" / "processed").iterdir())
-    path, = release.write_release(root, reader, log=lambda *a: None, local=True)
-    assert "ship" in data.identity_of(path)["local_only"]
+    (root / "data" / "raw").mkdir(parents=True)
+    (root / "data" / "raw" / "cb.pdf").write_text("publisher file")
+    path, = release.write_release(root, lambda rel, tab, names: (raw_frame(), "cb"), log=lambda *a: None)
+    assert "ship" in data.identity_of(path)["local_only"]          # built, and marked
+    with pytest.raises(ValueError, match="nothing written"):
+        release.package(root, log=lambda *a: None)
+    assert not (root / "data" / "release").exists()
+
+
+def test_package_ship(tmp_path):
+    root = make_repo(tmp_path)
+    sources = yaml.safe_load((root / "sources.yaml").read_text())
+    sources["sources"][0]["path"] = "data/raw/cb.pdf"
+    (root / "sources.yaml").write_text(yaml.safe_dump(sources))
+    with pytest.raises(ValueError, match="missing"):
+        release.package(root, log=lambda *a: None)
+    (root / "data" / "raw").mkdir(parents=True)
+    (root / "data" / "raw" / "cb.pdf").write_text("publisher file")
+    release.write_release(root, lambda rel, tab, names: (raw_frame(), "cb"), log=lambda *a: None)
+    out = release.package(root, log=lambda *a: None)
+    assert sorted(p.name for p in out.iterdir()) == ["SHA256SUMS", "cb.pdf", "toy-r1.parquet"]
+    assert sha("publisher file") + "  cb.pdf" in (out / "SHA256SUMS").read_text()
+
+
+def test_read_stata_dictionary(tmp_path):
+    from pdt import readers
+    dct = tmp_path / "x.dct"
+    dct.write_text('dictionary {\n_lines(1)\n'
+                   '    _column(1)  long  caseid  %5f  "Case"\n'
+                   '    _column(6)  byte  pregend %1f  "End"\n'
+                   '    _column(7)  double wgt    %8f  "Weight"\n'
+                   '    _column(15) str3  code    %3s  "Code"\n}\n')
+    dat = tmp_path / "x.dat"
+    dat.write_text("12345 1234.567abc\n678901    2.5   \n")
+    raw = readers.read_stata_dictionary(dat, dct, ["CASEID", "pregend", "wgt", "code"])
+    assert raw["CASEID"].tolist() == [12345, 67890]
+    assert raw["pregend"].tolist()[0] == data.Code(".") and raw["pregend"].tolist()[1] == 1
+    assert raw["wgt"].tolist() == [1234.567, 2.5]
+    assert raw["code"].tolist()[0] == "abc"

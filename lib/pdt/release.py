@@ -15,10 +15,13 @@ as the views and the export apply them (STANDARD.md §8). The file's identity ho
 both files' SHA-256 and lists the corrections applied, with their confidence, so an
 inferred correction is visible in the data itself.
 
-Only data whose terms allow it is packaged: terms.data and the source's redistribution
-must both be `ship` (STANDARD.md §9). `local=True` builds the files anyway, for use on
-this machine (by extract.py, say); their identity says `local_only`, and the upload
-step refuses them.
+Building data/processed/ is allowed for any terms: it's for this machine (extract.py
+reads it). Only publishing is blocked (STANDARD.md §9). A file whose terms.data or
+source isn't `ship` says why in its identity (`local_only`), and `package` refuses to
+put it in a release asset, before writing anything.
+
+    package(root) -> data/release/<dataset>-data/   the publisher's data files, unchanged,
+                                                    the common-format files, and SHA256SUMS
 
 For each release, or each table of a release with tables, this writes
 `data/processed/<dataset>-<release>[-<table>].parquet` holding the variables the
@@ -97,13 +100,10 @@ def check_terms(dataset, source):
     return None
 
 
-def write_one(root, repo, release, table, raw, source_id, log=print, local=False):
+def write_one(root, repo, release, table, raw, source_id, log=print):
     root = Path(root)
     sources = {s["id"]: s for s in yaml.safe_load((root / "sources.yaml").read_text())["sources"]}
     refusal = check_terms(repo.dataset, sources.get(source_id, {"id": source_id}))
-    if refusal and not local:
-        raise ValueError(f"{release}" + (f"/{table}" if table else "") + f": {refusal}; nothing written "
-                         "(use local=True to build it for this machine only)")
     records, applied = corrected_records(repo, release, table)
     missing = [n for n in records if n not in raw.columns]
     if missing:
@@ -137,17 +137,14 @@ def write_one(root, repo, release, table, raw, source_id, log=print, local=False
     codes = sum(1 for c in back.columns if c.endswith(data.CODE_SUFFIX))
     log(f"  {out.relative_to(root)}: {len(back):,} rows, {len(records)} variables, "
         f"{codes} code columns, {len(applied)} corrections; round trip exact"
-        + ("; LOCAL ONLY, not for release" if refusal else ""))
+        + (f"; local only, not for release: {refusal}" if refusal else ""))
     return out
 
 
-def write_release(root, reader, releases=None, log=print, local=False):
+def write_release(root, reader, releases=None, log=print):
     """Write every release (and table) the reader can read. Returns the paths written."""
     root = Path(root)
     repo = Repo.load(root)
-    refusal = check_terms(repo.dataset, {"id": "-", "redistribution": "ship"})
-    if refusal and not local:
-        raise ValueError(f"{refusal}; nothing written (use local=True to build for this machine only)")
     written = []
     for (release, table) in release_files(repo.dataset):
         if releases and release not in releases:
@@ -158,5 +155,67 @@ def write_release(root, reader, releases=None, log=print, local=False):
             log(f"  skipped {release}" + (f"/{table}" if table else "") + ": the reader can't read its source")
             continue
         raw, source_id = got
-        written.append(write_one(root, repo, release, table, raw, source_id, log=log, local=local))
+        written.append(write_one(root, repo, release, table, raw, source_id, log=log))
     return written
+
+
+RELEASE = Path("data") / "release"
+
+
+def package(root, log=print):
+    """Assemble the data release asset: publisher's data files, common-format files, SHA256SUMS.
+
+    Refuses, before writing anything, if terms.data isn't ship, if any common-format
+    file is local_only or missing, or if a publisher data file isn't ship or is missing.
+    Nothing is uploaded; a person publishes the directory as a GitHub release.
+    """
+    import hashlib
+    import shutil
+    root = Path(root)
+    repo = Repo.load(root)
+    problems = []
+    terms = check_terms(repo.dataset, {"id": "-", "redistribution": "ship"})
+    if terms:
+        problems.append(terms)
+    sources = {s["id"]: s for s in yaml.safe_load((root / "sources.yaml").read_text())["sources"]}
+    files = []
+    for (release, table), name in release_files(repo.dataset).items():
+        path = root / PROCESSED / name
+        if not path.exists():
+            problems.append(f"{name} is missing; run make data")
+            continue
+        ident = data.identity_of(path)
+        if ident.get("local_only"):
+            problems.append(f"{name}: {ident['local_only']}")
+        src = sources.get(ident.get("source"))
+        if src is None:
+            problems.append(f"{name}: its source {ident.get('source')!r} isn't in sources.yaml")
+            continue
+        files.append(path)
+        # every publisher data file of the release (or table), e.g. a .dat and its .dct
+        r = next(r for r in repo.dataset["releases"] if r["id"] == release)
+        ids = next(t for t in r["tables"] if t["id"] == table).get("sources", r["sources"]) if table else r["sources"]
+        for sid in dict.fromkeys([src["id"]] + [i for i in ids if sources.get(i, {}).get("kind") == "data"]):
+            s = sources[sid]
+            refusal = check_terms(repo.dataset, s)
+            if refusal:
+                problems.append(f"{sid}: {refusal}")
+            publisher = root / s["path"] if s.get("path") else None
+            if publisher is None or not publisher.exists():
+                problems.append(f"{sid}: {s.get('path')} is missing")
+            else:
+                files.append(publisher)
+    if problems:
+        raise ValueError("not packaged, nothing written:\n  " + "\n  ".join(dict.fromkeys(problems)))
+    out = root / RELEASE / f"{repo.dataset['id']}-data"
+    if out.exists():
+        shutil.rmtree(out)
+    out.mkdir(parents=True)
+    sums = []
+    for f in dict.fromkeys(files):
+        target = out / f.name
+        shutil.copyfile(f, target)
+        sums.append(f"{hashlib.sha256(target.read_bytes()).hexdigest()}  {f.name}")
+        log(f"  {target.relative_to(root)}")
+    (out / "SHA256SUMS").write_text("\n".join(sums) + "\n")
+    return out

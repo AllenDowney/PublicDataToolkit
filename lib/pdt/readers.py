@@ -7,6 +7,8 @@ columns asked for, since the files are often much wider than a repo's records.
     read_stata(path, columns)              Stata .dta or .dta.gz; extended missing (.d, .i, .) -> Code
     read_sas(path, columns)                SAS .sas7bdat; system missing -> Code(".")
     read_csv_zip(path, member, columns)    a CSV inside a zip; empty cells stay null
+    read_stata_dictionary(dat, dct, columns)   fixed-width text described by a Stata .dct;
+                                           a blank numeric field is Stata's missing -> Code(".")
 """
 
 import io
@@ -68,3 +70,49 @@ def read_csv_zip(path, member, columns, encoding="latin-1"):
         frame = pd.read_csv(io.TextIOWrapper(f, encoding=encoding), usecols=columns,
                             low_memory=False)[columns]
     return frame.astype(object).where(frame.notna(), None)
+
+
+DCT_LINE = re.compile(r'_column\((\d+)\)\s+(\S+)\s+(\S+)\s+%(\d+)(?:\.\d+)?([a-z])', re.IGNORECASE)
+
+
+def parse_dct(path):
+    """[(name, start (0-based), width, stata type)] from a Stata dictionary's _column lines."""
+    out = []
+    for line in open(path, encoding="latin-1"):
+        m = DCT_LINE.search(line)
+        if m:
+            out.append((m.group(3), int(m.group(1)) - 1, int(m.group(4)), m.group(2).lower()))
+    return out
+
+
+def _number(text):
+    try:
+        return int(text)
+    except ValueError:
+        return float(text)
+
+
+def read_stata_dictionary(dat, dct, columns, encoding="latin-1"):
+    """Fixed-width data described by a Stata .dct, as a raw frame.
+
+    Names match case-insensitively (the NSFG's .dct writes caseid; records may write
+    CASEID), and the frame uses the names asked for. Numeric fields are int or float;
+    a blank numeric field is Stata's system missing, Code("."). String fields stay text.
+    """
+    layout = {name.lower(): (start, width, kind) for name, start, width, kind in parse_dct(dct)}
+    missing = [c for c in columns if c.lower() not in layout]
+    if missing:
+        raise KeyError(f"{dct}: no column(s) {missing}")
+    specs = [layout[c.lower()] for c in columns]
+    frame = pd.read_fwf(dat, colspecs=[(start, start + width) for start, width, _ in specs],
+                        names=list(columns), dtype=str, header=None, encoding=encoding,
+                        keep_default_na=False, delimiter="\n")
+    out = {}
+    for name, (_, _, kind) in zip(columns, specs):
+        cells = frame[name].tolist()
+        if kind.startswith("str"):
+            out[name] = pd.Series(cells, dtype=object)
+        else:
+            out[name] = pd.Series([Code(".") if not c.strip() else _number(c.strip()) for c in cells],
+                                  dtype=object)
+    return pd.DataFrame(out)

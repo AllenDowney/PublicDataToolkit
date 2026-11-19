@@ -20,11 +20,22 @@ def main(argv=None):
     search = sub.add_parser("search", help="search a dataset repo's records; prints a labeled result")
     search.add_argument("path", help="the dataset repo")
     search.add_argument("--filter", required=True, help='a JSON filter, e.g. \'{"topic": "Abortion"}\'')
+    pkg = sub.add_parser("package", help="assemble the data release asset in data/release/ (ship data only)")
+    pkg.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
     download = sub.add_parser("download", help="fetch a dataset repo's sources (see pdt download -h)",
                               add_help=False)
     download.add_argument("rest", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
 
+    if args.command == "package":
+        from .release import package
+        try:
+            out = package(args.path)
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            return 1
+        print(f"wrote {out}; publish it as a GitHub release by hand")
+        return 0
     if args.command == "download":
         from .download import main as download_main
         return download_main(args.rest)
