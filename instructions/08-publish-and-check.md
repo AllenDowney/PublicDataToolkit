@@ -11,10 +11,10 @@
 3. **Write CLAUDE.md** for agents working *in* the repo: which files are generated and by what, which are hand-written, how to build and check, and where terms questions go. Copy the shape of [`pdt-gss/CLAUDE.md`](../../pdt-gss/CLAUDE.md), and add the dataset's own traps (pdt-nsfg's: "Watch for page-break headers and margin boxes").
 4. **The data release,** only when `terms.data` is `ship`:
    - the publisher's files, unchanged, with SHA-256 sums;
-   - the same data in the common format (§8), written with `pdt.data`. The build proves the conversion is lossless by rebuilding every cell. Every file tried so far round-trips exactly: the full GSS (6,943 variables), the full ANES CDF, all three NSFG files, and the FARS tables in the slice ([`missing_codes_design.md`](../planning/missing_codes_design.md) §9, board Tasks 12 and 13).
+   - the same data in the common format (§8), written with `pdt.data`. The build proves the conversion is lossless by rebuilding every cell. Every file tried so far round-trips exactly: the full GSS (6,943 variables), the full ANES CDF, all three NSFG files, and the FARS tables in the slice ([`missing_codes_design.md`](../planning/missing_codes_design.md) §9; [Task 12](../planning/tasks/task-12.md), [Task 13](../planning/tasks/task-13.md)).
 
    `pdt.release` (Task 18) writes the common-format files to `data/processed/` and checks the round trip; pdt-nsfg's `make data` shows how. Publishing the GitHub release waits for a person (below).
-5. **Record findings on the project board,** in the task's section: what the build found, what ended up in extensions and why, and what's still open.
+5. **Record findings in the task's file,** `planning/tasks/task-NN.md`, and keep its entry on the board current: what the build found, what ended up in extensions and why, and what's still open.
 
 ## Check before moving on
 

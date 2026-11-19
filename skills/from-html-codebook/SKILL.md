@@ -28,7 +28,7 @@ Example: [`pdt-anes-cdf/build/build_slice.py`](../../../pdt-anes-cdf/build/build
 
 ## Verify against the data
 
-- [ ] **Codes (C4):** every code in the data is in Valid or Missing. The ANES build found `-1`, `-8`, `-4` and an undocumented code 2, all real codebook gaps (board Task 20).
+- [ ] **Codes (C4):** every code in the data is in Valid or Missing. The ANES build found `-1`, `-8`, `-4` and an undocumented code 2, all real codebook gaps ([Task 20](../../planning/tasks/task-20.md)).
 - [ ] **Years (C5):** Sources vs the years with data. Six variables' Sources omit a year that has data.
 - [ ] **Coverage (C3)** over the whole codebook. A scan of every entry ([`pdt-anes-cdf/build/scan_codebook_vs_data.py`](../../../pdt-anes-cdf/build/scan_codebook_vs_data.py)) is a useful screen, but summary indexes without a Valid section show up as false positives.
 

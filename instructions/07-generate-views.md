@@ -6,7 +6,7 @@
 
 ## Do
 
-1. **Derived properties** come from named, versioned rules, such as `scale_signature_from_valid_labels`. The build writes them to `metadata/derived/<property>.jsonl` (today each repo's build has its own copy of the rule; the standard puts them in the shared library). They support `complete_by_rule` results. Topic tags and aliases are annotations (`metadata/annotations/`, any origin) and only ever support `approximate` results.
+1. **Derived properties** come from named, versioned rules, such as `scale_signature_from_valid_labels`. The build writes them to `metadata/derived/<property>.jsonl` (the shared rules are in [`lib/pdt/derived.py`](../lib/pdt/derived.py), Task 27; use them rather than copying a rule into a build). They support `complete_by_rule` results. Topic tags and aliases are annotations (`metadata/annotations/`, any origin) and only ever support `approximate` results.
 2. **Publisher subject lists are groups** of kind `subject` (§5.1), not annotations. gssrdoc's subjects became 23 subject groups in the GSS slice.
 3. **Run `make views`**, which runs `pdt views .`, from the dataset repo. It writes `agent/` (index, `SKILL.md`, shards by release/table, group, subject and scale signature) and `docs/`. Never edit the output.
 4. **Rerun it after every build.** The views carry a hash of their inputs, and C8 fails when they're stale.

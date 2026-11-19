@@ -46,7 +46,7 @@ Read their build scripts in `build/` and their `build/report.md` before writing 
 - **Check every source against the data.** Each of the four builds found documentation that didn't match the data file: gssrdoc documented an older release; the ANES codebook omitted years and codes; NSFG names differ in case; the FARS manual's labels differ from the CSV's. The data file is the arbiter of what exists; the documentation is the arbiter of what it means.
 - **Never hand-edit generated files** (`metadata/releases/`, `groups.jsonl`, `derived/`, `docs/`, `agent/`). Change the build, a hand-written build input (`build/slice.yaml`), or `corrections.jsonl` (STANDARD.md §2).
 - **Write a build report.** Each build writes `build/report.md`: counts, coverage, codes and labels to look at, and the data checks. Read it after every build; it's where problems show up first.
-- **Keep the record of what you did.** Findings and decisions go on the project board, in the task's section.
+- **Keep the record of what you did.** Findings and decisions go in the task's file, `planning/tasks/task-NN.md`, with its short entry on the [project board](../PROJECT_BOARD.md) kept current.
 
 ## What exists today, and what doesn't yet
 
