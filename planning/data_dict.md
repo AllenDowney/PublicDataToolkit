@@ -71,6 +71,28 @@ Exported to data-dict today, there are two choices, and both lose something:
 
 In both, the missing codes either disappear or become nulls. Nulls lose the distinction between "don't know" and "not asked this year." haven's `tagged_na()` and `labelled_spss()` with `na_values` exist to keep exactly that distinction.
 
+## 3a. Evidence from a working export
+
+We've since built the export (PublicDataToolkit Task 16): one `data-dict.yaml` per release for four datasets, GSS, ANES, NSFG and FARS, written from our records. Every file passes `data-dict validate-spec` (data-dict-yaml 0.0.3, spec 0.1.0), and a test passes `validate-data` against a parquet file in our common format.
+
+What the export had to drop or flatten into text:
+
+| | GSS (50 vars) | ANES (37) | NSFG (52) | FARS (40) |
+|---|---|---|---|---|
+| Numeric codes whose labels went to `details` | 47 | 34 | 42 | 24 |
+| Missing codes, typed only in a label's text | 182 | 89 | | |
+
+Also lost or flattened, in all four:
+- availability by wave and form, which becomes one line of text (2,871 entries for the GSS);
+- wording that varies by wave;
+- corrections, of which only the corrected text survives;
+- provenance per field (about 300 per repo);
+- groups, links between releases, derived properties and code histories;
+- conditional joins (FARS person → vehicle "when PER_TYP is 1, 2 or 9");
+- release ids that are neither semver nor a date.
+
+The first row is the main one. An `enum` with `{"1": "yes"}` passes `validate-spec` but fails `validate-meta` (M01: "the data is `number`"), because our value columns hold numbers.
+
 ## 4. Questions
 
 1. **Labels on numeric codes.** Would data-dict consider value labels on `number` columns, or `enum` values that may be integers? Survey data almost always stores coded answers as numbers.
