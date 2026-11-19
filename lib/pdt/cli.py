@@ -1,4 +1,5 @@
-"""Command line: `pdt check [PATH]`, `pdt views [PATH] [--only agent|site|export]`, `pdt search PATH --filter JSON`."""
+"""Command line: `pdt check [PATH]`, `pdt views [PATH] [--only agent|site|export]`, `pdt search PATH --filter JSON`, `pdt search --catalog PATHS --filter JSON`,
+`pdt catalog PATHS --out DIR`."""
 
 import argparse
 import json
@@ -18,8 +19,13 @@ def main(argv=None):
     views.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
     views.add_argument("--only", choices=["agent", "site", "export"], help="generate just one of them")
     search = sub.add_parser("search", help="search a dataset repo's records; prints a labeled result")
-    search.add_argument("path", help="the dataset repo")
+    search.add_argument("path", nargs="+", help="the dataset repo; with --catalog, repos or directories holding them")
     search.add_argument("--filter", required=True, help='a JSON filter, e.g. \'{"topic": "Abortion"}\'')
+    search.add_argument("--catalog", action="store_true",
+                        help="search across every included dataset repo (see pdt catalog)")
+    search.add_argument("--all-releases", action="store_true", help="with --catalog: superseded releases too")
+    cat = sub.add_parser("catalog", help="build a catalog across dataset repos (see pdt catalog -h)", add_help=False)
+    cat.add_argument("rest", nargs=argparse.REMAINDER)
     dif = sub.add_parser("diff", help="compare two releases' records (see pdt diff -h)", add_help=False)
     dif.add_argument("rest", nargs=argparse.REMAINDER)
     pkg = sub.add_parser("package", help="assemble the data release asset in data/release/ (ship data only)")
@@ -60,7 +66,18 @@ def main(argv=None):
             manifest = build_export(args.path)
             print(f"export/data-dict/: {', '.join(manifest['files'])}")
         return 0
+    if args.command == "catalog":
+        from .catalog import main as catalog_main
+        return catalog_main(args.rest)
+    if args.command == "search" and args.catalog:
+        from .catalog import search_catalog
+        result = search_catalog(args.path, json.loads(args.filter), args.all_releases)
+        print(json.dumps(result, indent=1, ensure_ascii=False))
+        return 0
     if args.command == "search":
+        if len(args.path) != 1:
+            parser.error("search takes one repo; use --catalog to search several")
+        args.path = args.path[0]
         from .check import Repo
         from .search import Index, search as run_search
         result = run_search(Index.from_repo(Repo.load(args.path)), json.loads(args.filter))
