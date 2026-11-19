@@ -5,7 +5,7 @@ the extract has no analysis choices of its own. A dataset repo's
 `scripts/extract.py` calls `main`; code can call `extract`.
 
     extract(root, release, variables, table=None, missing=None, unresolved=None,
-            waves=None, codes=False) -> Extract(frame, report)
+            waves=None, codes=False, not_asked_from_availability=False) -> Extract(frame, report)
 
 - Reads `data/processed/<dataset>-<release>[-<table>].parquet` (`make data` writes it)
   and warns if it was built from other records or other corrections.
@@ -19,6 +19,10 @@ the extract has no analysis choices of its own. A dataset repo's
   dataset whose waves are its releases (the NSFG) has no wave column; pick the
   release instead.
 - `codes=True` keeps each variable's code column (`<name>__code`) beside it.
+- `not_asked_from_availability=True` (off by default) splits a missing code whose types
+  include not_asked by each variable's availability: not_asked in waves outside it, its
+  other types inside (pdt.data.recode). It needs the dataset's wave column. A cumulative
+  file such as the YRBSS combined datasets uses one blank for both.
 
 The report says what the extract relied on, and in particular every inferred
 correction (STANDARD.md §5.3): a code classified as missing only because of one
@@ -94,7 +98,8 @@ def _typed(series, like):
         return series
 
 
-def extract(root, release, variables, table=None, missing=None, unresolved=None, waves=None, codes=False):
+def extract(root, release, variables, table=None, missing=None, unresolved=None, waves=None, codes=False,
+            not_asked_from_availability=False):
     """The extract asked for, and a report of what it relied on (see the module docstring)."""
     root = Path(root)
     repo = Repo.load(root)
@@ -120,9 +125,9 @@ def extract(root, release, variables, table=None, missing=None, unresolved=None,
         records, applied = corrected(repo, release, table)
         names = [_find(records, n) for n in variables]
         wave_col = (repo.dataset.get("dimensions", {}).get("wave") or {}).get("column")
-        if waves is not None and not wave_col:
+        if (waves is not None or not_asked_from_availability) and not wave_col:
             raise ValueError(f"{repo.dataset['id']} has no wave column; its waves are its releases")
-        wave_name = _find(records, wave_col) if waves is not None else None
+        wave_name = _find(records, wave_col) if waves is not None or not_asked_from_availability else None
         cols = list(dict.fromkeys(names + ([wave_name] if wave_name else [])))
         read_cols = [c for n in cols for c in (n, n + data.CODE_SUFFIX)]
         available = set(pq.read_schema(path).names)
@@ -143,7 +148,14 @@ def extract(root, release, variables, table=None, missing=None, unresolved=None,
         out = {}
         for name in names:
             rec, done = records[name], applied[name]
-            series = data.recode(frame, rec, unresolved=unresolved, inferred=inferred_codes(rec, done), **missing)
+            series = data.recode(frame, rec, unresolved=unresolved, inferred=inferred_codes(rec, done),
+                                 not_asked_from_availability=not_asked_from_availability,
+                                 waves=wave_name if not_asked_from_availability else None, **missing)
+            split = series.attrs.get("not_asked_split")
+            if split and (split["not_asked"] or split["other"]):
+                report.append(f"{name}: not_asked from availability: {split['not_asked']:,} missing values in waves "
+                              f"outside its availability read as not_asked, {split['other']:,} inside it as "
+                              "their other types")
             out[name] = _typed(series, frame[name])
             if codes and name + data.CODE_SUFFIX in frame:
                 out[name + data.CODE_SUFFIX] = frame[name + data.CODE_SUFFIX]
@@ -211,6 +223,9 @@ def main(argv=None):
     p.add_argument("--unresolved", help="a value for unresolved and undocumented codes (default: null)")
     p.add_argument("--waves", help="e.g. 2000-2024 or 1972,1974; uses the dataset's wave column")
     p.add_argument("--codes", action="store_true", help="keep each variable's code column")
+    p.add_argument("--not-asked-from-availability", action="store_true",
+                   help="read a code whose types include not_asked as not_asked outside the variable's "
+                        "availability and as its other types inside it")
     p.add_argument("--out", required=True, help="output file: .parquet or .csv")
     args = p.parse_args(argv)
 
@@ -222,7 +237,8 @@ def main(argv=None):
         missing[key.strip()] = _value(value)
     result = extract(args.root, args.release, names, table=args.table, missing=missing,
                      unresolved=_value(args.unresolved) if args.unresolved is not None else None,
-                     waves=_waves(args.waves) if args.waves else None, codes=args.codes)
+                     waves=_waves(args.waves) if args.waves else None, codes=args.codes,
+                     not_asked_from_availability=args.not_asked_from_availability)
     out = Path(args.out)
     if out.suffix == ".csv":
         result.frame.to_csv(out, index=False)

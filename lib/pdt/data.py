@@ -280,13 +280,29 @@ def _same(a, b):
     return a == b or (isinstance(a, float) and isinstance(b, float) and math.isnan(a) and math.isnan(b))
 
 
-def recode(table, record, unresolved=None, inferred=None, **by_type):
+def _wave_key(w):
+    """A wave as text, so 2021, 2021.0 and "2021" match."""
+    if is_null(w):
+        return None
+    return code_text(w) if is_number(w) else str(w)
+
+
+def recode(table, record, unresolved=None, inferred=None, not_asked_from_availability=False, waves=None,
+           **by_type):
     """Values with missing codes replaced by type, e.g. recode(t, rec, dk="DK", refused="DK").
 
     A code is replaced only when every one of its missing types is given, with
     the same replacement: GSS ".m" ("dk, na, iap") is replaced only if dk,
     no_answer and inap are all given and agree, because ".m" alone doesn't say
     which applies. Other codes stay null.
+
+    not_asked_from_availability (off by default): a missing code whose types include
+    not_asked, such as YRBSS's blank ("no_answer, uncodeable, not_asked"), is split by the
+    record's `availability`. In a row whose wave isn't in it, the question wasn't asked, so
+    the code counts as not_asked only; in a row whose wave is, it counts as its other types.
+    `waves` gives each row's wave: a column of table, or a sequence as long as it. Rows
+    with no wave keep all the code's types. The result's attrs["not_asked_split"] counts
+    the cells read each way: {"not_asked": n outside availability, "other": n inside}.
 
     Unresolved codes, and codes the record doesn't list, are never replaced by
     type: pass unresolved= to handle them; otherwise they stay null and a
@@ -303,15 +319,34 @@ def recode(table, record, unresolved=None, inferred=None, **by_type):
     if code_col not in table:
         return pd.Series(values, index=table.index, dtype=object)
     documented = {code_text(v["code"]): v for v in record.get("values", []) if v["kind"] != "valid"}
+
+    def replace(types):
+        """(True, replacement) if every type is given, with one replacement; else (False, None)."""
+        if types and all(t in by_type for t in types):
+            given = [by_type[t] for t in types]
+            if all(_same(g, given[0]) for g in given):
+                return True, given[0]
+        return False, None
+
     replacement = {}
+    split = {}       # code text -> (outside availability, inside it): each (replaced?, replacement)
     for text, v in documented.items():
         if v["kind"] == "unresolved":
             continue
         types = v.get("missing_types", [])
-        if types and all(t in by_type for t in types):
-            given = [by_type[t] for t in types]
-            if all(_same(g, given[0]) for g in given):
-                replacement[text] = given[0]
+        ok, value = replace(types)
+        if ok:
+            replacement[text] = value
+        if not_asked_from_availability and "not_asked" in types:
+            split[text] = (replace(["not_asked"]), replace([t for t in types if t != "not_asked"] or types))
+    row_waves = None
+    if not_asked_from_availability:
+        if waves is None:
+            raise ValueError(f"{name}: not_asked_from_availability needs each row's wave (waves=)")
+        row_waves = (table[waves] if isinstance(waves, str) else pd.Series(list(waves), index=table.index)).tolist()
+        if len(row_waves) != len(table):
+            raise ValueError(f"{name}: waves has {len(row_waves)} entries for {len(table)} rows")
+        available = {_wave_key(a["wave"]) for a in record.get("availability", [])}
     codes = table[code_col].astype(object).tolist()
     unknown = [c for c in codes if isinstance(c, str)
                and (c not in documented or documented[c]["kind"] == "unresolved")]
@@ -321,9 +356,15 @@ def recode(table, record, unresolved=None, inferred=None, **by_type):
         warnings.warn(f"{name}: {len(unknown)} values have unresolved or undocumented codes, left null{detail}",
                       UnresolvedCodes)
     cells = []
-    for v, c in zip(values, codes):
+    counts = {"not_asked": 0, "other": 0}
+    for i, (v, c) in enumerate(zip(values, codes)):
         if not isinstance(c, str):
             cells.append(v)
+        elif c in split and _wave_key(row_waves[i]) is not None:
+            outside = _wave_key(row_waves[i]) not in available
+            counts["not_asked" if outside else "other"] += 1
+            ok, value = split[c][0 if outside else 1]
+            cells.append(value if ok else None)
         elif c in replacement:
             cells.append(replacement[c])
         elif (c not in documented or documented[c]["kind"] == "unresolved") and unresolved is not None:
@@ -339,4 +380,7 @@ def recode(table, record, unresolved=None, inferred=None, **by_type):
                 else f"left null as {', '.join(v.get('missing_types', [])) or v['kind']}")
         warnings.warn(f"{name}: code {text} ({n} values) is {v['kind']} only because of inferred correction(s) "
                       f"{', '.join(ids)}; {what}", InferredClassification)
-    return pd.Series(cells, index=table.index, dtype=object)
+    out = pd.Series(cells, index=table.index, dtype=object)
+    if not_asked_from_availability:
+        out.attrs["not_asked_split"] = counts
+    return out
