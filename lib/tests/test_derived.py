@@ -1,4 +1,4 @@
-from pdt.derived import SCALE_SIGNATURE_RULE, SCALE_SIGNATURE_VERSION, scale_signature, scale_signatures
+from pdt.derived import SCALE_SIGNATURE_RULE, SCALE_SIGNATURE_VERSION, scale_signature, scale_signatures, valid_labels
 
 
 def record(labels, name="v", release="r1", table=None, **extra):
@@ -47,3 +47,17 @@ def test_lines_once_per_variable():
             record(["Yes", "No"], name="a", release="r2"),
             record(["Yes", "No"], name="a", release="r3")]
     assert [line["target"] for line in scale_signatures(recs, per_release=False)] == [{"variable": "a"}]
+
+
+def test_valid_codes_without_labels():
+    """YRBSS qn variables: codes 1 and 2 are valid and unlabeled (label is optional in the schema)."""
+    qn = {"dataset": "d", "release": "r1", "name": "qn26",
+          "values": [{"code": 1, "kind": "valid"}, {"code": 2, "kind": "valid"},
+                     {"code": ".", "kind": "missing", "missing_types": ["no_answer"]}]}
+    assert valid_labels(qn) == (None, None)
+    assert scale_signature(qn) is None
+    half = record(["Yes"])
+    half["values"].insert(1, {"code": 2, "kind": "valid"})
+    assert valid_labels(half) == ("yes", None)
+    assert scale_signature(half) is None
+    assert scale_signatures([qn, half, record(["Yes", "No"], name="a")])[0]["target"]["variable"] == "a"

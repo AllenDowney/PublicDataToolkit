@@ -13,6 +13,9 @@ Version history:
   case-sensitive matching.
 - 0.2: one shared table (the union of the four), matched ignoring case; the
   thermometer test from the ANES build.
+  Fixed within 0.2 (Task 39): a valid code without a label (the schema allows
+  it; YRBSS's dichotomized qn variables) no longer raises KeyError. Its label is
+  None, so its record has no signature. No signature that 0.2 gave changes.
 """
 
 SCALE_SIGNATURE_RULE = "scale_signature_from_valid_labels"
@@ -29,8 +32,9 @@ SCALE_SIGNATURES = {
 
 
 def valid_labels(record):
-    """The record's valid labels, lowercased and stripped, in order."""
-    return tuple(v["label"].strip().lower() for v in record.get("values", []) if v.get("kind") == "valid")
+    """The record's valid labels, lowercased and stripped, in order; None for a code without a label."""
+    return tuple(v["label"].strip().lower() if v.get("label") is not None else None
+                 for v in record.get("values", []) if v.get("kind") == "valid")
 
 
 def scale_signature(record):
