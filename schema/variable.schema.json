@@ -5,9 +5,19 @@
   "description": "One variable in one release, as the publisher documents it. One per line in metadata/releases/<release>/variables.jsonl. Corrections are not applied here; they live in corrections.jsonl. See STANDARD.md §4.",
   "type": "object",
   "properties": {
-    "dataset": { "$ref": "common.schema.json#/$defs/id" },
-    "release": { "$ref": "common.schema.json#/$defs/id" },
-    "name": { "$ref": "common.schema.json#/$defs/name" },
+    "dataset": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "release": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "table": {
+      "description": "The table this variable belongs to; required when the release declares tables.",
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "name": {
+      "$ref": "common.schema.json#/$defs/name"
+    },
     "label": {
       "description": "The publisher's short label or description, verbatim.",
       "type": "string"
@@ -16,34 +26,65 @@
       "description": "Question text, verbatim. Usually one entry. Several entries when the wording differs by wave, form or mode (e.g. ANES VCF0803); each then says where it applies.",
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/question" }
+      "items": {
+        "$ref": "#/$defs/question"
+      }
     },
     "storage_type": {
       "description": "How the value is stored in the data file.",
-      "enum": ["integer", "float", "string", "date", "datetime"]
+      "enum": [
+        "integer",
+        "float",
+        "string",
+        "date",
+        "datetime"
+      ]
     },
     "measure": {
       "description": "What kind of quantity the valid values are. Descriptive, not an analysis decision.",
-      "enum": ["categorical", "ordinal", "continuous", "count", "identifier", "weight", "text", "date"]
+      "enum": [
+        "categorical",
+        "ordinal",
+        "continuous",
+        "count",
+        "identifier",
+        "weight",
+        "text",
+        "date"
+      ]
     },
     "values": {
       "description": "Every documented code, valid and missing, in the publisher's order.",
       "type": "array",
-      "items": { "$ref": "#/$defs/value" }
+      "items": {
+        "$ref": "#/$defs/value"
+      }
     },
     "valid_range": {
       "description": "For numeric variables whose valid values are not all labeled (thermometers, ages, counts). Labeled codes inside the range still appear in values.",
       "type": "object",
       "properties": {
-        "min": { "type": "number" },
-        "max": { "type": "number" },
-        "top_coded": { "type": "boolean" },
-        "bottom_coded": { "type": "boolean" },
-        "note": { "type": "string" }
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "top_coded": {
+          "type": "boolean"
+        },
+        "bottom_coded": {
+          "type": "boolean"
+        },
+        "note": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     },
-    "units": { "type": "string" },
+    "units": {
+      "type": "string"
+    },
     "universe": {
       "description": "Who was asked, verbatim from the publisher when available.",
       "type": "string"
@@ -51,7 +92,9 @@
     "availability": {
       "description": "Where the variable has data: one entry per (wave, form, sample, mode) combination the publisher documents. An entry with only wave means everyone in that wave.",
       "type": "array",
-      "items": { "$ref": "#/$defs/availability" }
+      "items": {
+        "$ref": "#/$defs/availability"
+      }
     },
     "notes": {
       "description": "The publisher's notes on this variable, verbatim.",
@@ -61,13 +104,28 @@
       "description": "Where a person can read this variable's documentation.",
       "type": "object",
       "properties": {
-        "source": { "$ref": "common.schema.json#/$defs/id" },
-        "page": { "type": ["integer", "string"] },
-        "url": { "type": "string", "format": "uri" },
-        "anchor": { "type": "string" },
+        "source": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "page": {
+          "type": [
+            "integer",
+            "string"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "anchor": {
+          "type": "string"
+        },
         "upstream_id": {
           "description": "The publisher's or upstream package's own id for the variable, e.g. NORC's variable number.",
-          "type": ["integer", "string"]
+          "type": [
+            "integer",
+            "string"
+          ]
         }
       },
       "additionalProperties": false
@@ -76,7 +134,9 @@
       "description": "Where the fields came from. 'record' applies to every field unless 'fields' overrides it.",
       "type": "object",
       "properties": {
-        "record": { "$ref": "common.schema.json#/$defs/origin" },
+        "record": {
+          "$ref": "common.schema.json#/$defs/origin"
+        },
         "fields": {
           "type": "object",
           "propertyNames": {
@@ -94,15 +154,26 @@
               "source_location"
             ]
           },
-          "additionalProperties": { "$ref": "common.schema.json#/$defs/origin" }
+          "additionalProperties": {
+            "$ref": "common.schema.json#/$defs/origin"
+          }
         }
       },
-      "required": ["record"],
+      "required": [
+        "record"
+      ],
       "additionalProperties": false
     },
-    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
   },
-  "required": ["dataset", "release", "name", "provenance"],
+  "required": [
+    "dataset",
+    "release",
+    "name",
+    "provenance"
+  ],
   "additionalProperties": false,
   "$defs": {
     "question": {
@@ -128,53 +199,112 @@
         "waves": {
           "description": "Waves this wording applies to. Omit when it applies to all.",
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/wave" }
+          "items": {
+            "$ref": "common.schema.json#/$defs/wave"
+          }
         },
-        "forms": { "type": "array", "items": { "type": "string" } },
-        "modes": { "type": "array", "items": { "type": "string" } },
-        "note": { "type": "string" }
+        "forms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "note": {
+          "type": "string"
+        }
       },
-      "required": ["text"],
+      "required": [
+        "text"
+      ],
       "additionalProperties": false
     },
     "value": {
       "type": "object",
       "properties": {
-        "code": { "$ref": "common.schema.json#/$defs/code" },
-        "label": { "description": "The publisher's label, verbatim.", "type": "string" },
+        "code": {
+          "$ref": "common.schema.json#/$defs/code"
+        },
+        "label": {
+          "description": "The publisher's label, verbatim.",
+          "type": "string"
+        },
         "kind": {
           "description": "valid or missing, as the sources say. unresolved: the sources don't say whether, or why, this code is missing. Record that rather than guess; origin.note says what was checked.",
-          "enum": ["valid", "missing", "unresolved"]
+          "enum": [
+            "valid",
+            "missing",
+            "unresolved"
+          ]
         },
         "missing_types": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "$ref": "common.schema.json#/$defs/missing_type" }
+          "items": {
+            "$ref": "common.schema.json#/$defs/missing_type"
+          }
         },
         "origin": {
           "description": "Where the kind and missing types came from. Required for missing and unresolved codes.",
           "$ref": "common.schema.json#/$defs/origin"
         }
       },
-      "required": ["code", "kind"],
+      "required": [
+        "code",
+        "kind"
+      ],
       "additionalProperties": false,
       "allOf": [
         {
-          "if": { "properties": { "kind": { "const": "missing" } } },
-          "then": { "required": ["missing_types", "origin"] },
-          "else": { "not": { "required": ["missing_types"] } }
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "missing"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "missing_types",
+              "origin"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "missing_types"
+              ]
+            }
+          }
         },
         {
-          "if": { "properties": { "kind": { "const": "unresolved" } } },
-          "then": { "required": ["origin"] }
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "unresolved"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "origin"
+            ]
+          }
         }
       ]
     },
     "availability": {
       "type": "object",
       "properties": {
-        "wave": { "$ref": "common.schema.json#/$defs/wave" },
+        "wave": {
+          "$ref": "common.schema.json#/$defs/wave"
+        },
         "form": {
           "description": "Questionnaire form, ballot or version (GSS ballot A, MTF form 3).",
           "type": "string"
@@ -183,15 +313,23 @@
           "description": "Subsample, e.g. a panel or a cross-section.",
           "type": "string"
         },
-        "mode": { "description": "Interview mode, e.g. face-to-face, web.", "type": "string" },
-        "phase": { "description": "Pre- or post-election, or similar.", "type": "string" },
+        "mode": {
+          "description": "Interview mode, e.g. face-to-face, web.",
+          "type": "string"
+        },
+        "phase": {
+          "description": "Pre- or post-election, or similar.",
+          "type": "string"
+        },
         "n": {
           "description": "Number of non-missing responses, when known.",
           "type": "integer",
           "minimum": 0
         }
       },
-      "required": ["wave"],
+      "required": [
+        "wave"
+      ],
       "additionalProperties": false
     }
   }

@@ -10,10 +10,15 @@ PublicDataToolkit holds instructions and agent skills for turning a public datas
 PROPOSAL.md    the public summary for review; keep it free of internal details
 STANDARD.md    what a finished dataset repo must contain; the definition of done
 schema/        JSON Schemas for the records, examples, and check_examples.py
+lib/pdt/       the shared library: `pdt check` (lib/tests/ has its tests; run pytest)
+pyproject.toml packages lib/pdt as `publicdatatoolkit`, with schema/ bundled
 planning/      designs and context
   plan.md                            the plan (Task 1)
   data_dict.md                       note for Hadley: relationship to data-dict, questions (Task 6)
   review_1.md                        first review of PROPOSAL.md, triaged, with decisions (Task 10)
+  missing_codes_design.md            design for review: missing codes in the common data format (Task 11)
+  review_2.md                        review of the missing-codes design, triaged, with decisions (Task 11)
+  next_datasets.md                   preliminary NSFG, MTF and portal work; questions for Allen
   versions_layout_names.md           versioning, CCDS, repo names (Task 8)
   inventory.md                       what exists for GSS, ANES and NSFG (Task 3)
   survey_metadata_packages_plan.md   earlier design, copied from CultureWar Task 186 (2026-11-17)

@@ -21,15 +21,25 @@
     },
     "code": {
       "description": "A value as stored in the data file. Numbers stay numbers. Stata extended missing values are written as strings such as \".d\"; SAS special missing values as \".A\".",
-      "type": ["number", "string"]
+      "type": [
+        "number",
+        "string"
+      ]
     },
     "wave": {
       "description": "One wave of data collection, in the dataset's own terms: a survey year (1972), a panel wave (\"W2\"), a cycle (\"2022-2023\"), or a portal snapshot date.",
-      "type": ["integer", "string"]
+      "type": [
+        "integer",
+        "string"
+      ]
     },
     "redistribution": {
       "description": "ship: may be redistributed (in git or a release). build-only: users must get it from the publisher; we ship only code that builds from it. unknown: not yet reviewed; nothing built from it may ship.",
-      "enum": ["ship", "build-only", "unknown"]
+      "enum": [
+        "ship",
+        "build-only",
+        "unknown"
+      ]
     },
     "missing_type": {
       "description": "Why a value is missing. One code can carry several types, e.g. GSS NA(m) \"dk, na, iap\". See STANDARD.md §4.",
@@ -47,13 +57,22 @@
     },
     "origin_kind": {
       "description": "Where a fact came from. See STANDARD.md §3.",
-      "enum": ["publisher", "upstream_package", "data_file", "rule", "hand", "model"]
+      "enum": [
+        "publisher",
+        "upstream_package",
+        "data_file",
+        "rule",
+        "hand",
+        "model"
+      ]
     },
     "origin": {
       "description": "Provenance for one fact or a group of facts.",
       "type": "object",
       "properties": {
-        "origin": { "$ref": "#/$defs/origin_kind" },
+        "origin": {
+          "$ref": "#/$defs/origin_kind"
+        },
         "source": {
           "description": "Id of the file in sources.yaml the fact was read from.",
           "$ref": "#/$defs/id"
@@ -66,10 +85,19 @@
           "description": "Name of the rule that produced the fact, e.g. missing_from_label_regex.",
           "type": "string"
         },
-        "rule_version": { "type": "string" },
-        "model": { "description": "Model id, when origin is model.", "type": "string" },
-        "prompt_version": { "type": "string" },
-        "date": { "$ref": "#/$defs/date" },
+        "rule_version": {
+          "type": "string"
+        },
+        "model": {
+          "description": "Model id, when origin is model.",
+          "type": "string"
+        },
+        "prompt_version": {
+          "type": "string"
+        },
+        "date": {
+          "$ref": "#/$defs/date"
+        },
         "author": {
           "description": "Who made a hand edit or reviewed a model draft.",
           "type": "string"
@@ -78,45 +106,111 @@
           "description": "For model output: whether a person has checked it.",
           "type": "boolean"
         },
-        "note": { "type": "string" }
+        "note": {
+          "type": "string"
+        }
       },
-      "required": ["origin"],
+      "required": [
+        "origin"
+      ],
       "additionalProperties": false,
       "allOf": [
         {
-          "if": { "properties": { "origin": { "enum": ["publisher", "upstream_package", "data_file"] } } },
-          "then": { "required": ["source"] }
+          "if": {
+            "properties": {
+              "origin": {
+                "enum": [
+                  "publisher",
+                  "upstream_package",
+                  "data_file"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "source"
+            ]
+          }
         },
         {
-          "if": { "properties": { "origin": { "const": "rule" } } },
-          "then": { "required": ["rule"] }
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "rule"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "rule"
+            ]
+          }
         },
         {
-          "if": { "properties": { "origin": { "const": "hand" } } },
-          "then": { "required": ["author", "date"] }
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "hand"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "author",
+              "date"
+            ]
+          }
         },
         {
-          "if": { "properties": { "origin": { "const": "model" } } },
-          "then": { "required": ["model", "date", "reviewed"] }
+          "if": {
+            "properties": {
+              "origin": {
+                "const": "model"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "model",
+              "date",
+              "reviewed"
+            ]
+          }
         }
       ]
     },
     "variable_ref": {
-      "description": "Points at one variable. dataset defaults to this repo's dataset; release is required wherever the same name could mean different things in different releases.",
+      "description": "Points at one variable. dataset defaults to this repo's dataset; release is required wherever the same name could mean different things in different releases. table is required when the name appears in more than one table of the release.",
       "type": "object",
       "properties": {
-        "dataset": { "$ref": "#/$defs/id" },
-        "release": { "$ref": "#/$defs/id" },
-        "name": { "$ref": "#/$defs/name" }
+        "dataset": {
+          "$ref": "#/$defs/id"
+        },
+        "release": {
+          "$ref": "#/$defs/id"
+        },
+        "table": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "additionalProperties": false
     },
     "extensions": {
       "description": "Dataset-specific fields the standard doesn't model yet, namespaced by dataset id: {\"gss\": {...}}. Every key used here should be listed, with a reason, in the repo's EXTENSIONS.md.",
       "type": "object",
-      "propertyNames": { "$ref": "#/$defs/id" },
-      "additionalProperties": { "type": "object" }
+      "propertyNames": {
+        "$ref": "#/$defs/id"
+      },
+      "additionalProperties": {
+        "type": "object"
+      }
     }
   }
 }

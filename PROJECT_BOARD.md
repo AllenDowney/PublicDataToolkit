@@ -12,11 +12,13 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 2:** Recover the earlier planning session — `DONE`. Found as CultureWar Task 186 and copied to [`planning/`](planning/).
 - **Task 3:** Inventory the GSS and ANES work in CultureWar — `DONE`. [`planning/inventory.md`](planning/inventory.md).
 - **Task 4:** Publish the repo on GitHub — `DONE`. https://github.com/AllenDowney/PublicDataToolkit
-- **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Steps 1–3 done: the standard and schemas, a 45-variable GSS slice (`pdt-gss`) and a 32-variable ANES CDF slice (`pdt-anes-cdf`), both local, with terms recorded. Next: move the shared check into `lib/`, then MTF.
+- **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Steps 1–3 done: the standard and schemas, a 45-variable GSS slice (`pdt-gss`) and a 32-variable ANES CDF slice (`pdt-anes-cdf`), both local, with terms recorded. The check now lives in the shared library (`lib/pdt`, `pdt check`). Preliminary NSFG slice (`pdt-nsfg`, local), MTF research, and a first look at a portal dataset: see [`planning/next_datasets.md`](planning/next_datasets.md), which ends with questions for Allen.
 - **Task 6:** Talk to Hadley Wickham about data-dict — `DOING`. Note to share: [`planning/data_dict.md`](planning/data_dict.md).
 - **Task 7:** Withdrawn.
 - **Task 9:** Remove private information so the repo can be public — `DONE`.
 - **Task 10:** Respond to review 1 of the proposal — `DONE`. [`planning/review_1.md`](planning/review_1.md).
+- **Task 11:** Data releases, download script and extract builder for dataset repos — `DOING`. The common data format is accepted after review 2 and implemented in `lib/pdt/data.py`.
+- **Task 12:** Tables: let one release hold several files (NSFG female/male/pregnancy; FARS crash/vehicle/person) — `DOING`, decided 2026-11-19.
 - **Task 8:** Versions, layout and names for dataset repos — `DONE`. Decided; see [`planning/versions_layout_names.md`](planning/versions_layout_names.md). Applied to STANDARD.md.
 
 ---
@@ -177,6 +179,13 @@ Findings from the ANES slice:
 - **No groups.** The CDF has 92 thermometers whose shared question text sits in a preamble before VCF0201, which the variable parser doesn't see. A `thermometer` scale signature, from the "Degrees" range, supports the structural query instead (`complete_by_rule`).
 - **The shared library is overdue.** `check_metadata.py` was copied from `pdt-gss` into `pdt-anes-cdf`, which is exactly the drift between repos the plan warned about. It should move into `lib/` here before MTF.
 
+**Progress (2026-11-19), the shared check:** `check_metadata.py` moved into the shared library, as `lib/pdt/check.py` with `pdt check` as the command. `pyproject.toml` packages it as `publicdatatoolkit` with `schema/` bundled, so there's one copy of the schemas.
+- It implements C1, C2, C6, C7, C9, C10 and C11 (README sections and CLAUDE.md). C3–C5 still run in each repo's build, because they need the data and the code to read it; C8 waits for the views.
+- Two hacks in the copied script were replaced: the regex scan for source ids and the count of unreviewed model output now walk the records.
+- `lib/tests/test_check.py` has 14 tests: a small valid repo passes, and each check catches its own kind of breakage. All pass.
+- Both dataset repos dropped their copy. Their `make check` runs `python -m pdt check .` against the toolkit checkout next to them, so nothing is installed into the conda env. Both pass, with the same reports as before.
+- `schema/check_examples.py` uses the shared validators too.
+
 ## Task 6 — Talk to Hadley Wickham about data-dict
 
 **Status:** `TODO`
@@ -240,3 +249,58 @@ The first review of [`PROPOSAL.md`](PROPOSAL.md) recommends going ahead with a f
 - release monitoring.
 
 DDI comparison isn't scheduled.
+
+## Task 11 — Data releases, download script and extract builder
+
+**Status:** `TODO` — decided 2026-11-19
+
+The workflow for someone who clones a dataset repo:
+1. `make download` runs `scripts/download.py`. It fetches the data release, checks the SHA-256 sums in `sources.yaml`, and refuses to run until the user accepts the publisher's terms, as MarriageNSFG's script does.
+2. `scripts/extract.py` builds the extract the user asks for: variables, years, and how to treat each missing type.
+
+None of this exists yet for `pdt-gss` or `pdt-anes-cdf`.
+
+**Decided (Allen, 2026-11-19):**
+- **Extract builders live in dataset repos** (plan §10 item 5), rather than only in analysis projects. To keep STANDARD.md's first principle, the builder's options encode no analysis choices; the user supplies them. The recoding by missing type lives in the shared library, so it behaves the same everywhere.
+- **A data release holds the publisher's original files plus a common format (parquet) written by the build.** The library reads every dataset through the common format.
+
+**Design out for review (2026-11-19):** [`planning/missing_codes_design.md`](planning/missing_codes_design.md) compares three layouts, and parquet against Arrow and CSV, measured on both slices. It recommends one parquet file with a `<name>__code` column next to each value column. Round trips back to the publisher's values are exact for both slices. Waiting for review before building.
+
+**To design first:** how the common format keeps missing codes distinct. Stata's `.d`/`.i`/`.n` have no parquet equivalent, and the ANES stores missing codes as ordinary numbers. A code column next to each value column is one option. The same files could feed the data checks C3–C5 in `pdt check`, so they no longer have to run in each repo's build.
+
+**Steps:**
+1. Design the common format; add it to STANDARD.md and a schema if needed.
+2. The library: read the common format; select; recode by missing type.
+3. `download.py` and `extract.py` in the Copier template, and copies in `pdt-gss` and `pdt-anes-cdf`.
+4. The first data releases, once the repos are pushed.
+
+**Progress (2026-11-19):** Review 2 accepted Option A with five refinements; triage and decisions are in [`planning/review_2.md`](planning/review_2.md). All five are in the design doc and STANDARD.md §4.2, §8 and §10, and `dataset.schema.json` gained `column` and `codes` for dimensions.
+- `lib/pdt/data.py` implements split, write, rebuild and recode. 10 tests, including metadata evolution; 24 library tests pass in all.
+- `pdt check` rejects reserved names (`__code`, `_row`).
+- **Cross-language:** both slices read identically in pandas, Polars, DuckDB, R arrow and R DuckDB, in a new conda env, `pdt-xlang`.
+- **Full-file round trips:** the NSFG female respondent file (1,912 variables) is exact; the GSS and ANES results are in the design doc §9.
+- A second-opinion review of `data.py` by an agent is in progress.
+
+## Task 12 — Tables: several files in one release
+
+**Status:** `DOING` — Allen decided on 2026-11-19 to add a table level
+
+The standard identifies a variable by (release, name). An NSFG release has three files (female respondents, male respondents, pregnancies) that share names such as `MARSTAT`. A portal dataset's coded columns refer to other tables (Chicago crimes `iucr` → the IUCR code list). Both need a table level, which data-dict has (`tables`, `relationships`).
+
+Likely shape: `metadata/releases/<release>/<table>/variables.jsonl`, a `table` field in records and in variable references, and optional relationships between tables. Background: [`planning/next_datasets.md`](planning/next_datasets.md) §1 and §3.
+
+**Progress (2026-11-19):** implemented in the standard, the schemas and `pdt check`.
+- **`dataset.yaml`:** a release may list `tables`, each with an id, label, sources, `key` columns, and `references` to other tables (foreign keys, possibly in another release or dataset).
+- **Layout:** records go in `metadata/releases/<release>/<table>/variables.jsonl`. A release without tables keeps the old layout, so the three existing repos are unchanged.
+- **Records** carry `table`. Variable references (group members, links, corrections, annotations, derived properties) may name one, and must when a name is in several tables of the release.
+- **`pdt check`** enforces all of this: a record's table matches its directory, there are no ambiguous references, and keys and reference columns have records. Six new tests cover it, with 36 library tests passing.
+- **The common format** has one parquet file per table.
+- **First real use, the NSFG** (2026-11-19). `pdt-nsfg` now has three tables in release 2022-2023: female respondents (23 variables), male respondents (17) and pregnancies (12).
+  - Keys: `CaseID`, and (`CaseID`, `PREGORDR`). The pregnancy → female reference is checked against the data: every pregnancy's `CaseID` is a female respondent, and male and female IDs never overlap.
+  - `MARSTAT` and others appear in two tables without conflict. `pdt check` passes.
+  - The male and pregnancy files round-trip exactly through the common format.
+  - Findings:
+    - The cycle 12 data is in `/NCHS/NSFG/` on the CDC FTP site, not `/Datasets/NSFG/`. The earlier `sources.yaml` URL was wrong.
+    - The pregnancy data has a column `AGER` with no entry in the pregnancy codebook.
+    - The male codebook carries NCHS's own correction in a margin box ("Corrected universe for MFLASTP"), and the universe field says only "see box to the right". The parser now keeps margin text and records it in the variable's notes, labeled.
+    - Some pregnancy names are lowercase in the data (`agepreg`) but uppercase in the codebook.

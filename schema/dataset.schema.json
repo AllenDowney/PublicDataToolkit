@@ -14,39 +14,82 @@
       "description": "Short dataset id, also the namespace for extensions: gss, anes-cdf, mtf.",
       "$ref": "common.schema.json#/$defs/id"
     },
-    "title": { "type": "string" },
+    "title": {
+      "type": "string"
+    },
     "publisher": {
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "url": { "type": "string", "format": "uri" }
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "additionalProperties": false
     },
-    "url": { "description": "The dataset's home page.", "type": "string", "format": "uri" },
-    "description": { "type": "string" },
-    "citation": { "description": "How the publisher asks to be cited.", "type": "string" },
+    "url": {
+      "description": "The dataset's home page.",
+      "type": "string",
+      "format": "uri"
+    },
+    "description": {
+      "type": "string"
+    },
+    "citation": {
+      "description": "How the publisher asks to be cited.",
+      "type": "string"
+    },
     "terms": {
       "description": "Reviewed before anything built from the dataset ships. Per-file terms in sources.yaml must not be looser than these.",
       "type": "object",
       "properties": {
-        "url": { "type": "string", "format": "uri" },
-        "summary": { "description": "The relevant terms in a few sentences.", "type": "string" },
-        "data": { "$ref": "common.schema.json#/$defs/redistribution" },
-        "documentation": { "$ref": "common.schema.json#/$defs/redistribution" },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "summary": {
+          "description": "The relevant terms in a few sentences.",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/redistribution"
+        },
+        "documentation": {
+          "$ref": "common.schema.json#/$defs/redistribution"
+        },
         "metadata": {
           "description": "Whether the records we build from the documentation may ship. Usually the same as documentation.",
           "$ref": "common.schema.json#/$defs/redistribution"
         },
         "llm_processing": {
           "description": "Whether the documentation's text may be sent to a hosted LLM.",
-          "enum": ["allowed", "not_allowed", "unknown"]
+          "enum": [
+            "allowed",
+            "not_allowed",
+            "unknown"
+          ]
         },
-        "reviewed_by": { "type": "string" },
-        "reviewed_on": { "$ref": "common.schema.json#/$defs/date" }
+        "reviewed_by": {
+          "type": "string"
+        },
+        "reviewed_on": {
+          "$ref": "common.schema.json#/$defs/date"
+        }
       },
-      "required": ["url", "summary", "data", "documentation", "metadata", "llm_processing"],
+      "required": [
+        "url",
+        "summary",
+        "data",
+        "documentation",
+        "metadata",
+        "llm_processing"
+      ],
       "additionalProperties": false
     },
     "naming": {
@@ -54,24 +97,64 @@
       "properties": {
         "case": {
           "description": "How the publisher writes variable names. Names are stored as published; lookup in the library is case-insensitive.",
-          "enum": ["lower", "upper", "mixed"]
+          "enum": [
+            "lower",
+            "upper",
+            "mixed"
+          ]
         },
-        "note": { "type": "string" }
+        "note": {
+          "type": "string"
+        }
       },
       "additionalProperties": false
     },
     "dimensions": {
       "description": "What availability's wave, form, sample, mode and phase mean here. Omit the ones that don't apply.",
       "type": "object",
-      "propertyNames": { "enum": ["wave", "form", "sample", "mode", "phase"] },
+      "propertyNames": {
+        "enum": [
+          "wave",
+          "form",
+          "sample",
+          "mode",
+          "phase"
+        ]
+      },
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "label": { "description": "The publisher's word: year, ballot, form, cycle.", "type": "string" },
-          "values": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/wave" } },
-          "note": { "type": "string" }
+          "label": {
+            "description": "The publisher's word: year, ballot, form, cycle.",
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/wave"
+            }
+          },
+          "column": {
+            "description": "The variable in the data that holds this dimension, e.g. year or ballot. Lets availability be checked against the data.",
+            "type": "string"
+          },
+          "codes": {
+            "description": "How the column's codes map to the values used in availability, e.g. {\"1\": \"A\", \"2\": \"B\"}. Omit when they're the same.",
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "integer"
+              ]
+            }
+          },
+          "note": {
+            "type": "string"
+          }
         },
-        "required": ["label"],
+        "required": [
+          "label"
+        ],
         "additionalProperties": false
       }
     },
@@ -85,16 +168,111 @@
             "description": "Directory name under metadata/releases/, e.g. 7224r3a or 20260205.",
             "$ref": "common.schema.json#/$defs/id"
           },
-          "label": { "description": "The publisher's name for the release.", "type": "string" },
-          "date": { "$ref": "common.schema.json#/$defs/date" },
-          "status": { "enum": ["current", "superseded", "withdrawn"] },
+          "label": {
+            "description": "The publisher's name for the release.",
+            "type": "string"
+          },
+          "date": {
+            "$ref": "common.schema.json#/$defs/date"
+          },
+          "status": {
+            "enum": [
+              "current",
+              "superseded",
+              "withdrawn"
+            ]
+          },
           "sources": {
             "description": "Ids of the files in sources.yaml this release's records were built from.",
             "type": "array",
-            "items": { "$ref": "common.schema.json#/$defs/id" }
+            "items": {
+              "$ref": "common.schema.json#/$defs/id"
+            }
+          },
+          "tables": {
+            "description": "When a release has several files, one entry per file. Each table's records are in metadata/releases/<release>/<table>/variables.jsonl.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/id"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "sources": {
+                  "description": "Ids in sources.yaml for this table's files.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "common.schema.json#/$defs/id"
+                  }
+                },
+                "key": {
+                  "description": "Columns that identify a row, e.g. [ST_CASE, VEH_NO].",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                },
+                "references": {
+                  "description": "Columns that refer to another table, as foreign keys, e.g. a vehicle's ST_CASE refers to the crash table.",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1
+                      },
+                      "table": {
+                        "$ref": "common.schema.json#/$defs/id"
+                      },
+                      "release": {
+                        "description": "Omit when the other table is in the same release.",
+                        "$ref": "common.schema.json#/$defs/id"
+                      },
+                      "dataset": {
+                        "description": "Omit when the other table is in the same dataset, e.g. a code list published separately.",
+                        "$ref": "common.schema.json#/$defs/id"
+                      },
+                      "target_columns": {
+                        "description": "The other table's columns, when their names differ.",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "columns",
+                      "table"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "label"
+              ],
+              "additionalProperties": false
+            }
           }
         },
-        "required": ["id", "label", "status", "sources"],
+        "required": [
+          "id",
+          "label",
+          "status",
+          "sources"
+        ],
         "additionalProperties": false
       }
     },
@@ -102,14 +280,31 @@
       "description": "The GitHub release with the data, when terms.data is ship.",
       "type": "object",
       "properties": {
-        "tag": { "type": "string" },
-        "url": { "type": "string", "format": "uri" }
+        "tag": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
       },
-      "required": ["tag"],
+      "required": [
+        "tag"
+      ],
       "additionalProperties": false
     },
-    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+    "extensions": {
+      "$ref": "common.schema.json#/$defs/extensions"
+    }
   },
-  "required": ["standard_version", "id", "title", "publisher", "url", "terms", "releases"],
+  "required": [
+    "standard_version",
+    "id",
+    "title",
+    "publisher",
+    "url",
+    "terms",
+    "releases"
+  ],
   "additionalProperties": false
 }

@@ -3,9 +3,9 @@
 Usage:
     python schema/check_examples.py
 
-Needs jsonschema (4.18 or later) and PyYAML. This is a stopgap until the
-shared library's `pdt check` exists (plan §4.4); it only does check C1
-(STANDARD.md §9), plus a few records that must be rejected.
+Needs jsonschema (4.18 or later) and PyYAML. Uses the shared library in lib/
+for the validators. Runs check C1 (STANDARD.md §9) on the examples, plus a few
+records that must be rejected.
 """
 
 import json
@@ -13,10 +13,11 @@ import sys
 from pathlib import Path
 
 import yaml
-from jsonschema import Draft202012Validator, FormatChecker
-from referencing import Registry, Resource
 
 SCHEMA_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCHEMA_DIR.parent / "lib"))
+from pdt.schemas import errors, validators  # noqa: E402
+
 EXAMPLES = SCHEMA_DIR / "examples"
 
 # Which schema validates which file, by file name.
@@ -32,23 +33,6 @@ SCHEMA_FOR = {
 }
 
 
-def load_registry():
-    """Register every schema under its $id so relative $refs resolve offline."""
-    schemas = {}
-    resources = []
-    for path in sorted(SCHEMA_DIR.glob("*.schema.json")):
-        schema = json.loads(path.read_text())
-        schemas[path.name] = schema
-        resources.append((schema["$id"], Resource.from_contents(schema)))
-    return schemas, Registry().with_resources(resources)
-
-
-def validator(schemas, registry, name):
-    return Draft202012Validator(
-        schemas[name], registry=registry, format_checker=FormatChecker()
-    )
-
-
 def records(path):
     """Yield (label, record) for a YAML file or each line of a JSONL file."""
     if path.suffix == ".yaml":
@@ -57,10 +41,6 @@ def records(path):
     for i, line in enumerate(path.read_text().splitlines(), start=1):
         if line.strip():
             yield f"{path.name}:{i}", json.loads(line)
-
-
-def errors(v, record):
-    return sorted(v.iter_errors(record), key=lambda e: list(e.absolute_path))
 
 
 # Records that must fail, one per rule the schema is meant to enforce.
@@ -128,13 +108,13 @@ MUST_FAIL = [
 
 
 def main():
-    schemas, registry = load_registry()
+    v_for = validators(str(SCHEMA_DIR))
     failures = 0
 
     for path in sorted(EXAMPLES.rglob("*")):
         if path.name not in SCHEMA_FOR:
             continue
-        v = validator(schemas, registry, SCHEMA_FOR[path.name])
+        v = v_for[SCHEMA_FOR[path.name]]
         for label, record in records(path):
             errs = errors(v, record)
             rel = path.relative_to(EXAMPLES).parent / label
@@ -148,7 +128,7 @@ def main():
                 print(f"ok   {rel}")
 
     for what, schema_name, record in MUST_FAIL:
-        v = validator(schemas, registry, schema_name)
+        v = v_for[schema_name]
         if errors(v, record):
             print(f"ok   rejected: {what}")
         else:

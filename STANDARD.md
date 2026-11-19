@@ -15,7 +15,7 @@ One repository describes one dataset across all its releases: for example the GS
 - a way to get the data: a GitHub release when the terms allow it, otherwise a download script;
 - three generated forms of the metadata: a site for people, a Python API and JSONL for code, and shards for LLMs.
 
-It does **not** hold analysis decisions: which answers count as agreement, weights, harmonized recodes, or extract column lists. Those stay in the projects that use the repo.
+It does **not** hold analysis decisions: which answers count as agreement, weights, harmonized recodes, or which variables a project uses. Those stay in the projects that use the repo. The repo does ship an **extract builder** (`scripts/extract.py`): the user names the variables, years and how to treat each missing type, and it writes the extract. Its options encode no analysis choices of their own.
 
 **Name.** A dataset repo is named `pdt-<dataset-id>`, where `<dataset-id>` is the `id` in `dataset.yaml`: lowercase letters, digits and hyphens, starting with the name people already use for the dataset. Examples: `pdt-gss`, `pdt-anes-cdf`, `pdt-mtf-12`, `pdt-chicago-crimes`. The name has no language, release, version or publisher in it: the repo is language-neutral, covers every release, and outlives versions of the standard. Add a qualifier only to tell apart two products of one study (`anes-cdf`, `anes-panel`) or two places. Python code in the repo uses underscores (`pdt_gss`). Before building, claim the id in this toolkit's registry (not yet created), and give the repo the GitHub topic `publicdatatoolkit`. The reasoning is in [`planning/versions_layout_names.md`](planning/versions_layout_names.md).
 
@@ -33,9 +33,11 @@ pdt-<dataset-id>/
   pyproject.toml             depends on the shared library
   .env                       gitignored; logins for sources that need them
   scripts/download.py        fetches sources; --check; refuses to run until terms are accepted
+  scripts/extract.py         builds an extract the user specifies (§8)
   build/                     parsers: publisher documentation -> records
   metadata/
     releases/<release>/variables.jsonl   one variable per line        schema/variable.schema.json
+    releases/<release>/<table>/variables.jsonl   instead, when the release has several tables (§2.1)
     groups.jsonl                         batteries, sections, ...     schema/group.schema.json
     links.jsonl                          continuity across releases   schema/link.schema.json
     corrections.jsonl                    errata                       schema/correction.schema.json
@@ -67,6 +69,14 @@ Hand edits to source records are not allowed because the next build would silent
 ### 2.1 `dataset.yaml`
 
 Names the dataset and its publisher, records the terms (§8), and lists the releases the repo covers. Each release has an `id`, which is also its directory under `metadata/releases/`, and the list of source files its records were built from.
+
+**Tables.** Some releases have several files: the NSFG has female respondents, male respondents and pregnancies, and FARS has crashes, vehicles and persons. A release like that lists its `tables`. Each table has:
+- an `id`, which is also its directory under the release;
+- a label, and the source files it comes from;
+- the `key` columns that identify a row;
+- `references` to other tables, like foreign keys: a pregnancy's `CASEID` refers to the female respondent table.
+
+Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A release with one file lists no tables and keeps its records in `metadata/releases/<release>/variables.jsonl`. A reference can also point to a table in another dataset, such as a code list published separately.
 
 `dimensions` says what availability's `wave`, `form`, `sample`, `mode` and `phase` mean for this dataset. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
 
@@ -131,13 +141,13 @@ Each variable record has `provenance.record`, the origin of the record as a whol
 
 ## 4. Variable records
 
-One line per variable in `metadata/releases/<release>/variables.jsonl`. The same name in two releases is two records; links (§5.2) say how they relate.
+One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../<release>/<table>/variables.jsonl` for a release with tables. The same name in two releases is two records; links (§5.2) say how they relate. The same name in two tables of one release (`MARSTAT` for women and for men) is also two records, and every reference to it must name its `table`; `pdt check` fails an ambiguous reference.
 
 ### 4.1 Fields
 
 | Field | What it holds |
 |---|---|
-| `dataset`, `release`, `name` | Required. Together they identify the record |
+| `dataset`, `release`, `name` | Required. Together with `table`, when the release has tables, they identify the record |
 | `label` | The publisher's short label |
 | `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text` |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime |
@@ -179,9 +189,9 @@ Codes are stored as they appear in the data file: numbers as numbers, and Stata 
 3. A rule over labels, used only when neither of the above exists. `origin: rule`, with the rule's name.
 4. A person adds one the others missed, such as an out-of-universe code. `origin: hand`.
 
-**When the sources don't say,** the code is `unresolved`: a code in the data with no label, or a label like "see codebook" that the codebook doesn't explain. Don't guess a type to get past the check. A wrong classification is worse than an open one, because recoding code would silently trust it. `pdt check` reports unresolved codes and doesn't fail on them. The library leaves them as they are when it recodes missing values, unless the caller says otherwise.
+**When the sources don't say,** the code is `unresolved`: a code in the data with no label, or a label like "see codebook" that the codebook doesn't explain. Don't guess a type to get past the check. A wrong classification is worse than an open one, because recoding code would silently trust it. `pdt check` reports unresolved codes and doesn't fail on them. Unresolved isn't a kind of missing: the library never recodes an unresolved code by missing type, warns when a variable it recodes has any, and handles them only when the caller asks explicitly.
 
-A code's `kind` follows the publisher even when its label suggests otherwise. The ANES codebook lists VCF0803 code 9, "DK; haven't thought much about it," under **Valid**, so it is stored as valid; a follow-up item depends on it. If a publisher's marking looks like an error, record a correction (§5.3).
+A code's `kind` follows the publisher of that release even when its label suggests otherwise. If a later release classifies the same code differently, each release's records say what that release's publisher said, and each release's data is read with its own records. The ANES codebook lists VCF0803 code 9, "DK; haven't thought much about it," under **Valid**, so it is stored as valid; a follow-up item depends on it. If a publisher's marking looks like an error, record a correction (§5.3).
 
 The point of typing missing codes is that the library can recode them by type, for example DK to one value and INAP to another, instead of collapsing them all into one NaN, which is what the existing GSS and ANES code does ([inventory](planning/inventory.md) §3).
 
@@ -318,6 +328,18 @@ Before anything built from a dataset ships, `dataset.yaml` records the terms of 
 Rules:
 
 - Data is never committed to git. When `terms.data` is `ship`, it goes in a GitHub release with SHA-256 sums, and `download.py` can fetch the release. When it is `build-only`, `download.py` fetches it from the publisher or explains the manual steps.
+- A data release holds two things: the publisher's files, unchanged, so anyone can verify them against the publisher; and the same data in the common format, written by the build, so the shared library reads every dataset the same way.
+- **The common format** is one parquet file per release ([design](planning/missing_codes_design.md)):
+  - There is one file per release, or one per table for a release with tables; the file metadata names the table.
+  - Each variable has a **value column** with its valid answers, typed as in its record, and null wherever the answer is missing or unresolved. Codes the publisher lists as valid stay in the value column.
+  - Each variable that has any codes also has a **code column**, `<name>__code`. It holds the code as text, exactly as in the record's `values` (`".d"`, `"98"`, `"."`), and is null where the answer is valid. Dimension columns such as year and ballot are variables like any other.
+  - A `_row` column numbers the rows in the publisher's order. Names ending in `__code`, and `_row`, are reserved.
+  - The file's metadata records the dataset, the release, the version of the standard, the SHA-256 of the publisher's file, the SHA-256 of the `variables.jsonl` used to split it, and which code texts were the publisher's own missing tokens (Stata's `.d`) rather than ordinary values (the ANES's 98), so every cell can be rebuilt exactly.
+  - A value is a code only if its type matches: a number matches a numeric code in the record, a string matches a string code. The string `"98"` isn't the code 98.
+  - The build proves the conversion is lossless: it rebuilds every cell of the publisher's file from the parquet file and compares them.
+
+  The shared library (`pdt.data`) does the splitting, writing, rebuilding and recoding; each dataset supplies only a reader for the publisher's format.
+- `scripts/extract.py` reads the common format and writes the extract the user asks for, recoding missing values by type with the shared library.
 - `download.py` refuses to run until the user passes a flag accepting the publisher's terms, as MarriageNSFG's `--i-accept-nchs-terms` does.
 - When `metadata` is `build-only`, the repo ships the build code and not the records; users build the records locally.
 - When `llm_processing` is not `allowed`, no record may have `origin: model`.
@@ -342,7 +364,13 @@ An agent that reaches a terms question stops and asks a person.
 | C10 | Every extension key in the records is listed in `EXTENSIONS.md` | | fail |
 | C11 | README has the sections in §2.3; CLAUDE.md exists | | fail |
 
-Until the shared library exists, [`schema/check_examples.py`](schema/check_examples.py) does C1 for the examples in [`schema/examples/`](schema/examples/).
+`pdt check` is in the shared library, [`lib/pdt/`](lib/pdt/). Version 0.1 implements C1, C2, C6, C7, C9, C10 and C11. C3–C5 need the data and run in each repo's build for now, and C8 waits for the generated views. To run it from a dataset repo with a toolkit checkout next to it:
+
+```bash
+PYTHONPATH=../PublicDataToolkit/lib python -m pdt check .
+```
+
+Or install the toolkit (`pip install -e ../PublicDataToolkit`) and run `pdt check`. [`schema/check_examples.py`](schema/check_examples.py) runs C1 on the examples in [`schema/examples/`](schema/examples/).
 
 ## 10. Provisional parts
 
@@ -354,6 +382,8 @@ The spike should try to break these:
 - **Missing types.** The nine types come from GSS and ANES labels, plus `unresolved` as a kind for codes nobody can classify yet. MTF and NSFG may need more, or `other` may turn out to be common.
 - **Provenance per field rather than per value.** Values and missing codes have their own origin; other fields share one per field. Per-value provenance for question text may turn out to be needed when wordings come from different documents.
 - **Versioned schema paths.** At 1.0, schemas move to `schema/v1/` and their `$id`s include the version, so older versions stay available to `pdt check`.
+- **The common data format** (§8) was adopted after review, but no release has used it yet. MTF and NSFG will test it further.
+- **Tables** (§2.1) were added for the NSFG and FARS and are tested only on toy data so far. Whether `references` are enough to describe code-list tables, such as FARS's or a city portal's, is untested.
 - **Release ids.** The GSS uses `7224r3a` (from NORC's file name) and the ANES uses `20260205` (its release date). There is no rule yet for choosing.
 
 Record what breaks, and why, on the [project board](PROJECT_BOARD.md) under Task 5.

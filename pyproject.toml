@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "publicdatatoolkit"
+version = "0.1.0"
+description = "Shared library for dataset repositories built to the PublicDataToolkit standard"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = ["jsonschema>=4.18", "referencing", "pyyaml"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+pdt = "pdt.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lib/pdt"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schema" = "pdt/schema"
+
+[tool.pytest.ini_options]
+testpaths = ["lib/tests"]
+pythonpath = ["lib"]

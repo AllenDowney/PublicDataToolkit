@@ -5,15 +5,25 @@
   "description": "An erratum in the publisher's (or upstream package's) documentation. One per line in metadata/corrections.jsonl. Source records keep the original; the shared library applies corrections when it builds the views. See STANDARD.md §5.",
   "type": "object",
   "properties": {
-    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "id": {
+      "$ref": "common.schema.json#/$defs/id"
+    },
     "target": {
       "type": "object",
       "properties": {
-        "name": { "$ref": "common.schema.json#/$defs/name" },
+        "name": {
+          "$ref": "common.schema.json#/$defs/name"
+        },
+        "table": {
+          "description": "The table (file) within the release, when the release has several (STANDARD.md §2.1).",
+          "$ref": "common.schema.json#/$defs/id"
+        },
         "releases": {
           "description": "Releases the correction applies to. Omit for every release whose record still contains original.",
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/id" }
+          "items": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
         },
         "field": {
           "description": "JSON Pointer into the variable record, e.g. /questions/0/text or /values/2/label.",
@@ -21,13 +31,18 @@
           "pattern": "^(/[^/]+)+$"
         }
       },
-      "required": ["name", "field"],
+      "required": [
+        "name",
+        "field"
+      ],
       "additionalProperties": false
     },
     "original": {
       "description": "The value as published. The check fails when it no longer appears, which usually means upstream fixed it."
     },
-    "corrected": { "description": "The value to use instead." },
+    "corrected": {
+      "description": "The value to use instead."
+    },
     "problem": {
       "description": "What is wrong, in one sentence.",
       "type": "string"
@@ -38,31 +53,73 @@
       "items": {
         "type": "object",
         "properties": {
-          "citation": { "type": "string" },
-          "url": { "type": "string", "format": "uri" },
-          "quote": { "type": "string" }
+          "citation": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "quote": {
+            "type": "string"
+          }
         },
-        "required": ["citation"],
+        "required": [
+          "citation"
+        ],
         "additionalProperties": false
       }
     },
     "confidence": {
       "description": "verified: the corrected value is confirmed by a source. inferred: our best reading, e.g. from parallel items.",
-      "enum": ["verified", "inferred"]
+      "enum": [
+        "verified",
+        "inferred"
+      ]
     },
     "upstream": {
       "type": "object",
       "properties": {
-        "status": { "enum": ["not_filed", "filed", "acknowledged", "fixed", "declined"] },
-        "url": { "type": "string", "format": "uri" },
-        "date": { "$ref": "common.schema.json#/$defs/date" }
+        "status": {
+          "enum": [
+            "not_filed",
+            "filed",
+            "acknowledged",
+            "fixed",
+            "declined"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "date": {
+          "$ref": "common.schema.json#/$defs/date"
+        }
       },
-      "required": ["status"],
+      "required": [
+        "status"
+      ],
       "additionalProperties": false
     },
-    "author": { "type": "string" },
-    "date": { "$ref": "common.schema.json#/$defs/date" }
+    "author": {
+      "type": "string"
+    },
+    "date": {
+      "$ref": "common.schema.json#/$defs/date"
+    }
   },
-  "required": ["id", "target", "original", "corrected", "problem", "evidence", "confidence", "upstream", "author", "date"],
+  "required": [
+    "id",
+    "target",
+    "original",
+    "corrected",
+    "problem",
+    "evidence",
+    "confidence",
+    "upstream",
+    "author",
+    "date"
+  ],
   "additionalProperties": false
 }
