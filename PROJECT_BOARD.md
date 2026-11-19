@@ -12,7 +12,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 2:** Recover the earlier planning session — `DONE`. Found as CultureWar Task 186 and copied to [`planning/`](planning/).
 - **Task 3:** Inventory the GSS and ANES work in CultureWar — `DONE`. [`planning/inventory.md`](planning/inventory.md).
 - **Task 4:** Publish the repo on GitHub — `DONE`. https://github.com/AllenDowney/PublicDataToolkit
-- **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Step 1 drafted: [`STANDARD.md`](STANDARD.md) and [`schema/`](schema/). Next: the GSS slice.
+- **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Steps 1–2 done: the standard and schemas, and a 45-variable GSS slice in a local `pdt-gss` repo (not pushed). Next: the ANES slice.
 - **Task 6:** Talk to Hadley Wickham about data-dict — `DOING`. Note to share: [`planning/data_dict.md`](planning/data_dict.md).
 - **Task 7:** Withdrawn.
 - **Task 9:** Remove private information so the repo can be public — `DONE`.
@@ -121,6 +121,28 @@ Findings:
 - **gssrdoc's MIT license covers its code, not NORC's documentation,** so the gssrdoc source takes the GSS terms. The GSS terms are still unreviewed.
 - **No Python environment for the toolkit yet.** The base Python lacks `jsonschema`; the check ran with a temporary install. The shared library (`lib/`) will need a `pyproject.toml`.
 - **Still open:** how to choose release ids (`7224r3a` from the GSS file name, `20260205` from the ANES release date). Listed in STANDARD.md §10 with the other provisional parts.
+
+**Progress (2026-11-19), step 2, the GSS slice:** a new local repo, `pdt-gss`, next to this one; not pushed. It has 45 variables from release 7224r3a:
+- design variables;
+- the abortion battery (7) and the core spending battery (18), both complete;
+- two ballot-split items (`natracey`, `natfarey`);
+- the race items with corrections (`racopen`, `racfew`, `rachaf`, `racmost`, `racschol`);
+- `grass` (marijuana, for the cross-survey topic query) and five others.
+
+`build/build_slice.py` builds the records from gssrdoc (question text, value labels, years and ballots) and the Stata file (variable labels, and which missing codes occur), using only pandas' public API. Four corrections from gssrdoc issue #1 are in `corrections.jsonl`. `tests/check_metadata.py` runs C1, C2, C6, C7, C9 and C10, and all pass; C7 was confirmed to fail on a stale correction. The build runs C3–C5 against the data.
+
+GSS terms, decided by Allen on 2026-11-19: everything `ship`. The 2024 R3a codebook grants MIT-style rights, provided NORC's notice is included (`pdt-gss/NOTICE.md`). The data goes in a GitHub release when `pdt-gss` is published.
+
+Findings from the GSS slice:
+- **gssrdoc doesn't match release 7224r3a.** Its 2024 counts differ from the data: `racopen` 462 vs 981, `grass` 867 vs 862. So gssrdoc was scraped from an earlier 2024 release. Ballots and years match exactly for every other variable.
+- **Missing codes per variable come from the data.** gssrdoc lists the same twelve `NA(x)` codes for every variable. The data shows which occur: `.d`, `.i` and `.n` in 41 of 45 variables, `.s` in 32, `.y` in 8, and none of the others.
+- **gssrdoc doubles every apostrophe** ("DON''T") in 239 variables. It's handled by a recorded parser rule rather than 239 corrections. STANDARD.md rule 3 should say that systemic source artifacts may be fixed by a named rule.
+- **`.z` "see codebook" has no missing type,** but the data file says it's missing. The schema can't say "missing, reason unknown"; `other` is the closest. `unresolved` doesn't fit, because the kind is known.
+- **The shared-stem rule for batteries is fragile.** `natrace` was left out until the rule accepted an item letter right after "?". The rule also merges the Y and Z wording versions, which NORC fields on different ballots, into one 26-item group, and it can't see the `racfew`/`rachaf`/`racmost` chain, which has no shared stem. The build writes a group only when all its members are in the slice, and reports partial ones.
+- **gssrdoc has no yearly counts for weights,** so the build counted `wtssps`'s availability in the data and labeled that field `origin: data_file`.
+- **Per-code provenance is bulky.** Every missing code repeats the same long origin. A default origin for missing codes per variable would shrink the records a lot, which matters for files LLMs read.
+- **A possible documentation error, not verified:** the spending stem repeats a clause ("name some of these problems, and for each one I'd like you to name some of these problems…").
+- **Only one extension so far:** `gss.modules`. Every slice variable is `Core`, so a module group would say nothing.
 
 ## Task 6 — Talk to Hadley Wickham about data-dict
 
