@@ -76,7 +76,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 18 — `download.py` and the data release
 
-`DOING (views + site)`. `pdt download` and the data release in the common format. Details: [`planning/tasks/task-18.md`](planning/tasks/task-18.md).
+`DONE (views + site)`. `pdt download`, the shared readers and `pdt package`; all four repos' data round-trip exactly and pass data-dict `validate-data`. Details: [`planning/tasks/task-18.md`](planning/tasks/task-18.md).
 
 ### Task 19 — `extract.py`, the extract builder
 
