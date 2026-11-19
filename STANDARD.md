@@ -160,7 +160,7 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other` |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
-| `values` | Every documented code, valid and missing, in the publisher's order (§4.2) |
+| `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one |
 | `valid_range` | For numeric variables whose valid values aren't all labeled, such as thermometers and ages: min, max, and whether the ends are top- or bottom-coded |
 | `units`, `universe`, `notes` | Verbatim from the publisher |
 | `availability` | One entry per (wave, form, sample, mode, phase) combination the publisher documents. An entry with only `wave` means everyone in that wave. `n` is the count of non-missing responses, when known |
@@ -267,7 +267,7 @@ Groups the publisher defines have `origin: publisher` or `upstream_package`. Gro
 | `renamed` | The name changed |
 | `wording_changed` | The question text changed |
 | `codes_changed` | The value set changed |
-| `labels_changed` | The variable label or value labels changed, with the codes unchanged (e.g. a corrected label) |
+| `labels_changed` | The variable label or value labels changed (e.g. a corrected label). When the codes changed too, the link also lists `codes_changed` |
 | `universe_changed` | Who was asked changed |
 | `data_revised` | The same item, but its values in the data were revised between releases: recoded missing codes, restored or corrected data, reassigned cases. Release notes are the usual source |
 | `derived_from` | `from` is built from `to`, as a cumulative-file variable is built from single-year items |

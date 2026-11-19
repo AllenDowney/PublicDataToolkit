@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/variable.schema.json",
   "title": "Variable",
-  "description": "One variable in one release, as the publisher documents it. One per line in metadata/releases/<release>/variables.jsonl. Corrections are not applied here; they live in corrections.jsonl. See STANDARD.md §4.",
+  "description": "One variable in one release, as the publisher documents it. One per line in metadata/releases/<release>/variables.jsonl. Corrections are not applied here; they live in corrections.jsonl. See STANDARD.md \u00a74.",
   "type": "object",
   "properties": {
     "dataset": {
@@ -276,6 +276,11 @@
           "items": {
             "$ref": "common.schema.json#/$defs/missing_type"
           }
+        },
+        "n": {
+          "description": "Cases with this code in the release, as the publisher's codebook prints it. 0 means a code listed with no cases; leave it out when the publisher prints no count. Lets a comparison of releases tell a code with no cases from a new code.",
+          "type": "integer",
+          "minimum": 0
         },
         "origin": {
           "description": "Where the kind and missing types came from. Missing and unresolved codes need an origin, their own or the record's provenance.codes (checked by pdt check).",
