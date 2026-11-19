@@ -11,7 +11,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 1:** Write the plan — `DOING`. Draft in [`planning/plan.md`](planning/plan.md). Decided: one repo per dataset, JSONL as the source of truth with data-dict exported, and a GSS + ANES + MTF spike. Remaining decisions are in plan §10.
 - **Task 2:** Recover the earlier planning session — `DONE`. Found as CultureWar Task 186 and copied to [`planning/`](planning/).
 - **Task 3:** Inventory the GSS and ANES work in CultureWar — `DONE`. [`planning/inventory.md`](planning/inventory.md).
-- **Task 4:** Publish the repo on GitHub — `TODO`, waiting for Allen's OK.
+- **Task 4:** Publish the repo on GitHub — `DONE`. https://github.com/AllenDowney/PublicDataToolkit
 - **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Step 1 drafted: [`STANDARD.md`](STANDARD.md) and [`schema/`](schema/). Next: the GSS slice.
 - **Task 6:** Talk to Hadley Wickham about data-dict — `DOING`. Note to share: [`planning/data_dict.md`](planning/data_dict.md).
 - **Task 7:** Withdrawn.
@@ -86,9 +86,9 @@ Write the result to `planning/inventory.md`. Also check MarriageNSFG as a third 
 
 ## Task 4 — Publish the repo on GitHub
 
-**Status:** `TODO` — needs Allen's OK
+**Status:** `DONE` (2026-11-19)
 
-Create the public repository `AllenDowney/PublicDataToolkit` (the name is free as of 2026-11-19) and push. The repo was cleaned for publication in Task 9.
+Published as the public repository https://github.com/AllenDowney/PublicDataToolkit, after the cleanup in Task 9. Comments on [`PROPOSAL.md`](PROPOSAL.md) go to its GitHub issues.
 
 ## Task 5 — snake_case spike
 
