@@ -120,7 +120,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 29 — A YRBSS slice
 
-`DOING (yrbss)`. A slice of CDC's Youth Risk Behavior Survey (high school, 1991–2023) in `~/pdt-yrbss`, built from the Copier template: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-29.md`](planning/tasks/task-29.md).
+`DONE (purple)`. YRBSS combined datasets in `~/pdt-yrbss`: 29 variables in releases sadc-2021 and sadc-2023, which renumber every question; 28 links from CDC's Questionnaire Content document, 3 code histories, data round-trip exact, `pdt check` 0 failures; 7 proposals for the standard. Details: [`planning/tasks/task-29.md`](planning/tasks/task-29.md).
 
 ### Task 30 — A BRFSS slice
 
