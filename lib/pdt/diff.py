@@ -34,39 +34,16 @@ never writes into metadata/.
 import argparse
 import difflib
 import json
-import re
 import sys
 from pathlib import Path
 
 from . import __version__
 from .check import Repo
+from .compare import compare_text, norm
 
 RULE = "release_diff"
 RULE_VERSION = "0.1"
 RENAME_THRESHOLD = 0.6
-
-
-def norm(text):
-    """Text for comparison: case, whitespace and dash variants folded."""
-    text = re.sub(r"[‐-―−]", "-", str(text or ""))
-    text = re.sub(r"\s*-\s*", "-", text)
-    return " ".join(text.lower().split())
-
-
-ITEM_REF = re.compile(r"\(?\b(?:[A-Z]{1,3} )?[A-Z]{1,3}-\d+[a-z]?\b\)?")
-
-
-def strip_refs(text):
-    return norm(ITEM_REF.sub(" ", str(text or "")))
-
-
-def compare_text(a, b):
-    """'same'; 'text_only' (case, whitespace or dashes); 'reference_only' (item references); 'changed'."""
-    if (a or "") == (b or ""):
-        return "same"
-    if norm(a) == norm(b):
-        return "text_only"
-    return "reference_only" if strip_refs(a) == strip_refs(b) else "changed"
 
 
 def question(rec):

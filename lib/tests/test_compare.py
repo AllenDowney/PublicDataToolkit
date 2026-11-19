@@ -1,0 +1,27 @@
+"""Tests for pdt.compare, the shared text comparison."""
+
+import pytest
+
+from pdt.compare import compare_text, is_change, norm, strip_refs
+
+
+@pytest.mark.parametrize("a, b, how", [
+    ("Never married", "Never married", "same"),
+    ("NEVER MARRIED", "Never married", "text_only"),
+    ("Dark - Not Lighted", "Dark – Not Lighted", "text_only"),
+    ("Child Restraint System  - Rear Facing", "Child Restraint System - Rear Facing", "text_only"),
+    ("IC-9 How important is religion", "IC-7 How important is religion", "reference_only"),
+    ("R's age at interview", "R's age at interview (FC A-2b)", "reference_only"),
+    ("JB-4 Attendance", "JB-3 attendance", "reference_only"),
+    ("Whether R was ever married", "Ever married to an opposite-sex spouse (computed in FC A-17)", "changed"),
+    ("15 years", "15", "changed"),
+    (None, "", "same"),
+])
+def test_compare_text(a, b, how):
+    assert compare_text(a, b) == how
+    assert is_change(how) == (how == "changed")
+
+
+def test_helpers():
+    assert norm("  A — b ") == "a-b"
+    assert strip_refs("IC-9 How (FC A-2b) important") == "how important"
