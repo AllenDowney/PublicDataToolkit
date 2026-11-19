@@ -392,9 +392,9 @@ An agent that reaches a terms question stops and asks a person.
 |---|---|---|---|
 | C1 | Every file validates against its schema | | fail |
 | C2 | Ids are unique: (release, name) for variables, `id` for groups and corrections. Every reference resolves: group members, link ends, correction and annotation targets, source ids, release ids | | fail |
-| C3 | Coverage: every variable in the data file has a record, and every record matches a variable in the data file | data | fail |
-| C4 | Missing codes: every code in the data file that has a value label or is an extended missing value appears in `values` | data | fail |
-| C5 | Availability: every wave in `availability` has non-missing values in the data, and every wave with non-missing values is in `availability` | data | warn |
+| C3 | Coverage: every variable in the repo's data file has a record, and every record matches a variable in it. A slice's data file holds only the slice's variables, so the check is against the repo's file, not the publisher's | data | fail |
+| C4 | Codes: every code in a `<name>__code` column appears in `values`. Valid values that `values` doesn't list are reported. The common format doesn't keep the source's value labels, so each build compares those labels with `values` before writing the file | data | fail on unlisted codes; report unlisted valid values |
+| C5 | Availability: every wave in `availability` has non-missing values in the data, and every wave with non-missing values is in `availability`. Version 0.1 compares waves only, not forms or counts, and skips a table with no wave column in a release with several waves | data | warn |
 | C6 | Provenance: every source used by a release has `fetched_on` and `sha256`; every upstream package has `version`. Reports counts of records without label, question text or values, of unresolved codes, and of unreviewed model output | | fail on missing hashes; report the rest |
 | C7 | Each correction's `original` still appears in its target | | fail |
 | C8 | `docs/`, `agent/` and `export/` are current with the records | | fail |
@@ -403,7 +403,7 @@ An agent that reaches a terms question stops and asks a person.
 | C11 | README has the sections in §2.3; CLAUDE.md exists | | fail |
 | C12 | Keys and references hold in the data: each table's `key` is unique and non-blank, and each reference (§2.1) finds its target row, for the rows its `when` selects | data | fail |
 
-`pdt check` is in the shared library, [`lib/pdt/`](lib/pdt/). Version 0.1 implements C1, C2, C6, C7, C9, C10 and C11. C3–C5 need the data and run in each repo's build for now, and C8 waits for the generated views. To run it from a dataset repo with a toolkit checkout next to it:
+`pdt check` is in the shared library, [`lib/pdt/`](lib/pdt/). Version 0.1 implements every check except C8, which waits for the generated views. The data checks read `data/processed/` and skip a file, with a notice, when it's missing or when its `metadata_sha256` doesn't match the current records. To run it from a dataset repo with a toolkit checkout next to it:
 
 ```bash
 PYTHONPATH=../PublicDataToolkit/lib python -m pdt check .
