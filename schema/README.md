@@ -10,6 +10,7 @@ JSON Schemas (draft 2020-12) for the files in a dataset repository. What the fie
 | [`variable.schema.json`](variable.schema.json) | each line of `metadata/releases/<release>/variables.jsonl` | §4 |
 | [`group.schema.json`](group.schema.json) | each line of `metadata/groups.jsonl` | §5.1 |
 | [`link.schema.json`](link.schema.json) | each line of `metadata/links.jsonl` | §5.2 |
+| [`code_list.schema.json`](code_list.schema.json) | each line of `metadata/code_lists.jsonl` | §4.5 |
 | [`correction.schema.json`](correction.schema.json) | each line of `metadata/corrections.jsonl` | §5.3 |
 | [`derived.schema.json`](derived.schema.json) | each line of `metadata/derived/*.jsonl` | §6 |
 | [`annotation.schema.json`](annotation.schema.json) | each line of `metadata/annotations/*.jsonl` | §6 |

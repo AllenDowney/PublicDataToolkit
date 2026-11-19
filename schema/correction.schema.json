@@ -14,6 +14,10 @@
         "name": {
           "$ref": "common.schema.json#/$defs/name"
         },
+        "code_list": {
+          "description": "A shared code list's id (STANDARD.md §4.5), instead of a variable name; field then points into the list, e.g. /codes/12/label.",
+          "$ref": "common.schema.json#/$defs/id"
+        },
         "table": {
           "description": "The table (file) within the release, when the release has several (STANDARD.md §2.1).",
           "$ref": "common.schema.json#/$defs/id"
@@ -26,14 +30,25 @@
           }
         },
         "field": {
-          "description": "JSON Pointer into the variable record, e.g. /questions/0/text or /values/2/label.",
+          "description": "JSON Pointer into the variable record, e.g. /questions/0/text or /values/2/label, or into the code list, e.g. /codes/12/label.",
           "type": "string",
           "pattern": "^(/[^/]+)+$"
         }
       },
       "required": [
-        "name",
         "field"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "code_list"
+          ]
+        }
       ],
       "additionalProperties": false
     },

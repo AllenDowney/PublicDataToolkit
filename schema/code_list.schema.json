@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/code_list.schema.json",
+  "title": "Code list",
+  "description": "A list of codes shared by several variables, or published separately by the publisher. One per line in metadata/code_lists.jsonl. Optional (STANDARD.md §4.5).",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique; names the list's version, e.g. census-occ-2010, iucr-20261119.",
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "label": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "codes": {
+      "description": "The publisher's codes, in its order; each a value as in a variable record (STANDARD.md §4.2).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "variable.schema.json#/$defs/value"
+      }
+    },
+    "columns": {
+      "description": "The publisher's other columns, carried in each code's attributes: name -> description.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "origin": {
+      "$ref": "common.schema.json#/$defs/origin"
+    },
+    "source_location": {
+      "$ref": "variable.schema.json#/properties/source_location"
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "label",
+    "codes",
+    "origin"
+  ],
+  "additionalProperties": false
+}

@@ -87,6 +87,10 @@
         "$ref": "#/$defs/value"
       }
     },
+    "code_list": {
+      "description": "Id of a shared code list in metadata/code_lists.jsonl (STANDARD.md §4.5). Its codes come before this record's own values.",
+      "$ref": "common.schema.json#/$defs/id"
+    },
     "valid_range": {
       "description": "For numeric variables whose valid values are not all labeled (thermometers, ages, counts). Labeled codes inside the range still appear in values.",
       "type": "object",
@@ -304,6 +308,30 @@
           "description": "Cases with this code in the release, as the publisher's codebook prints it. 0 means a code listed with no cases; leave it out when the publisher prints no count. Lets a comparison of releases tell a code with no cases from a new code.",
           "type": "integer",
           "minimum": 0
+        },
+        "retired": {
+          "description": "The publisher marks the code retired; it may still occur in earlier data, so it stays valid (STANDARD.md §4.2).",
+          "type": "boolean"
+        },
+        "waves": {
+          "description": "When the publisher says the code is in use: {from, to}, in the dataset's wave units.",
+          "type": "object",
+          "properties": {
+            "from": {
+              "$ref": "common.schema.json#/$defs/wave"
+            },
+            "to": {
+              "$ref": "common.schema.json#/$defs/wave"
+            }
+          },
+          "required": [
+            "from"
+          ],
+          "additionalProperties": false
+        },
+        "attributes": {
+          "description": "The publisher's other columns for this code, in a shared code list (e.g. IUCR's index_code); the list's columns describe them.",
+          "type": "object"
         },
         "origin": {
           "description": "Where the kind and missing types came from. Missing and unresolved codes need an origin, their own or the record's provenance.codes (checked by pdt check).",
