@@ -382,6 +382,61 @@ The comparison of the manual's labels with the data's labels already works, and 
 
 **Files:** `../pdt-fars/` only (not its `agent/` or `docs/`, which the views thread generates).
 
+**Step 1, done (fars thread, 2026-11-19):** the PARKWORK table. pdt-fars commit `f2761b7`.
+- `parkwork`: 8 variables; key (`ST_CASE`, `VEH_NO`); refers to `accident`.
+- person (`ST_CASE`, `VEH_NO`) → `parkwork` `when` `PER_TYP` is 3. The manual says so on page 295 ("When PER_TYPE = 3, the occupied vehicle will be found in the PARKWORK data file"). It holds for all 426 rows, and the parkwork and vehicle keys don't overlap.
+- The build now checks every key and reference in `dataset.yaml` against the data and lists the results in `build/report.md`. `pdt check` only checks that the tables and columns exist.
+- **Parser:** the SAS Name field can span several lines, each with its years (`HARM_EV 2005-2009`, `PHARM_EV 2010-Later`). The parser read only the first line, so in PARKWORK it found the 2005–2009 names. 88 elements were renamed this way. All the lines are read now. The other tables' records didn't change, and every ACCIDENT column is now found in the manual.
+- **Parser:** pdftotext printed two rows of `PHARM_EV` on one line (code 98, two labels). The parser now splits rows like that. 0 unresolved codes.
+
+**Step 2, proposal: code histories (fars thread, 2026-11-19; sent to the coordinator, not built)**
+
+*What the manual has.* Each element's codes are a matrix: one row per attribute, as the publisher prints it, and one column per year range. Across the manual there are 462 matrices with 5,162 rows. Both kinds of change occur:
+- the same code changes meaning: `LGT_COND` 9 is the row "Unknown" for 1975–2017 and the row "Reported as Unknown" from 2018;
+- the same attribute changes code: `WEATHER` "Unknown" is 9 until 2017 and 99 after, and `CL_TWAY` "County Road" is 6, then 4. 54 rows change code this way, not counting widened ranges such as 1-99 → 1-999.
+
+There are also renames (88 elements, above) and 338 labels with year notes inside them ("(Since 2018)").
+
+*Why the existing forms don't fit.*
+
+| Form | Problem |
+|---|---|
+| Links (§5.2) | Variable-level, between two release records. A link can say `codes_changed`, but not which code changed or how. It also needs a record in every release (50 FARS years). |
+| A release-comparison report | Generated from two releases' records. It finds differences, but doesn't record what the publisher asserts, and covers only releases we've built. |
+| `since`/`until` on each value in the 2024 record | Goes against the Task 25 decision that a record says only what its own release means. |
+
+*Proposal.* A new source file, `metadata/histories.jsonl`, written by `build/`, with one line per element the publisher documents across years. It is the manual's matrix stored as structure (rule 5):
+
+```json
+{"id": "accident/LGT_COND", "table": "accident", "name": "LGT_COND",
+ "names": [{"name": "LGT_COND", "waves": {"from": 1975}}],
+ "periods": [{"from": 1975, "to": 1979}, {"from": 1980, "to": 2008}, {"from": 2009, "to": 2009},
+             {"from": 2010, "to": 2017}, {"from": 2018}],
+ "attributes": [
+   {"label": "Daylight", "codes": [1, 1, 1, 1, 1]},
+   {"label": "Unknown", "codes": [9, 9, 9, 9, null]},
+   {"label": "Reported as Unknown", "codes": [null, null, null, null, 9]}],
+ "origin": {"origin": "publisher", "source": "fars-manual-1975-2024", "location": {"page": 78}}}
+```
+
+- **Periods** are in the units of `dimensions.wave` (the data year for FARS). A period with no `to` runs through the latest release.
+- **Attributes** are the publisher's rows, in its order. `codes` lines up with `periods`, and `null` is the manual's `--`. A range stays a string (`"1-99"`). Labels are verbatim, year notes included.
+- **Names** give the element's name in each period (`HARM_EV` 2005–2009, `PHARM_EV` from 2010).
+- Identity is (`table`, the current name). A discontinued element is keyed by its last name and has no 2024 record.
+
+*What it's for.*
+1. **Records for other years.** A 2017 record can be built from the 2017 column plus the 2017 data's labels, with no separate parser.
+2. **Release comparison.** For each code, compare which attribute (row) it belongs to in each release: the same row, a different row with the same code (`LGT_COND` 9), a new code, or a dropped one. The comparison is a rule over the publisher's history, not a guess.
+3. **Links.** A `codes_changed` or `renamed` link between two releases' records can be generated from the history by a named rule (`origin: rule`), like the GSS naming-convention links. Rule 2 still holds, because the publisher asserts the rows.
+4. **Views.** A per-variable "code history" table. That is where a history string like "(Since 2018)" belongs.
+
+*Questions for the coordinator.*
+1. Put this in the standard now, as an optional file (a new §5.4, `schema/history.schema.json`, C2 checks that the target exists), or keep it FARS-only until a second dataset needs it? GSS and ANES CDF codebooks also document year-specific codes, so it may generalize. Extensions (§4.4) are per record and don't fit a separate file.
+2. Scope: only the slice's elements (as §5.1 does for groups), or all 433 in the manual? I'd do the slice, plus the discontinued elements that share a name with one in the slice (`WEATHER`).
+3. Is (`table`, current name) the right identity, given that one element can hold several SAS names (`WEATHER1`, `WEATHER2`)? I'd make one history per name, and duplicate the history where names share it.
+
+*Test.* Once Allen downloads the 2017 national CSV (step 3), check the matrix's 2017 column against the 2017 data's codes and labels. The data should say "Unknown" for `LGT_COND` 9 in 2017 and "Reported as Unknown" in 2024.
+
 ## Task 14 — Agent views: `agent/` index and shards
 
 **Status:** `DONE` (views thread, 2026-11-19; not pushed)
