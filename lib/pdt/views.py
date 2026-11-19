@@ -227,6 +227,26 @@ def wave_list(waves):
     return ",".join(str(a) if a == b else f"{a}-{b}" for a, b in runs)
 
 
+def when_text(when):
+    """A reference's condition: "PER_TYP is 1, 2 or 9"."""
+    if not when:
+        return ""
+    values = [str(v) for v in when.get("in", [])]
+    listed = values[0] if len(values) == 1 else ", ".join(values[:-1]) + " or " + values[-1]
+    return f"{when.get('column')} is {listed}"
+
+
+def reference_text(ref):
+    """A table reference in words: "ST_CASE, VEH_NO -> vehicle when PER_TYP is 3"."""
+    target = ref.get("table", "?")
+    if ref.get("dataset"):
+        target = f"{ref['dataset']}:{target}"
+    text = f"{', '.join(ref.get('columns', []))} -> {target}"
+    if ref.get("when"):
+        text += f" when {when_text(ref['when'])}"
+    return text
+
+
 def sort_key(value):
     return (isinstance(value, str), value)
 
@@ -483,6 +503,20 @@ def render_index(repo, index, shards, header, waves):
         for tab, recs in repo.tables.get(r["id"], {}).items():
             out.append(f"| `{r['id']}` | {tab or '-'} | {len(recs)} | {r.get('label', '')} |")
     out.append("")
+    for r in ds.get("releases", []):
+        if not r.get("tables"):
+            continue
+        out.append(f"Tables in `{r['id']}`: the key identifies a row; a reference says which "
+                   "columns join to another table, and when.\n")
+        for t in r["tables"]:
+            line = f"- `{t['id']}`: {t.get('label', '')}"
+            if t.get("key"):
+                line += f". Key: {', '.join(t['key'])}"
+            refs = [reference_text(ref) for ref in t.get("references") or []]
+            if refs:
+                line += ". References: " + "; ".join(refs)
+            out.append(line)
+        out.append("")
 
     if index.corrected:
         out.append("## Corrections applied\n")

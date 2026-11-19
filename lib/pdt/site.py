@@ -23,7 +23,7 @@ from urllib.parse import quote
 from . import __version__
 from .check import Repo
 from .search import Index
-from .views import inputs_hash, origin_text, sort_key, wave_list, wave_summary
+from .views import inputs_hash, origin_text, sort_key, wave_list, wave_summary, when_text
 
 DIRECTORY = "docs"
 
@@ -216,10 +216,18 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             t = next(t for t in r["tables"] if t["id"] == tab)
             facts = [("Table", esc(t.get("label", tab)))]
             if t.get("key"):
-                facts.append(("Key", ", ".join(f"<code>{esc(k)}</code>" for k in t["key"])))
-            for ref in t.get("references") or []:
-                facts.append(("References", f"<code>{esc(json.dumps(ref, ensure_ascii=False))}</code>"))
+                facts.append(("Key", ", ".join(self.column(here, r["id"], tab, k) for k in t["key"])))
+            refs = [self.reference(here, r["id"], tab, ref) for ref in t.get("references") or []]
+            if refs:
+                facts.append(("Refers to", "<br>".join(refs)))
+            back = [(other, ref) for other in r["tables"] for ref in other.get("references") or []
+                    if ref.get("table") == tab and not ref.get("dataset")]
+            if back:
+                facts.append(("Referred to by", "<br>".join(
+                    self.reference(here, r["id"], other["id"], ref, source=True) for other, ref in back)))
             body.append(dl(facts))
+            if t.get("description"):
+                body.append(f"<p>{esc(' '.join(t['description'].split()))}</p>")
         if r.get("sources"):
             body.append(dl([("Sources", ", ".join(f"<code>{esc(s)}</code>" for s in r["sources"]))]))
         rows = []
@@ -232,6 +240,29 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                          esc(self.signature.get(key, {}).get("scale_signature", {}).get("value", ""))])
         body.append(table(["Name", "Label", self.dim_label("wave") + "s", "Scale"], rows))
         self.page(here, title, "\n".join(body), crumbs=[])
+
+    def column(self, here, rel, tab, name):
+        """A column name, linked to its variable page when the repo has a record for it."""
+        if any(r == rel and t == tab and rec["name"] == name for r, t, rec in self.index.entries):
+            return f"<code>{self.link(here, self.var_path(rel, tab, name), name)}</code>"
+        return f"<code>{esc(name)}</code>"
+
+    def reference(self, here, rel, tab, ref, source=False):
+        """ "ST_CASE, VEH_NO → vehicle, when PER_TYP is 3", with links."""
+        cols = ", ".join(self.column(here, rel, tab, c) for c in ref.get("columns", []))
+        target = ref.get("table", "?")
+        if ref.get("dataset"):
+            other = esc(f"{ref['dataset']}: {target}")
+        elif source:
+            other = self.link(here, self.release_path(rel, tab), tab)
+        else:
+            other = self.link(here, self.release_path(rel, target), target)
+        text = f"{other}: {cols}" if source else f"{cols} → {other}"
+        if ref.get("when"):
+            when = ref["when"]
+            col = self.column(here, rel, tab, when.get("column", ""))
+            text += f", when {col}{esc(when_text(when)[len(str(when.get('column', ''))):])}"
+        return text
 
     def variable_page(self, rel, tab, rec):
         here = self.var_path(rel, tab, rec["name"])
@@ -306,6 +337,7 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                 c = self.corrections[a["id"]]
                 ev = "".join(f"<li>{esc(e.get('citation'))}"
                              + (f' — <a href="{esc(e["url"])}">{esc(e["url"])}</a>' if e.get("url") else "")
+                             + (f'<blockquote>{esc(e["quote"])}</blockquote>' if e.get("quote") else "")
                              + "</li>" for e in c.get("evidence", []))
                 up = c.get("upstream") or {}
                 upstream = esc(up.get("status", "")) + (
@@ -577,6 +609,8 @@ table.numeric td + td, table.numeric th + th { text-align: right; font-variant-n
 code { font-size: 90%; }
 .origin { color: var(--muted); font-size: 13px; }
 .gap { white-space: nowrap; }
+blockquote { margin: 4px 0 8px; padding: 4px 10px; border-left: 3px solid var(--line);
+  color: var(--muted); white-space: pre-wrap; }
 .corrected { background: var(--warn-bg); color: var(--warn-fg); font-size: 12px; padding: 1px 6px;
   border-radius: 4px; }
 .kind-missing { color: var(--missing); }

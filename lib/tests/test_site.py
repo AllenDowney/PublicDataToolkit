@@ -112,3 +112,33 @@ def test_tables(tmp_path):
     site.build(root)
     assert "Table A" in read(root, "releases/r1-a.html")
     assert 'href="../../../style.css"' in read(root, "variables/r1/a/q1.html")
+
+
+def test_references_with_conditions(tmp_path):
+    tables = [
+        {"id": "veh", "label": "Vehicles", "sources": ["cb"], "key": ["q1"]},
+        {"id": "per", "label": "People", "sources": ["cb"], "key": ["q1", "q2"],
+         "description": "One row per person.",
+         "references": [{"columns": ["q1"], "table": "veh", "when": {"column": "q2", "in": [1, 2, 9]}}]},
+    ]
+    dataset = dict(DATASET, releases=[{"id": "r1", "label": "R1", "status": "current", "sources": ["cb"],
+                                       "tables": tables}])
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "veh" / "variables.jsonl", [VARIABLES[0]])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "per" / "variables.jsonl", VARIABLES)
+    site.build(root)
+    per = read(root, "releases/r1-per.html")
+    assert 'href="../releases/r1-veh.html">veh</a>' in per and "when" in per and " is 1, 2 or 9" in per
+    assert 'href="../variables/r1/per/q2.html"' in per and "One row per person." in per
+    assert "Referred to by" in read(root, "releases/r1-veh.html")
+    from pdt import views
+    views.build(root)
+    assert "q1 -> veh when q2 is 1, 2 or 9" in (root / "agent" / "index.md").read_text()
+
+
+def test_correction_evidence_quote(tmp_path):
+    from test_check import CORRECTIONS
+    c = dict(CORRECTIONS[0], evidence=[{"citation": "Data file", "quote": "code 9: 1,204 cases"}])
+    root = make_repo(tmp_path, corrections=[c])
+    site.build(root)
+    assert "<blockquote>code 9: 1,204 cases</blockquote>" in read(root, "variables/r1/q2.html")
