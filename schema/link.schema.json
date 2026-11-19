@@ -18,6 +18,7 @@
           "renamed",
           "wording_changed",
           "codes_changed",
+          "labels_changed",
           "universe_changed",
           "data_revised",
           "derived_from",
