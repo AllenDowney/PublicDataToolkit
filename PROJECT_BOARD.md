@@ -158,7 +158,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 39 — Library changes from the YRBSS findings
 
-`DOING (purple)`. Library changes from Task 29: `valid_labels` without labels, `read_sas_input`, a warning on name reuse across releases, `not_asked` from availability, and `design` in pdt-yrbss. Details: [`planning/tasks/task-39.md`](planning/tasks/task-39.md).
+`DONE (purple)`. `valid_labels` without labels, `pdt.readers.read_sas_input`, a C2 warning on names reused across releases, C12 with `target_columns` (CPS: 35 references pass), `not_asked_from_availability` in recode and extract, and `design` in pdt-yrbss. Details: [`planning/tasks/task-39.md`](planning/tasks/task-39.md).
 ### Task 40 — `pdt diff` pairs by links first
 
 `DONE (red)`. `pdt diff` pairs by links first (YRBSS's renumbering: 28 of 28 by link, 7 name conflicts flagged), compares valid ranges (CPS FPOVCUT) and question numbers. Details: [`planning/tasks/task-40.md`](planning/tasks/task-40.md).

@@ -50,10 +50,12 @@ The Youth Risk Behavior Survey (YRBS) is CDC's survey of US high-school students
 
 ## Proposals for the standard (not made; for the coordinator)
 
+The coordinator's decisions (2026-11-19): 2, 3 and 6 are in STANDARD.md and the schemas (`8ae8813`). 1, 5 and 7, and the `valid_labels` bug, went to the library as [Task 39](task-39.md). 4 is deferred.
+
 1. **Warn on name reuse across releases.** `pdt check` (or `pdt diff`) should report a name that appears in two releases without a `same_item` link between those two records, when the name has a link to a different name. `pdt diff` should pair by existing links before pairing by name.
 2. **Per-wording provenance.** Let each `questions` entry carry its own `origin`. A record whose wordings come from different origins needs this; §10 lists it as provisional ("Provenance per field rather than per value").
 3. **§5.4 `names`:** say whose names they are. Allow names in another product, such as the single-year files, with a `source`, or rename the field to "the publisher's identifiers by wave".
-4. **Tables as partitions.** Say that a release's tables may be partitions of one kind of record (by site or region), with the same columns. Or add `parts` to a table, so the national, state and district files form one table.
+4. **Tables as partitions.** *Deferred by the coordinator (2026-11-19) until someone builds the state or district files.* Say that a release's tables may be partitions of one kind of record (by site or region), with the same columns. Or add `parts` to a table, so the national, state and district files form one table.
 5. **`not_asked` from availability.** A missing code whose types include `not_asked` could be split by the library: in a wave outside `availability` it is `not_asked`, and inside it, the other types. This would apply to any cumulative file.
 6. **Design variables in `dataset.yaml`,** e.g. `design: {weight: weight, strata: stratum, psu: PSU}`. The YRBSS, BRFSS and CPS all need one.
 7. **A shared reader for SAS input programs** (`pdt.readers.read_sas_input`), from `build/sadc.py`. It reads `$` columns as text, and numeric `.` or blank as `Code(".")`. CDC publishes BRFSS and other datasets the same way. This is for the views + site thread, which owns `readers.py`.
@@ -64,6 +66,6 @@ The Youth Risk Behavior Survey (YRBS) is CDC's survey of US high-school students
 
 ## Problems found in CDC's documentation
 
-- **The Questionnaire Content document** letters 2021 Q78 (screen time) A, C, D, E, F, G, with no B, in both the high-school and middle-school rows. The 2021 formats and the data have six codes, 1–6. It's small, and not filed; Allen can decide whether to report it.
+- **For Allen:** the Questionnaire Content document letters 2021 Q78 (screen time) A, C, D, E, F, G, with no B, in both the high-school and middle-school rows. The 2021 formats and the data have six codes, 1–6. The coordinator judged it not worth an email by itself; it's listed here in case it goes with another report to CDC.
 - **The formats' labels are CDC's "short response" labels,** not the questionnaire's text: `q59` "Never had sex", against the questionnaire's "I have never had sexual intercourse". That isn't an error; the build report lists the differences.
 - **The 2021 combined guide prints no page numbers.** Page references in both releases are PDF pages.
