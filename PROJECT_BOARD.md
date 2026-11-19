@@ -129,6 +129,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (red)`. `pdt check` C8: `docs/`, `agent/` and `export/` are current with the records (STANDARD.md §9). Details: [`planning/tasks/task-31.md`](planning/tasks/task-31.md).
 
+### Task 32 — A CPS-ASEC slice
+
+`DOING (yellow)`. A slice of the Census/BLS CPS Annual Social and Economic Supplement (March CPS, 2019–2024 or longer) in `~/pdt-cps-asec`, from Census's own public-use files: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
+
 
 ## Working in parallel
 
