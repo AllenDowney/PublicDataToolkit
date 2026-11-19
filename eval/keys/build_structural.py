@@ -41,11 +41,12 @@ def gss_ballot_a_1988(repo):
                       "why": why + ("; administrative" if admin else "")})
     return {
         "question": "gss_ballot_a_1988",
-        "expected_label": "approximate",
+        "expected_label": "complete",
         "label_reason": (
-            "No pdt search filter or shard selects on availability, so the agent has to read "
-            "waves by form from the release shard and pick variables itself. Under SKILL.md that "
-            "is `approximate`, although the answer is exact. See the Task 23 findings."),
+            "pdt search's `available` filter, {\"available\": {\"wave\": 1988, \"form\": \"A\"}}, "
+            "returns this set; GSS availability has a data or upstream origin, so it is `complete`. "
+            "The filter returns the neutral items too. Picking by reading the shards is "
+            "`approximate`; that was the expected label before the filter existed (runs 1-2)."),
         "scope": {"gss": {"release": "7224r3a", "variables": 50}},
         "built_by": "eval/keys/build_structural.py from ../pdt-gss/metadata/",
         "items": items,
@@ -66,10 +67,11 @@ def anes_therm_1978(repo):
     assert by_label == therm, (by_label ^ therm)   # label and scale signature agree
     return {
         "question": "anes_therm_1978",
-        "expected_label": "approximate",
+        "expected_label": "complete_by_rule",
         "label_reason": (
-            "The thermometer shard is `complete_by_rule`, but restricting it to 1978 is done by "
-            "reading, which SKILL.md labels `approximate`."),
+            "{\"derived\": {\"scale_signature\": \"thermometer\"}, \"available\": {\"wave\": 1978}} "
+            "returns this set; the scale signature and ANES availability (anes_phase) are rules. "
+            "Picking by reading is `approximate`, the expected label for runs 1-2."),
         "scope": {"anes-cdf": {"release": "20260205", "variables": 37}},
         "built_by": "eval/keys/build_structural.py from ../pdt-anes-cdf/metadata/",
         "items": items,

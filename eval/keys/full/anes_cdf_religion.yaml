@@ -1,0 +1,140 @@
+# Religion key for the full ANES CDF, release 20260205 (1,029 variables).
+# Built by hand on 2026-11-19. Candidates: every variable in
+# ../pdt-anes-cdf/data/raw/anes_cdf_codebook_20260205.html whose label or question text matches
+# a religion keyword (relig, church, god, pray, bible, clergy, faith, denomination, Jew,
+# Catholic, Protestant, Muslim, evangelical, born again, fundamentalist, Christian, atheist,
+# Mormon, ...): 27 candidates. Each was read and sorted by the rule in README.md. Out:
+# VCF0630 and VCF0631 ("faith in" a level of government) and VCF9040 (Blacks and special
+# favors; its question text names other groups that worked their way up).
+question: religion
+expected_label: approximate
+scope:
+  anes-cdf:
+    release: '20260205'
+    variables: 1029
+items:
+- dataset: anes-cdf
+  table: null
+  name: VCF0128
+  status: hit
+  why: affiliation, major group
+- dataset: anes-cdf
+  table: null
+  name: VCF0128a
+  status: hit
+  why: affiliation, 7 categories 1960-1988
+- dataset: anes-cdf
+  table: null
+  name: VCF0128b
+  status: hit
+  why: affiliation, 8 categories 1990-1996
+- dataset: anes-cdf
+  table: null
+  name: VCF0129
+  status: hit
+  why: affiliation, full code 1960-1988, 2002
+- dataset: anes-cdf
+  table: null
+  name: VCF0152
+  status: hit
+  why: affiliation, full code 1990-
+- dataset: anes-cdf
+  table: null
+  name: VCF0130
+  status: hit
+  why: attendance 1970-
+- dataset: anes-cdf
+  table: null
+  name: VCF0130a
+  status: hit
+  why: attendance 1990-
+- dataset: anes-cdf
+  table: null
+  name: VCF0131
+  status: hit
+  why: attendance 1952-1968
+- dataset: anes-cdf
+  table: null
+  name: VCF0845
+  status: hit
+  why: authority of the Bible 1964-1990
+- dataset: anes-cdf
+  table: null
+  name: VCF0846
+  status: hit
+  why: importance of religion
+- dataset: anes-cdf
+  table: null
+  name: VCF0847
+  status: hit
+  why: guidance from religion
+- dataset: anes-cdf
+  table: null
+  name: VCF0850
+  status: hit
+  why: authority of the Bible 1984-
+- dataset: anes-cdf
+  table: null
+  name: VCF9243
+  status: hit
+  why: born-again Christian
+- dataset: anes-cdf
+  table: null
+  name: VCF0203
+  status: neutral
+  why: thermometer, Protestants
+- dataset: anes-cdf
+  table: null
+  name: VCF0204
+  status: neutral
+  why: thermometer, Catholics
+- dataset: anes-cdf
+  table: null
+  name: VCF0205
+  status: neutral
+  why: thermometer, Jews
+- dataset: anes-cdf
+  table: null
+  name: VCF0234
+  status: neutral
+  why: thermometer, Christian fundamentalists
+- dataset: anes-cdf
+  table: null
+  name: VCF9003
+  status: neutral
+  why: thermometer, evangelical groups
+- dataset: anes-cdf
+  table: null
+  name: VCF9267
+  status: neutral
+  why: thermometer, Muslims
+- dataset: anes-cdf
+  table: null
+  name: VCF9269
+  status: neutral
+  why: thermometer, Christians
+- dataset: anes-cdf
+  table: null
+  name: VCF0746
+  status: neutral
+  why: religious or moral group tried to influence R's vote
+- dataset: anes-cdf
+  table: null
+  name: VCF0747
+  status: neutral
+  why: election information at church
+- dataset: anes-cdf
+  table: null
+  name: VCF9043
+  status: neutral
+  why: school prayer, 4 categories
+- dataset: anes-cdf
+  table: null
+  name: VCF9043a
+  status: neutral
+  why: strength of opinion on school prayer
+- dataset: anes-cdf
+  table: null
+  name: VCF9051
+  status: neutral
+  why: school prayer, 2 categories

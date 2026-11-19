@@ -1,0 +1,117 @@
+# Religion key for the full NSFG 2022-2023 public-use files (female 1,912 variables,
+# male 1,156, pregnancy 110, as counted in the codebooks). Built by hand on 2026-11-19.
+# Candidates: every variable in ../pdt-nsfg/data/raw/2022-2023-*-Codebook.txt whose label or
+# universe matches a religion keyword, plus every item in the religion sections (female IC-3
+# to IC-8, male JB-3 to JB-8). IC/JB-1, -2, -4 and -5 (religion raised, current religion as
+# asked) aren't in the public files. "Against religion or morals" is a response code of
+# another item, not a variable.
+question: religion
+expected_label: approximate
+scope:
+  nsfg:
+    release: 2022-2023
+    tables:
+      female: 1912
+      male: 1156
+      pregnancy: 110
+items:
+- dataset: nsfg
+  table: female
+  name: RELIGION
+  status: hit
+  why: affiliation (recode)
+- dataset: nsfg
+  table: female
+  name: ATTND14
+  status: hit
+  why: attendance at age 14
+- dataset: nsfg
+  table: female
+  name: FUNDAM_1
+  status: hit
+  why: fundamentalist affiliation, 1st mention
+- dataset: nsfg
+  table: female
+  name: FUNDAM_2
+  status: hit
+  why: 2nd mention
+- dataset: nsfg
+  table: female
+  name: FUNDAM_3
+  status: hit
+  why: 3rd mention
+- dataset: nsfg
+  table: female
+  name: FUNDAM_4
+  status: hit
+  why: 4th mention
+- dataset: nsfg
+  table: female
+  name: RELDLIFE
+  status: hit
+  why: importance in daily life
+- dataset: nsfg
+  table: female
+  name: ATTNDNOW
+  status: hit
+  why: attendance
+- dataset: nsfg
+  table: female
+  name: RELIGION_I
+  status: neutral
+  why: imputation flag for RELIGION
+- dataset: nsfg
+  table: male
+  name: RELIGION
+  status: hit
+  why: affiliation (recode)
+- dataset: nsfg
+  table: male
+  name: ATTND14
+  status: hit
+  why: attendance at age 14
+- dataset: nsfg
+  table: male
+  name: FUNDAM_1
+  status: hit
+  why: fundamentalist affiliation, 1st mention
+- dataset: nsfg
+  table: male
+  name: FUNDAM_2
+  status: hit
+  why: 2nd mention
+- dataset: nsfg
+  table: male
+  name: FUNDAM_3
+  status: hit
+  why: 3rd mention
+- dataset: nsfg
+  table: male
+  name: FUNDAM_4
+  status: hit
+  why: 4th mention
+- dataset: nsfg
+  table: male
+  name: RELDLIFE
+  status: hit
+  why: importance in daily life
+- dataset: nsfg
+  table: male
+  name: ATTNDNOW
+  status: hit
+  why: attendance
+- dataset: nsfg
+  table: male
+  name: RELIGION_I
+  status: neutral
+  why: imputation flag for RELIGION
+- dataset: nsfg
+  table: pregnancy
+  name: RELIGION
+  status: hit
+  why: affiliation, copied to the pregnancy file
+- dataset: nsfg
+  table: pregnancy
+  name: RELIGION_I
+  status: neutral
+  why: imputation flag for RELIGION

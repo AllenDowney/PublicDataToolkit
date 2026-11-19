@@ -101,4 +101,4 @@ From the spike's success criterion (plan §13): the structural queries are answe
 
 ## Changes after the first run
 
-None yet.
+- **2026-11-19, after runs 1-2: expected labels of the structural keys.** The first runs showed that `pdt search` couldn't select on availability (finding 2 in [`RESULTS.md`](RESULTS.md)). The views thread added an `available` filter (df13f6f), so the expected labels changed from `approximate` to `complete` (`gss_ballot_a_1988`) and `complete_by_rule` (`anes_therm_1978`). The items didn't change. Runs 1-2 keep the scores they had, against `approximate`, in their `score.json`; runs 3-4 are scored against the new labels. An agent that picks by reading and says `approximate` is still following the rules, so the scores report the label it gave as well as whether it matches.
