@@ -522,3 +522,8 @@ Findings that need a decision or a change to STANDARD.md and the schemas:
 
 **Files:** `STANDARD.md`, `schema/`, and the `lib/` code that enforces them.
 
+**Decided (2026-11-19):**
+- **Publisher subject lists are groups,** of kind `subject` (STANDARD.md §5.1). Proposed by the views thread (Task 14), with Allen's approval of the direction. The main thread chose groups over "complete-capable annotations", so the rule stays simple: annotations never support completeness, and publisher groups can. `pdt-gss` now emits gssrdoc's subjects as `subject` groups instead of annotations.
+- **Headers for generated JSONL** (§7): the first line is a `{"shard": {...}}` object, and `agent/manifest.json` holds the input hashes. This was the views thread's convention.
+- **Still open, from the views thread:** JSONL shards cost about 1,200 tokens per GSS variable, of which availability is 36% and provenance 36%. The full GSS would need hundreds of shard files, so a compact JSONL form may be needed. This relates to the per-code provenance item above.
+
