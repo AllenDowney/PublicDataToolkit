@@ -29,9 +29,9 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
   - Religion is the cross-survey topic.
 - **Task 6:** Talk to Hadley Wickham about data-dict. [`planning/data_dict.md`](planning/data_dict.md)
 - **Task 11:** Data releases, download scripts and extract builders. The common data format is accepted and implemented (`lib/pdt/data.py`); the rest is in Tasks 18 and 19.
-- **Task 13:** FARS slice. The parser for the manual needs work.
 
 **To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
+- **Task 13:** FARS, continued: the PARKWORK table, history across years, a second release.
 - **Task 15:** Human-readable site: `docs/`. `DOING (views + site)`
 - **Task 16:** Export data-dict YAML and validate it with data-dict.
 - **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
@@ -346,7 +346,7 @@ Likely shape: `metadata/releases/<release>/<table>/variables.jsonl`, a `table` f
 
 ## Task 13 — FARS slice
 
-**Status:** `DOING` (main thread)
+**Status:** `TODO` — ready for a worker thread. The main thread built the preliminary slice and handed the rest off (2026-11-19)
 
 The non-survey case Allen chose. Allen downloaded the 2024 national CSV and SAS files, the auxiliary files, the Analytical User's Manual 1975–2024 (823 pages), and NHTSA's Q&A on the auxiliary files. They're in `../pdt-fars/data/raw/`; the manual's text is `data/interim/manual.txt`.
 
@@ -374,7 +374,13 @@ The comparison of the manual's labels with the data's labels already works, and 
 
 **Terms:** NHTSA's manual has a disclaimer, no license, and "available to the public"; it's a US government work. Allen decided on 2026-11-19: everything `ship`.
 
-**Files:** `../pdt-fars/` only.
+**Next steps, for the worker thread:**
+1. **The PARKWORK table:** add it as a fourth table, with a reference from person (`ST_CASE`, `VEH_NO`) `when` `PER_TYP` is 3 (an occupant of a motor vehicle not in transport). Check the reference against the data, as was done for vehicle.
+2. **History across years:** the manual's code matrix gives each element's codes by year range. Propose a structured form for it (STANDARD.md §5.2 links, a release-comparison report, or something new), and send the proposal to the coordinator before building it, since it may change the standard. `LGT_COND` code 9 ("Unknown" to 2017, "Reported as Unknown" from 2018) is the test case.
+3. **A second release:** to test release comparison, Allen downloads the 2017 national CSV (nhtsa.gov blocks scripts and headless browsers). Ask him when you're ready.
+4. More variables only as these steps need them.
+
+**Files:** `../pdt-fars/` only (not its `agent/` or `docs/`, which the views thread generates).
 
 ## Task 14 — Agent views: `agent/` index and shards
 
