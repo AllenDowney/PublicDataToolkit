@@ -7,7 +7,8 @@
 The dictionary describes the common data format (STANDARD.md §8): for each variable, a
 value column holding valid answers and, when the variable has missing or unresolved
 codes, a `<name>__code` column holding them as text. So the export validates against the
-release's parquet file, once a table names it as its `source`.
+release's parquet file, which each table names as its `source`
+(`data/processed/<dataset>-<release>[-<table>].parquet`, written by `pdt.release`).
 
 Mapping, and why:
 - data-dict's `enum` is a string column, and our value columns hold numbers, so numeric
@@ -34,6 +35,7 @@ from . import __version__
 from .check import Repo
 from .data import CODE_SUFFIX, ROW, code_text
 from .search import Index
+from .release import PROCESSED, file_name
 from .views import inputs_hash, origin_text, sort_key, wave_summary, when_text
 
 DIRECTORY = Path("export") / "data-dict"
@@ -212,6 +214,7 @@ class Exporter:
         tab = t["id"] if t else None
         recs = [rec for x, y, rec in self.index.entries if x == rel and y == tab]
         out = {"name": tab or self.ds.get("id")}
+        out["source"] = {"parquet": "../../" + (PROCESSED / file_name(self.ds["id"], rel, tab)).as_posix()}
         if t:
             out["label"] = t.get("label", tab)
             if t.get("description"):
