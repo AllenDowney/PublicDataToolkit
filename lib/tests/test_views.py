@@ -348,7 +348,7 @@ def c8(result):
 def test_c8_views_current(repo_dir):
     from pdt.check import run as check
     from pdt import site, export as dd
-    assert len(c8(check(repo_dir))) == 3                           # none generated
+    assert len(c8(check(repo_dir))) == 2                           # agent/ and export/; docs/ absent is fine
     views.build(repo_dir)
     site.build(repo_dir)
     dd.build(repo_dir)
@@ -389,3 +389,23 @@ def test_across_releases_file(tmp_path):
 def test_runs_of_range_waves():
     assert views.runs({"2017-2019", "2022-2023"}, ["2017-2019", "2022-2023"]) == "2017-2019 to 2022-2023"
     assert views.runs({1, 2}, [1, 2]) == "1-2"
+
+
+def test_c8_docs_only_where_it_exists(repo_dir):
+    import shutil
+    from pdt.check import run as check
+    from pdt import site, export as dd
+    views.build(repo_dir)
+    dd.build(repo_dir)
+    r = check(repo_dir)
+    assert c8(r) == [] and any("docs/ doesn't exist here" in x for x in r.reports)
+    (repo_dir / ".gitignore").write_text("data/\ndocs/\n")
+    r = check(repo_dir)
+    assert c8(r) == [] and any("docs/ is in .gitignore" in x and "not built here" in x for x in r.reports)
+    site.build(repo_dir)
+    write_jsonl(repo_dir / "metadata" / "derived" / "scale_signature.jsonl", [])
+    views.build(repo_dir)
+    dd.build(repo_dir)
+    assert [f for f in c8(check(repo_dir)) if "docs/" in f]                  # present, so checked, and stale
+    shutil.rmtree(repo_dir / "docs")
+    assert c8(check(repo_dir)) == []

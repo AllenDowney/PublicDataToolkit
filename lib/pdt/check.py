@@ -723,8 +723,27 @@ def view_files(manifest):
             + [f["path"] for f in manifest.get("across_releases", [])])
 
 
+def docs_ignored(root):
+    """Whether docs/ is git-ignored: by git when the repo is a git checkout, else from .gitignore."""
+    root = Path(root)
+    try:
+        done = subprocess.run(["git", "-C", str(root), "check-ignore", "-q", "docs/"],
+                              capture_output=True, timeout=10)
+        if done.returncode in (0, 1):
+            return done.returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    gitignore = root / ".gitignore"
+    if not gitignore.exists():
+        return False
+    return any(line.strip().strip("/") == "docs" for line in gitignore.read_text().splitlines())
+
+
 def check_views(repo, result):
-    """C8: agent/, docs/ and export/ were generated from the current records.
+    """C8: agent/ and export/, and docs/ wherever it exists, were generated from the current records.
+
+    docs/ may be left out of git and built for GitHub Pages instead (STANDARD.md §2, "Large
+    views"), so a missing docs/ isn't a failure; the report says whether it's in .gitignore.
 
     Each generator writes a manifest with the library version and a SHA-256 of
     dataset.yaml and everything under metadata/ (pdt.views.inputs_hash). A view is
@@ -735,8 +754,17 @@ def check_views(repo, result):
     from . import __version__
     from .views import inputs_hash
     current = inputs_hash(repo.root)
+    ignored = docs_ignored(repo.root)
     for directory, manifest_path in VIEWS:
         path = repo.root / manifest_path
+        if directory == "docs/":
+            if ignored:
+                result.report("C8", "docs/ is in .gitignore: built for GitHub Pages, not committed"
+                                    + ("" if (repo.root / "docs").exists() else "; not built here, so not checked"))
+            if not (repo.root / "docs").exists():
+                if not ignored:
+                    result.report("C8", "docs/ doesn't exist here, so it isn't checked")
+                continue
         if not path.exists():
             result.fail("C8", f"{directory} hasn't been generated; run `make views`")
             continue
