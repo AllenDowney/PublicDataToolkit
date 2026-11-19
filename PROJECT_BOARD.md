@@ -131,7 +131,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 32 — A CPS-ASEC slice
 
-`DOING (yellow)`. A slice of the Census/BLS CPS Annual Social and Economic Supplement (March CPS, 2019–2024 or longer) in `~/pdt-cps-asec`, from Census's own public-use files: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
+`DONE (yellow)`. CPS ASEC 2019–2025 in `~/pdt-cps-asec`: 32 variables in household, family and person tables, 192 links by rule, data round-trip exact, `pdt check` 0 failures (C12 skips references with `target_columns`; checked by hand); terms wait for Allen; 6 proposals. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
 
 ### Task 34 — release-diff
 
@@ -150,7 +150,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 `DONE (orange)`. `data_waves`, dataset `kind`, `terms.notice` and live sources in `pdt check` and `pdt download`, applied to the five dataset repos; four need their views regenerated. Details: [`planning/tasks/task-36.md`](planning/tasks/task-36.md).
 ### Task 37 — Count test in the NSFG rule; occurring-codes field; Cases column
 
-`DOING (red)`. NSFG rule `nsfg_identical_documentation` 0.5 with the count test (OUTCOME_I linked `codes_changed`); `lists_only_occurring_codes` read from `sources.yaml` by `pdt diff` and the rule; a Cases column on the site. Details: [`planning/tasks/task-37.md`](planning/tasks/task-37.md).
+`DONE (red)`. NSFG rule 0.5 with the count test (18 links, every rule link agreeing with `pdt diff`); `lists_only_occurring_codes` on NSFG's codebooks, read by `pdt diff` and the rule; a Cases column on the site. Details: [`planning/tasks/task-37.md`](planning/tasks/task-37.md).
 
 ### Task 38 — Code lists as tables, and retired codes
 
