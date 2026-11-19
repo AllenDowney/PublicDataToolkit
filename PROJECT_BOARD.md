@@ -38,7 +38,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 18:** `download.py` and the data-release workflow.
 - **Task 19:** `extract.py`, the extract builder.
 - **Task 20:** ANES codebook errors: verify and record as corrections. `DOING (anes-errata)`
-- **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc.
+- **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc. `DOING (gss)`
 - **Task 22:** NSFG question text and earlier cycles.
 - **Task 23:** Answer keys and scoring for the topic and structural queries. `DOING (eval)`
 - **Task 24:** Agent instructions and skills.
@@ -490,7 +490,7 @@ Check each one against the PDF codebook (`../pdt-anes-cdf/data/raw/`) and ANES's
 
 ## Task 21 — GSS follow-ups
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (gss)`
 
 - **The 39 missing variables:** release 7224r3a has 6,943 variables, and gssrdoc 6,904. Find the 39 and decide how to document them, perhaps from the NORC PDF codebook.
 - **Pin gssrdoc,** or decide to build from NORC sources (plan §10 item 3; ask Allen).
