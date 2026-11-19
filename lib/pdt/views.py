@@ -147,7 +147,13 @@ def runs(waves, all_waves):
         out.append((start, prev))
         start = prev = w
     out.append((start, prev))
-    return ",".join(str(a) if a == b else f"{a}-{b}" for a, b in out)
+    def joined(a, b):
+        if a == b:
+            return str(a)
+        # waves that are ranges themselves (NSFG's "2017-2019") read badly as "2017-2019-2022-2023"
+        sep = " to " if "-" in str(a) or "-" in str(b) else "-"
+        return f"{a}{sep}{b}"
+    return ",".join(joined(a, b) for a, b in out)
 
 
 MAX_GAPS_NAMED = 3

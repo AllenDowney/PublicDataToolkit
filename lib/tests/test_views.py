@@ -384,3 +384,8 @@ def test_across_releases_file(tmp_path):
     from pdt.check import run
     (root / "agent" / "variables.txt").unlink()
     assert any("C8" in f and "agent/" in f for f in run(root).failures)
+
+
+def test_runs_of_range_waves():
+    assert views.runs({"2017-2019", "2022-2023"}, ["2017-2019", "2022-2023"]) == "2017-2019 to 2022-2023"
+    assert views.runs({1, 2}, [1, 2]) == "1-2"
