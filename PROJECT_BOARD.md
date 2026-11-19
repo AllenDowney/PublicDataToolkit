@@ -47,7 +47,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 26:** The full GSS release (all 6,943 variables). `DOING (gss)`
 
 - **Task 27:** Shared derived rules in the library (scale signatures).
-- **Task 28:** The Copier template for dataset repos.
+- **Task 28:** The Copier template for dataset repos. `DOING (instructions)`
 
 **Withdrawn:** Task 7.
 
@@ -838,7 +838,7 @@ Build all of release 7224r3a in `pdt-gss`, not just the 50-variable slice. Eval'
 
 ## Task 28 — The Copier template for dataset repos
 
-**Status:** `TODO`
+**Status:** `DOING (instructions)`
 
 Task 8 decided that dataset repos are generated from `templates/` with Copier, but there's no template yet, and the instructions (Task 24) refer to it. Build one from what the four repos share: `dataset.yaml` and `sources.yaml` skeletons, the Makefile targets (`build`, `check`, `views`), README and CLAUDE.md skeletons with the sections in STANDARD.md §2.3, `EXTENSIONS.md`, `.gitignore`, and a `build/` stub. Test it by generating a repo and running `pdt check` on it.
 
