@@ -8,17 +8,25 @@
     "sources": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/source" }
+      "items": {
+        "$ref": "#/$defs/source"
+      }
     }
   },
-  "required": ["sources"],
+  "required": [
+    "sources"
+  ],
   "additionalProperties": false,
   "$defs": {
     "source": {
       "type": "object",
       "properties": {
-        "id": { "$ref": "common.schema.json#/$defs/id" },
-        "title": { "type": "string" },
+        "id": {
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "title": {
+          "type": "string"
+        },
         "kind": {
           "enum": [
             "data",
@@ -36,7 +44,10 @@
           "description": "File or API format: stata, spss, sas, csv, parquet, pdf, html, ddi-xml, rda, socrata-json, ...",
           "type": "string"
         },
-        "url": { "type": "string", "format": "uri" },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
         "path": {
           "description": "Where download.py puts the file, relative to the repo root. Under data/ for anything build-only.",
           "type": "string"
@@ -44,31 +55,85 @@
         "releases": {
           "description": "Releases this file belongs to.",
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/id" }
+          "items": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
+        },
+        "documents": {
+          "description": "For documentation and upstream packages: the releases this source documents, e.g. gssrdoc 0.9 documents 7224r3. Can differ from `releases`, the releases it's used to build.",
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/id"
+          }
         },
         "version": {
           "description": "For an upstream package: the release tag or commit it was pinned to.",
           "type": "string"
         },
-        "redistribution": { "$ref": "common.schema.json#/$defs/redistribution" },
+        "redistribution": {
+          "$ref": "common.schema.json#/$defs/redistribution"
+        },
         "acquisition": {
           "description": "automated: download.py fetches it. manual: a person must fetch it (login, click-through, blocked client); manual_steps says how.",
-          "enum": ["automated", "manual"]
+          "enum": [
+            "automated",
+            "manual"
+          ]
         },
-        "manual_steps": { "type": "string" },
-        "fetched_on": { "$ref": "common.schema.json#/$defs/date" },
-        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "bytes": { "type": "integer", "minimum": 0 },
-        "note": { "type": "string" }
+        "manual_steps": {
+          "type": "string"
+        },
+        "fetched_on": {
+          "$ref": "common.schema.json#/$defs/date"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "note": {
+          "type": "string"
+        }
       },
-      "required": ["id", "kind", "redistribution", "acquisition"],
+      "required": [
+        "id",
+        "kind",
+        "redistribution",
+        "acquisition"
+      ],
       "additionalProperties": false,
       "allOf": [
         {
-          "if": { "properties": { "acquisition": { "const": "manual" } } },
-          "then": { "required": ["manual_steps"] }
+          "if": {
+            "properties": {
+              "acquisition": {
+                "const": "manual"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "manual_steps"
+            ]
+          }
         },
-        { "anyOf": [{ "required": ["url"] }, { "required": ["manual_steps"] }] }
+        {
+          "anyOf": [
+            {
+              "required": [
+                "url"
+              ]
+            },
+            {
+              "required": [
+                "manual_steps"
+              ]
+            }
+          ]
+        }
       ]
     }
   }

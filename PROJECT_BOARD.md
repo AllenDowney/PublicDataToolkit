@@ -46,6 +46,9 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 
 - **Task 26:** The full GSS release (all 6,943 variables). `DOING (gss)`
 
+- **Task 27:** Shared derived rules in the library (scale signatures).
+- **Task 28:** The Copier template for dataset repos.
+
 **Withdrawn:** Task 7.
 
 ### Working in parallel
@@ -739,6 +742,9 @@ Then a scoring script for recall, precision and tokens read. Write the protocol 
 - **Caveat on the reruns:** SKILL.md's `available` examples are the two test queries word for word. A structural question that isn't an example is the next test.
 - **Measurement:** tokens read is what the commands printed. Agents that piped output through `head` or `grep` saw less, so the counts are an upper bound.
 
+
+**For the full-release rerun (coordinator, 2026-11-19):** `pdt-gss` now builds from gssrdoc 0.9 and has two releases (7224r3, 7224r3a). Before rerunning the topic test on the full GSS release (Task 26), rebuild `eval/keys/full/gss_religion.yaml` from gssrdoc 0.9, and score names within the current release, so the two releases don't double count.
+
 ## Task 24 — Agent instructions and skills
 
 **Status:** `DONE` (instructions thread, 2026-11-19; not pushed)
@@ -821,4 +827,20 @@ Build all of release 7224r3a in `pdt-gss`, not just the 50-variable slice. Eval'
 - **Then** tell the coordinator, so views + site regenerates the views and eval reruns the topic test with its full keys (`eval/keys/full/`, to be rebuilt from 0.9).
 
 **Files:** `../pdt-gss/` only (not its `agent/` or `docs/`).
+
+## Task 27 — Shared derived rules in the library
+
+**Status:** `TODO`
+
+`scale_signature_from_valid_labels` is copied into all four dataset builds, but STANDARD.md §6 puts derived rules in the shared library, and copies drift (as `check_metadata.py` did). Move it into `lib/pdt/` (e.g. `derived.py`, with tests), versioned, with one table of signatures that every dataset uses. Change the four builds to call it. Found by the instructions thread (Task 24).
+
+**Files:** new `lib/pdt/derived.py` and its tests; the `build/` scripts of the four dataset repos (coordinate with any thread working in a repo).
+
+## Task 28 — The Copier template for dataset repos
+
+**Status:** `TODO`
+
+Task 8 decided that dataset repos are generated from `templates/` with Copier, but there's no template yet, and the instructions (Task 24) refer to it. Build one from what the four repos share: `dataset.yaml` and `sources.yaml` skeletons, the Makefile targets (`build`, `check`, `views`), README and CLAUDE.md skeletons with the sections in STANDARD.md §2.3, `EXTENSIONS.md`, `.gitignore`, and a `build/` stub. Test it by generating a repo and running `pdt check` on it.
+
+**Files:** new `templates/` in this repo; a note in `instructions/` where it explains starting a repo (coordinate with whoever owns `instructions/`).
 

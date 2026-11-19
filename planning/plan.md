@@ -191,7 +191,7 @@ One skill per source format, all producing the same records:
 
 | Skill | Source | First real case |
 |---|---|---|
-| `from-structured-package` | an existing package (gssrdoc `.rda`, R/Stata label sets) | GSS via gssrdoc |
+| `from-upstream-package` (written as this; was `from-structured-package`) | an existing package (gssrdoc `.rda`, R/Stata label sets) | GSS via gssrdoc |
 | `from-html-codebook` | HTML codebooks | ANES CDF (rescue `extract_cdf_codebook.py` from ExtractANES) |
 | `from-pdf-codebook` | PDF codebooks, with LLM-assisted drafting | GSS 2024 PDF, NSFG, MTF |
 | `from-data-labels` | Stata/SPSS/SAS value labels in the data file | all three; the cross-check for missing codes |
