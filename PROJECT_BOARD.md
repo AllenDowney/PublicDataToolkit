@@ -92,7 +92,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 22 — NSFG question text and earlier cycles
 
-`DONE (nsfg)`. NSFG: question text for 2022-2023, release 2017-2019 added, 6 links (34 shared names unlinked; the rule may need revisiting). Details: [`planning/tasks/task-22.md`](planning/tasks/task-22.md).
+`DONE (nsfg)`. NSFG: question text for 2022-2023, release 2017-2019 added, 18 links (rule 0.2; 22 shared names unlinked). The BABYSEX report to NCHS waits for Allen. Details: [`planning/tasks/task-22.md`](planning/tasks/task-22.md).
 
 ### Task 23 — Answer keys for the topic and structural queries
 
