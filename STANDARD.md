@@ -156,7 +156,7 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `dataset`, `release`, `name` | Required. Together with `table`, when the release has tables, they identify the record |
 | `label` | The publisher's short label |
 | `description` | The publisher's definition or description, verbatim. For data without questions, such as FARS, this is the main text |
-| `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text` |
+| `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). A wording used only under a condition ("if R is married") says so in `condition`, in the publisher's words. When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text` |
 | `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other` |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
@@ -373,6 +373,7 @@ Rules:
   - A `_row` column numbers the rows in the publisher's order. Names ending in `__code`, and `_row`, are reserved.
   - The file's metadata records the dataset, the release, the version of the standard, the SHA-256 of the publisher's file, the SHA-256 of the `variables.jsonl` used to split it, and which code texts were the publisher's own missing tokens (Stata's `.d`) rather than ordinary values (the ANES's 98), so every cell can be rebuilt exactly.
   - A value is a code only if its type matches: a number matches a numeric code in the record, a string matches a string code. The string `"98"` isn't the code 98.
+  - The file is split with the **corrected** records: the source records with `corrections.jsonl` applied, as the views and the export see them. So a code an `inferred` correction resolves (ANES VCF0878's 2024 code 2) is a value in the file, not a code. The file's metadata lists the corrections applied, with their confidence, and its identity includes `corrections.jsonl`'s SHA-256 as well as `variables.jsonl`'s.
   - The build proves the conversion is lossless: it rebuilds every cell of the publisher's file from the parquet file and compares them.
 
   The shared library (`pdt.data`) does the splitting, writing, rebuilding and recoding; each dataset supplies only a reader for the publisher's format.

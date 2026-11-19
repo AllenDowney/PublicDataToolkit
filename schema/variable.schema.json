@@ -238,6 +238,10 @@
             "type": "string"
           }
         },
+        "condition": {
+          "description": "When this wording is used, in the publisher's words, e.g. a skip condition (\"IF R IS MARRIED\").",
+          "type": "string"
+        },
         "note": {
           "type": "string"
         }
