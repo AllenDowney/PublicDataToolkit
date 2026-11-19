@@ -115,3 +115,14 @@ Not built. It would take:
 - **C12 ignores `target_columns`.** `check_keys_in_data` looks for a reference's `columns` in the target table (`[c for c in cols if c not in target]`, `target[cols]`), so a reference whose target columns have other names (every CPS reference: `FH_SEQ` → `H_SEQ`, `(PH_SEQ, PEPAR1)` → `(PH_SEQ, A_LINENO)`) is reported as skipped. The fix: `tcols = ref.get("target_columns", cols)`, then check `tcols` in the target and build `have` from `target[tcols]`. `check.py` isn't this task's file; sent to the coordinator.
 - **`pdt diff` doesn't compare `valid_range`.** It calls FPOVCUT 2021 → 2022 `same_item`, but the range widened from (−1:60000) to (−1:99999). Sent to the coordinator for red.
 - **`pdt diff` found that my rule missed universe changes**, and counted an added code as `labels_changed`. Fixed before commit: FPOVCUT and PERLIS 2019 → 2020 now have `universe_changed`, and PERLIS has no `labels_changed`.
+
+## Follow-up: the new fields (cdae64a, c9450dc)
+
+The coordinator adopted four proposals. Applied in pdt-cps-asec (cbe4110):
+- **`flag_for`**: 9 allocation flags joined the slice, one for each person variable that has one: AXAGE, AXSEX, AXHGA, PXRACE1, PXHSPNON, PXMARITL, PXPAR1, PXPAR2 and I_HRSWK. `flag_for` and `variable_type: imputation_flag` come from the label "Allocation flag for X" (rule `cps_flag_from_label`). PXPAR2's entry says only "Same as PXPAR1", so its codes are copied from PXPAR1's, and the provenance says so. The flags' codes keep what the main variables lose: "Blank – no change", "Don't know – no change", "Refused – no change". The income totals have no flags; their components do.
+- **`implied_decimals: 2`** on HSUP_WGT, FSUP_WGT and MARSUPWT, from the dictionary's "2 implied decimals (example: 255212=2552.12)".
+- **`reference_period`** on each release: the calendar year before the ASEC year, with a note that demographics are as of the February–April interview.
+- **`questions[].number`**: A_HGA has the question quoted in each year's technical documentation (glossary, "Level of School Completed/Degree Received"), with number "18h" from the dictionary. The `cps.item` extension is gone. **pdt-nsfg should switch `nsfg.item` to `questions[].number` too**; red owns pdt-nsfg now.
+- **Labeled points in a range**: HRSWK's 1 ("1 hour") and 99 ("99 hours plus") are now values as well as the ends of the range, as A_AGE's 80 and 85 already were.
+
+Now 41 variables, 287 records, 246 links (243 `same_item`). `make data`: 21 files, every round trip exact. `pdt check`: 0 failures, after c9450dc added the two fields to `provenance.fields`.
