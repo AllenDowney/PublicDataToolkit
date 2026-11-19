@@ -1,0 +1,5 @@
+{"question": "anes_therm_1978",
+ "label": "complete_by_rule",
+ "items": [{"dataset": "anes-cdf", "table": null, "name": "VCF0218"}, {"dataset": "anes-cdf", "table": null, "name": "VCF0224"}],
+ "sources": ["search anes-cdf {\"derived\": {\"scale_signature\": \"thermometer\"}, \"available\": {\"wave\": 1978}} (complete_by_rule; release 20260205; 37 variables in scope; rules scale_signature_from_valid_labels 0.1, anes_phase 0.1)", "cross-check: text search 'thermometer' with available wave 1978 gave the same 2"],
+ "notes": "Only the Democratic and Republican party thermometers are available in 1978 in this release's metadata. Candidate and group thermometers were not found for 1978 by either search."}

@@ -1,0 +1,3 @@
+{"time": 1795120807.9375846, "call": "read", "args": ["anes-cdf/agent/SKILL.md"], "chars": 3971, "tokens": 992, "printed": true, "spent_after": 992}
+{"time": 1795120811.5620058, "call": "search", "args": ["anes-cdf", "{\"derived\": {\"scale_signature\": \"thermometer\"}, \"available\": {\"wave\": 1978}}"], "chars": 592, "tokens": 148, "printed": true, "spent_after": 1140}
+{"time": 1795120814.8452141, "call": "search", "args": ["anes-cdf", "{\"text\": \"thermometer\", \"available\": {\"wave\": 1978}}"], "chars": 528, "tokens": 132, "printed": true, "spent_after": 1272}

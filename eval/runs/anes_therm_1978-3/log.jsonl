@@ -1,0 +1,2 @@
+{"time": 1795120807.7521462, "call": "read", "args": ["anes-cdf/agent/SKILL.md"], "chars": 3971, "tokens": 992, "printed": true, "spent_after": 992}
+{"time": 1795120810.9267137, "call": "search", "args": ["anes-cdf", "{\"derived\": {\"scale_signature\": \"thermometer\"}, \"available\": {\"wave\": 1978}}"], "chars": 592, "tokens": 148, "printed": true, "spent_after": 1140}

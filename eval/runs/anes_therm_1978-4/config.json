@@ -1,0 +1,8 @@
+{
+ "run_id": "anes_therm_1978-4",
+ "question": "anes_therm_1978",
+ "budget": 40000,
+ "corpus_tokens": {
+  "anes-cdf": 28434
+ }
+}

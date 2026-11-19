@@ -1,0 +1,21 @@
+{
+ "run": "anes_therm_1978-4",
+ "question": "anes_therm_1978",
+ "answered": true,
+ "key_hits": 2,
+ "reported": 2,
+ "found": 2,
+ "recall": 1.0,
+ "precision": 1.0,
+ "misses": [],
+ "false_positives": [],
+ "tokens_read": 1272,
+ "corpus_tokens": 28434,
+ "effort": 0.045,
+ "calls": 3,
+ "searches": 2,
+ "refused": 0,
+ "label": "complete_by_rule",
+ "expected_label": "complete_by_rule",
+ "label_ok": true
+}

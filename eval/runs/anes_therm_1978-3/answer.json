@@ -1,0 +1,5 @@
+{"question": "anes_therm_1978",
+ "label": "complete_by_rule",
+ "items": [{"dataset": "anes-cdf", "table": null, "name": "VCF0218"}, {"dataset": "anes-cdf", "table": null, "name": "VCF0224"}],
+ "sources": ["anes-cdf/agent/SKILL.md", "search anes-cdf {\"derived\": {\"scale_signature\": \"thermometer\"}, \"available\": {\"wave\": 1978}}"],
+ "notes": "pdt search labeled complete_by_rule (release 20260205, 37 variables in scope, rules scale_signature_from_valid_labels 0.1, anes_phase 0.1). Thermometers are identified by scale signature, so any thermometer item lacking that signature would be missed."}

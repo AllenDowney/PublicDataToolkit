@@ -23,7 +23,23 @@ Effort is tokens read over every file in the `agent/` directories in scope (193k
 4. **Agents rarely used `pdt search`.** One search in six runs worked (the GSS subject "Religion"). With shards this small, reading was easier.
 5. **Measurement.** Tokens read counts what `read` and `search` printed. Two agents piped output through `grep`, `head` or `cut`, so they saw less than was counted; the numbers are an upper bound. Agents also wrote `answer.json` through the shell instead of the Write tool, which doesn't affect the scores.
 
+## Reruns of the structural questions with the `available` filter
+
+The views thread added `{"available": {"wave": W, "form": F}}` to `pdt search` (df13f6f) after finding 2, and SKILL.md now tells agents to use it. The expected labels changed to `complete` and `complete_by_rule` ([PROTOCOL.md](PROTOCOL.md#changes-after-the-first-run)). Same prompts, fresh agents, regenerated `agent/`.
+
+| Run | Recall | Precision | Tokens read | Effort | Calls | Label | Label ok |
+|---|---|---|---|---|---|---|---|
+| `gss_ballot_a_1988-3` | 1.0 | 1.0 | 2,289 | 0.016 | 2 | `complete` | yes |
+| `gss_ballot_a_1988-4` | 1.0 | 1.0 | 2,289 | 0.016 | 2 | `complete` | yes |
+| `anes_therm_1978-3` | 1.0 | 1.0 | 1,140 | 0.040 | 2 | `complete_by_rule` | yes |
+| `anes_therm_1978-4` | 1.0 | 1.0 | 1,272 | 0.045 | 3 | `complete_by_rule` | yes |
+
+Every agent read SKILL.md and ran one search; one also cross-checked with a text search. Tokens read fell by half to two thirds, and all four labels are now right, including the thermometer case that went wrong in run 2. This meets plan §13's criterion for structural queries: complete by construction and checked against a hand list.
+
+**Caveat:** SKILL.md's examples for `available` are these two queries, word for word. The reruns show that agents use the filter and report its label; they don't show that an agent would compose the right filter for a question SKILL.md doesn't spell out. The next structural test should use a query that isn't an example, e.g. every favor/oppose item asked in 2024.
+
 ## Next
 
 - Rerun when a repo holds a full release, or a large part of one, with the keys in [`keys/full/`](keys/full/).
-- Add the structural questions to `pdt search`'s tests once it has an availability filter, and rerun them expecting `complete`.
+- A structural question that isn't one of SKILL.md's examples.
+- A second reader for a sample of the GSS full key, to show how stable the hit/neutral boundary is.
