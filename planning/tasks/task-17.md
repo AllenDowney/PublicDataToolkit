@@ -37,3 +37,11 @@ They're skipped, with a notice, when the parquet files are absent.
 4. **The §9 paragraph is out of date.** It still says "Version 0.1 implements C1, C2, C6, C7, C9, C10 and C11. C3–C5 ... run in each repo's build". Now C8 is the only check not implemented.
 
 **Overlap:** pdt-fars's build still checks keys and references against the CSVs (`build/report.md`), which C12 now does from the parquet files. It can be removed once `make data` is part of the usual build.
+
+## The ANES reports, triaged (fars thread, 2026-11-19)
+
+All 9 are resolved. `pdt check` on pdt-anes-cdf now gives 0 failures and no data reports.
+
+- **`VCF0878` value 2 (C4), and 7 of the 8 C5 warnings, were a bug in `pdt check`.** `pdt.release` splits the data with the *corrected* records, and the data checks were comparing against the uncorrected ones. Correction `vcf0878-2024-code-2` (inferred) makes code 2 valid, so the file has 2 in the value column, which the uncorrected record lists as unresolved. The 1954, 2012 and 2016 waves for `VCF0104`, `VCF0128`, `VCF0301`, `VCF0830`, `VCF0704` and `VCF0878` are Task 20's verified availability corrections. The data checks now apply `corrections.jsonl`, as `pdt.release` does. A data file whose `corrections_sha256` doesn't match is skipped as stale. Commit `7a8278d`, with a test.
+- **`VCF0006` in 1954 was a codebook omission** (PDF page 17: the Sources list has no 1954), like Task 20's four 1954 corrections. All 1,139 respondents in 1954 have a case ID. It's now correction `vcf0006-sources-1954`, `verified`, upstream `not_filed`. Task 20 missed it because the ANES build exempts `VCF0004`, `VCF0006` and `VCF0009z` from its own availability check.
+- **`VCF0009z`, the weight, in 17 waves, was incomplete availability, not an error in the codebook.** Its Sources list names the 16 years with a study weight. In each of the other 17 years (1948–1956, 1962–1972, 1978–1990), every respondent has exactly 1.0, a uniform weight. That includes 1970, even though the label says "for 1970 type 0". The waves are added by hand (`availability_added` in `build/slice.yaml`, `origin: hand`, with the reason in the field's provenance). They aren't a correction, because the codebook doesn't say anything wrong. pdt-anes-cdf commit `03a091a`; `make data` was rerun, and the build script is unchanged.
