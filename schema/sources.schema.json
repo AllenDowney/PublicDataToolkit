@@ -74,6 +74,10 @@
           "description": "For an upstream package: the release tag or commit it was pinned to.",
           "type": "string"
         },
+        "live": {
+          "description": "true for a source the publisher changes in place (an open-data portal table or its metadata API). sha256 identifies the snapshot the build used; a later mismatch means the source changed, not that the download failed.",
+          "type": "boolean"
+        },
         "redistribution": {
           "$ref": "common.schema.json#/$defs/redistribution"
         },

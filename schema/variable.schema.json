@@ -41,7 +41,9 @@
         "float",
         "string",
         "date",
-        "datetime"
+        "datetime",
+        "boolean",
+        "geometry"
       ]
     },
     "measure": {

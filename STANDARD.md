@@ -84,6 +84,10 @@ Names the dataset and its publisher, records the terms (§8), and lists the rele
 
 Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A release with one file lists no tables and keeps its records in `metadata/releases/<release>/variables.jsonl`. A reference can also point to a table in another dataset, such as a code list published separately.
 
+`kind` says what sort of dataset it is: `survey`, `administrative` (FARS) or `portal` (a table on an open-data portal). It's optional, and tunes what C6 reports.
+
+**Partial data files.** When a release's or table's common-format file holds only some waves, because the table is too large or keeps growing, `data_waves` lists them, and C5 checks availability only for those.
+
 `dimensions` says what availability's `wave`, `form`, `sample`, `mode` and `phase` mean for this dataset. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
 
 ### 2.2 `sources.yaml`
@@ -92,11 +96,13 @@ Every file the repo depends on: data files, codebooks, questionnaires, release n
 
 A source that can't be downloaded automatically (a login, a click-through, a site that blocks scripts) is fine as long as `manual_steps` says exactly what to do. An undocumented file is not fine.
 
+A **live** source (`live: true`), such as an open-data portal's table or metadata API, changes in place. Its `sha256` identifies the snapshot the build used, and a later mismatch reports the source as changed since the snapshot, not as a failed download. The release id is the snapshot's date.
+
 An upstream package (gssrdoc, for instance) records the release tag or commit it was pinned to in `version`. A source that documents a release, such as a codebook or an upstream package, lists the releases it documents in `documents`, which can differ from the release it's used for: gssrdoc 0.9 documents `7224r3` and is used for `7224r3a`. A mismatch between `documents` and a source's use is then data, which `pdt check` can report, rather than a note.
 
 ### 2.3 README and CLAUDE.md
 
-The README has these sections, in this order: what the dataset is; terms of use; how to get the data; how to use the metadata (all three forms); how to cite the dataset and this repo; how to rebuild.
+The README has these sections, in this order: what the dataset is; terms of use, including `terms.notice` verbatim when the terms require a credit or disclaimer; how to get the data; how to use the metadata (all three forms); how to cite the dataset and this repo; how to rebuild.
 
 CLAUDE.md tells an agent working in the repo where things are, which files are generated, and to read `agent/index.md` before searching the metadata.
 
@@ -158,7 +164,7 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `description` | The publisher's definition or description, verbatim. For data without questions, such as FARS, this is the main text |
 | `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). A wording used only under a condition ("if R is married") says so in `condition`, in the publisher's words. When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text` |
 | `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other` |
-| `storage_type` | How the value is stored: integer, float, string, date, datetime |
+| `storage_type` | How the value is stored: integer, float, string, date, datetime, boolean, geometry |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
 | `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one |
 | `valid_range` | For numeric variables whose valid values aren't all labeled, such as thermometers and ages: min, max, and whether the ends are top- or bottom-coded |
