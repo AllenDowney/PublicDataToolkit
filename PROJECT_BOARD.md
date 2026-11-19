@@ -112,7 +112,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 27 — Shared derived rules in the library
 
-`DOING (fars)`. Shared derived rules in `lib/pdt/derived.py`. Done except gss switching its build over. Details: [`planning/tasks/task-27.md`](planning/tasks/task-27.md).
+`DONE (orange)`. Shared derived rules in `lib/pdt/derived.py`; fars, ANES and NSFG use it, and blue switches the GSS build when Task 26 ends. Details: [`planning/tasks/task-27.md`](planning/tasks/task-27.md).
 
 ### Task 28 — The Copier template for dataset repos
 
@@ -133,6 +133,9 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (yellow)`. A slice of the Census/BLS CPS Annual Social and Economic Supplement (March CPS, 2019–2024 or longer) in `~/pdt-cps-asec`, from Census's own public-use files: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
 
+### Task 33 — An open-portal dataset
+
+`DOING (orange)`. Chicago's "Crimes - 2001 to Present" (Socrata) in `~/pdt-chicago-crimes`, and the `from-open-data-portal` skill. Details: [`planning/tasks/task-33.md`](planning/tasks/task-33.md).
 
 ## Working in parallel
 
