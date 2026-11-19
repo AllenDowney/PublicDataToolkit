@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/annotation.schema.json",
+  "title": "Annotation",
+  "description": "A retrieval aid: a topic tag, an alias or a plain-language summary. Not a fact about the dataset, and never the basis for a completeness claim. One per line in metadata/annotations/*.jsonl. See STANDARD.md §6.",
+  "type": "object",
+  "properties": {
+    "target": { "$ref": "#/$defs/target" },
+    "kind": {
+      "description": "topic: a subject tag. alias: a search term the text doesn't use (\"gay\" for 1970s \"homosexual\"). summary: a short plain-language description.",
+      "enum": ["topic", "alias", "summary"]
+    },
+    "value": { "type": "string", "minLength": 1 },
+    "origin": {
+      "allOf": [
+        { "$ref": "common.schema.json#/$defs/origin" },
+        { "properties": { "origin": { "enum": ["publisher", "upstream_package", "hand", "rule", "model"] } } }
+      ]
+    }
+  },
+  "required": ["target", "kind", "value", "origin"],
+  "additionalProperties": false,
+  "$defs": {
+    "target": {
+      "description": "A variable (by name, optionally limited to one release) or a group (by id).",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "variable": { "$ref": "common.schema.json#/$defs/name" },
+            "release": { "$ref": "common.schema.json#/$defs/id" }
+          },
+          "required": ["variable"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "group": { "$ref": "common.schema.json#/$defs/id" } },
+          "required": ["group"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

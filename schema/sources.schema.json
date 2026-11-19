@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/sources.schema.json",
+  "title": "Sources manifest",
+  "description": "sources.yaml at the root of a dataset repo: every file the repo depends on. Hand-edited; download.py fills in fetched_on, sha256 and bytes. See STANDARD.md §2.",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/source" }
+    }
+  },
+  "required": ["sources"],
+  "additionalProperties": false,
+  "$defs": {
+    "source": {
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "title": { "type": "string" },
+        "kind": {
+          "enum": [
+            "data",
+            "codebook",
+            "questionnaire",
+            "release_notes",
+            "errata",
+            "crosswalk",
+            "upstream_package",
+            "api",
+            "other"
+          ]
+        },
+        "format": {
+          "description": "File or API format: stata, spss, sas, csv, parquet, pdf, html, ddi-xml, rda, socrata-json, ...",
+          "type": "string"
+        },
+        "url": { "type": "string", "format": "uri" },
+        "path": {
+          "description": "Where download.py puts the file, relative to the repo root. Under data/ for anything build-only.",
+          "type": "string"
+        },
+        "releases": {
+          "description": "Releases this file belongs to.",
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/id" }
+        },
+        "version": {
+          "description": "For an upstream package: the release tag or commit it was pinned to.",
+          "type": "string"
+        },
+        "redistribution": { "$ref": "common.schema.json#/$defs/redistribution" },
+        "acquisition": {
+          "description": "automated: download.py fetches it. manual: a person must fetch it (login, click-through, blocked client); manual_steps says how.",
+          "enum": ["automated", "manual"]
+        },
+        "manual_steps": { "type": "string" },
+        "fetched_on": { "$ref": "common.schema.json#/$defs/date" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "note": { "type": "string" }
+      },
+      "required": ["id", "kind", "redistribution", "acquisition"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "acquisition": { "const": "manual" } } },
+          "then": { "required": ["manual_steps"] }
+        },
+        { "anyOf": [{ "required": ["url"] }, { "required": ["manual_steps"] }] }
+      ]
+    }
+  }
+}

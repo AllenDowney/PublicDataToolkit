@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/group.schema.json",
+  "title": "Group",
+  "description": "An ordered set of variables: a battery, a codebook section, a module, a questionnaire form. One per line in metadata/groups.jsonl. Provisional: the spike should test whether one record type holds all of these (STANDARD.md §10).",
+  "type": "object",
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "kind": {
+      "description": "battery: items sharing a stem and response format. section: part of the codebook or questionnaire. module: a topical module fielded as a unit. form: everything on one questionnaire form or ballot. other: say what in note.",
+      "enum": ["battery", "section", "module", "form", "other"]
+    },
+    "label": { "type": "string" },
+    "stem": {
+      "description": "Text shared by the members, verbatim, for batteries.",
+      "type": "string"
+    },
+    "releases": {
+      "description": "Releases the group applies to. Omit when it applies to all.",
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/id" }
+    },
+    "members": {
+      "description": "Member variables, in questionnaire order when ordered is true.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "common.schema.json#/$defs/variable_ref" }
+    },
+    "ordered": { "type": "boolean" },
+    "parent": {
+      "description": "Id of an enclosing group, e.g. the section that contains a battery.",
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "origin": {
+      "description": "publisher or upstream_package for groups the source defines; rule for derived groups (e.g. a battery inferred from a shared stem).",
+      "$ref": "common.schema.json#/$defs/origin"
+    },
+    "note": { "type": "string" },
+    "extensions": { "$ref": "common.schema.json#/$defs/extensions" }
+  },
+  "required": ["id", "kind", "members", "origin"],
+  "additionalProperties": false
+}

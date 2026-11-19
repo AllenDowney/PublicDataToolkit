@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/link.schema.json",
+  "title": "Link",
+  "description": "Continuity between two variables that the publisher asserts: across releases, across years with different names (MTF V-numbers), or from a cumulative file to its single-year sources. One per line in metadata/links.jsonl. Equivalence we infer is out of scope (STANDARD.md §3, rule 2).",
+  "type": "object",
+  "properties": {
+    "from": { "$ref": "#/$defs/ref" },
+    "to": { "$ref": "#/$defs/ref" },
+    "relations": {
+      "description": "Every relation that holds between from and to. A pair can be both renamed and reworded.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "same_item",
+          "renamed",
+          "wording_changed",
+          "codes_changed",
+          "universe_changed",
+          "derived_from",
+          "split_from",
+          "merged_into"
+        ]
+      }
+    },
+    "origin": {
+      "description": "Must name a source: a crosswalk, release notes, or the publisher's naming convention. Model-inferred links are not allowed.",
+      "allOf": [
+        { "$ref": "common.schema.json#/$defs/origin" },
+        { "properties": { "origin": { "enum": ["publisher", "upstream_package", "rule", "hand"] } } },
+        { "required": ["source"] }
+      ]
+    },
+    "note": { "type": "string" }
+  },
+  "required": ["from", "to", "relations", "origin"],
+  "additionalProperties": false,
+  "$defs": {
+    "ref": {
+      "allOf": [
+        { "$ref": "common.schema.json#/$defs/variable_ref" },
+        { "required": ["release"] }
+      ]
+    }
+  }
+}

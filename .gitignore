@@ -1,0 +1,28 @@
+# ---------------------------------------------------------------------------
+# Data. This repo holds instructions, skills and metadata, not microdata.
+# Source data is downloaded by scripts or published as GitHub releases.
+# ---------------------------------------------------------------------------
+data/
+*.dat
+*.dat.gz
+*.sas7bdat
+*.sav
+*.dta
+*.dta.gz
+*.hdf
+*.parquet
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store

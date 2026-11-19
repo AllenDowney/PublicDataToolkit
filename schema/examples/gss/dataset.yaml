@@ -1,0 +1,40 @@
+standard_version: "0.1"
+id: gss
+title: General Social Survey
+publisher:
+  name: NORC at the University of Chicago
+  url: https://www.norc.org/
+url: https://gss.norc.org/
+description: >
+  A repeated cross-sectional survey of US adults, 1972 to 2024, about
+  attitudes, behaviors and attributes.
+terms:
+  url: https://gss.norc.org/
+  summary: >
+    Not yet reviewed. Until it is, nothing built from the GSS ships
+    (STANDARD.md §8).
+  data: unknown
+  documentation: unknown
+  metadata: unknown
+  llm_processing: unknown
+naming:
+  case: lower
+  note: The Stata file and gssrdoc use lowercase names; NORC's PDF codebook uses uppercase.
+dimensions:
+  wave:
+    label: year
+  form:
+    label: ballot
+    note: Ballots A, B and C split the sample from 1988 on.
+  mode:
+    label: mode
+    note: Face-to-face, plus web from 2021.
+releases:
+  - id: 7224r1
+    label: GSS 1972-2024 Cross-Sectional Cumulative Data, Release 1
+    status: superseded
+    sources: [gssrdoc, gss-release-notes-7224]
+  - id: 7224r3a
+    label: GSS 1972-2024 Cross-Sectional Cumulative Data, Release 3a
+    status: current
+    sources: [gssrdoc, gss-stata-7224r3a, gss-release-notes-7224]

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/derived.schema.json",
+  "title": "Derived property",
+  "description": "A property computed deterministically from source fields by a published, versioned rule, e.g. a scale signature. Exact given the rule, so it can support complete_by_rule queries. Generated into metadata/derived/<property>.jsonl, never edited by hand. See STANDARD.md §6.",
+  "type": "object",
+  "properties": {
+    "target": { "$ref": "annotation.schema.json#/$defs/target" },
+    "property": {
+      "description": "Property name, e.g. scale_signature.",
+      "$ref": "common.schema.json#/$defs/id"
+    },
+    "value": { "description": "Any JSON value." },
+    "rule": { "type": "string" },
+    "rule_version": { "type": "string" }
+  },
+  "required": ["target", "property", "value", "rule", "rule_version"],
+  "additionalProperties": false
+}

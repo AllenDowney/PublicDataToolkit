@@ -1,0 +1,28 @@
+sources:
+  - id: gssrdoc
+    title: gssrdoc R package (Kieran Healy), gss_doc table
+    kind: upstream_package
+    format: rda
+    url: https://github.com/kjhealy/gssrdoc
+    redistribution: unknown
+    acquisition: automated
+    note: >
+      The package code is MIT-licensed, but the content is NORC's documentation,
+      so its terms follow the dataset's. Version not yet pinned.
+      Which GSS release its gss_doc matches is also unverified.
+  - id: gss-stata-7224r3a
+    title: GSS 1972-2024 cumulative file, Stata, release 3a
+    kind: data
+    format: stata
+    path: data/raw/gss7224_r3a.dta.gz
+    releases: [7224r3a]
+    redistribution: unknown
+    acquisition: manual
+    manual_steps: Download the Stata cumulative file from https://gss.norc.org/ and gzip it.
+  - id: gss-release-notes-7224
+    title: GSS 2024 Release Notes 7224
+    kind: release_notes
+    format: pdf
+    redistribution: unknown
+    acquisition: manual
+    manual_steps: Download from the GSS documentation page at https://gss.norc.org/.

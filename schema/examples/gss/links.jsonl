@@ -1,0 +1,1 @@
+{"from": {"release": "7224r1", "name": "abany"}, "to": {"release": "7224r3a", "name": "abany"}, "relations": ["same_item"], "origin": {"origin": "rule", "rule": "gss_same_name_same_item", "source": "gss-release-notes-7224", "note": "NORC keeps a variable's name when the item is unchanged; release notes list the exceptions."}}
