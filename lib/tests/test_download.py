@@ -45,6 +45,7 @@ def test_check_reports_without_network(repo, capsys):
     assert download.main([str(repo), "--check"]) == 1
     out = capsys.readouterr().out
     assert "missing    data" in out and "manual     portal" in out and "Log in" in out
+    assert "3 source(s): 3 missing (1 to fetch by hand), 0 mismatched" in out
 
 
 def test_fetch_verify_and_convert(repo, capsys, monkeypatch):
@@ -84,7 +85,7 @@ def raw_frame():
 
 def test_write_release_round_trip(tmp_path):
     root = make_repo(tmp_path)
-    paths = release.write_release(root, lambda rel, tab: (raw_frame(), "cb"), log=lambda *a: None)
+    paths = release.write_release(root, lambda rel, tab, names: (raw_frame(), "cb"), log=lambda *a: None)
     assert [p.name for p in paths] == ["toy-r1.parquet"]
     ident = data.identity_of(paths[0])
     assert ident["dataset"] == "toy" and ident["release"] == "r1" and ident["source"] == "cb"
@@ -98,7 +99,7 @@ def test_write_release_round_trip(tmp_path):
 def test_write_release_needs_every_recorded_variable(tmp_path):
     root = make_repo(tmp_path)
     with pytest.raises(ValueError, match="not in the data"):
-        release.write_release(root, lambda rel, tab: (raw_frame()[["q1"]], "cb"))
+        release.write_release(root, lambda rel, tab, names: (raw_frame()[["q1"]], "cb"))
 
 
 def test_export_names_the_release_files(tmp_path):
@@ -107,3 +108,44 @@ def test_export_names_the_release_files(tmp_path):
     doc = yaml.safe_load((root / "export" / "data-dict" / "r1.yaml").read_text())
     assert doc["tables"][0]["source"] == {"parquet": "../../data/processed/toy-r1.parquet"}
     assert release.release_files(DATASET) == {("r1", None): "toy-r1.parquet"}
+
+
+def test_read_stata_codes(tmp_path):
+    from pdt import readers
+    path = tmp_path / "t.dta"
+    pd.DataFrame({"a": [1.0, None, 3.0], "b": [5, 6, 7], "c": [0, 0, 0]}).to_stata(path, write_index=False)
+    raw = readers.read_stata(path, ["a", "b"])
+    assert list(raw.columns) == ["a", "b"]
+    assert raw["a"].tolist()[0] == 1 and isinstance(raw["a"].tolist()[1], data.Code)
+    assert str(raw["a"].tolist()[1]) == "."
+    with pytest.raises(KeyError):
+        readers.read_stata(path, ["nope"])
+
+
+def test_read_csv_zip(tmp_path):
+    import zipfile
+    from pdt import readers
+    path = tmp_path / "f.zip"
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("FARS/ACCIDENT.CSV", "ST_CASE,STATE,NAME\n10001,1,Alabama\n10002,,x\n")
+        z.writestr("FARS/person.csv", "ST_CASE\n1\n")
+    member = readers.zip_member(path, r"(^|/)accident\.csv$")
+    raw = readers.read_csv_zip(path, member, ["STATE", "ST_CASE"])
+    assert list(raw.columns) == ["STATE", "ST_CASE"]
+    assert raw["STATE"].tolist() == [1, None]
+    with pytest.raises(KeyError):
+        readers.zip_member(path, r"\.csv$")
+
+
+def test_data_source(tmp_path):
+    root = make_repo(tmp_path)
+    sources = yaml.safe_load((root / "sources.yaml").read_text())
+    sources["sources"].append({"id": "dta", "kind": "data", "format": "stata", "redistribution": "ship",
+                               "acquisition": "manual", "path": "data/raw/x.dta"})
+    (root / "sources.yaml").write_text(yaml.safe_dump(sources))
+    ds = yaml.safe_load((root / "dataset.yaml").read_text())
+    ds["releases"][0]["sources"] = ["cb", "dta"]
+    (root / "dataset.yaml").write_text(yaml.safe_dump(ds))
+    assert release.data_source(root, "r1")["id"] == "dta"
+    with pytest.raises(ValueError):
+        release.data_source(root, "r1", format="sas7bdat")

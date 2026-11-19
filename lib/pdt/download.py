@@ -170,16 +170,18 @@ def main(argv=None):
                      args.source, args.release)
 
     if args.check:
-        bad = 0
+        counts = {"missing": 0, "manual": 0, "mismatch": 0}
         for s in sources:
             state, detail = status(root, s)
             if s.get("acquisition") == "manual" and state == "missing":
                 state, detail = "manual", f"missing; {' '.join((s.get('manual_steps') or 'see sources.yaml').split())}"
             print(f"  {state:10} {s['id']}: {detail}")
-            if state in ("missing", "mismatch"):
-                bad += 1
-        print(f"\n{len(sources)} source(s), {bad} missing or mismatched")
-        return 1 if bad else 0
+            if state in counts:
+                counts[state] += 1
+        missing = counts["missing"] + counts["manual"]
+        print(f"\n{len(sources)} source(s): {missing} missing ({counts['manual']} to fetch by hand), "
+              f"{counts['mismatch']} mismatched")
+        return 1 if missing or counts["mismatch"] else 0
 
     if not args.accept_terms:
         print(terms_text(dataset), file=sys.stderr)

@@ -3,9 +3,10 @@
 A dataset repo supplies only a reader for the publisher's format. Its
 `scripts/build_data.py` calls `write_release(root, reader)`, where
 
-    reader(release_id, table_id) -> (raw DataFrame, source id)
+    reader(release_id, table_id, names) -> (raw DataFrame, source id)
 
-returns the publisher's file as a raw frame: every cell is a value or, for the
+returns the publisher's file (or None to skip a release it can't read) as a raw frame, with at least the columns in `names`
+(the variables the repo has records for; `pdt.readers` reads only those): every cell is a value or, for the
 publisher's own missing tokens (Stata's ".d", SAS's "."), a `pdt.data.Code`. The
 source id names the file in `sources.yaml`, whose SHA-256 goes in the file's identity.
 
@@ -38,6 +39,25 @@ def release_files(dataset_yaml):
             tab = t["id"] if t else None
             out[(r["id"], tab)] = file_name(ds["id"], r["id"], tab)
     return out
+
+
+def data_source(root, release, table=None, format=None):
+    """The data file a release (or table) is built from: its source of kind data in sources.yaml.
+
+    dataset.yaml lists each release's (or table's) sources; when several are data files
+    (FARS ships CSV and SAS), `format` picks one. Returns the source entry.
+    """
+    root = Path(root)
+    ds = yaml.safe_load((root / "dataset.yaml").read_text())
+    sources = {s["id"]: s for s in yaml.safe_load((root / "sources.yaml").read_text())["sources"]}
+    r = next(r for r in ds["releases"] if r["id"] == release)
+    ids = next(t for t in r["tables"] if t["id"] == table).get("sources", r["sources"]) if table else r["sources"]
+    found = [sources[i] for i in ids if i in sources and sources[i]["kind"] == "data"
+             and (format is None or sources[i].get("format") == format)]
+    if len(found) != 1:
+        raise ValueError(f"{release}/{table}: {len(found)} data sources"
+                         + (f" of format {format}" if format else "") + f": {[f['id'] for f in found]}")
+    return found[0]
 
 
 def variables_path(root, release, table=None):
@@ -87,6 +107,11 @@ def write_release(root, reader, releases=None, log=print):
     for (release, table) in release_files(repo.dataset):
         if releases and release not in releases:
             continue
-        raw, source_id = reader(release, table)
+        names = [r["name"] for r in repo.tables[release][table]]
+        got = reader(release, table, names)
+        if got is None:
+            log(f"  skipped {release}" + (f"/{table}" if table else "") + ": the reader can't read its source")
+            continue
+        raw, source_id = got
         written.append(write_one(root, repo, release, table, raw, source_id, log=log))
     return written
