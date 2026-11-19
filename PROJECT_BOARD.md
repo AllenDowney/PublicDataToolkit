@@ -372,7 +372,7 @@ The comparison of the manual's labels with the data's labels already works, and 
 - **Common format:** all three full tables round-trip exactly; CSV is the third source format, after Stata and SAS.
 - **Still open:** terms (Allen); only the 2024 column of each element's year-range matrix is used. A second year (2017, before the 2018 code changes) would test release comparison.
 
-**Terms:** NHTSA's manual has a disclaimer, no license, and "available to the public"; it's a US government work. Recommendation: everything `ship`. **Allen to confirm.**
+**Terms:** NHTSA's manual has a disclaimer, no license, and "available to the public"; it's a US government work. Allen decided on 2026-11-19: everything `ship`.
 
 **Files:** `~/pdt-fars/` only.
 
