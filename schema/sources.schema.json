@@ -70,6 +70,10 @@
             "$ref": "common.schema.json#/$defs/id"
           }
         },
+        "lists_only_occurring_codes": {
+          "description": "For a codebook: true when it lists a code only if the release's data has cases with it (NSFG prints no zero rows). A code missing from such a codebook may still be valid, so comparing releases (pdt diff, link rules) must not read its absence as a dropped code.",
+          "type": "boolean"
+        },
         "version": {
           "description": "For an upstream package: the release tag or commit it was pinned to.",
           "type": "string"

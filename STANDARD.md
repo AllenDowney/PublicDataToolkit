@@ -98,7 +98,7 @@ A source that can't be downloaded automatically (a login, a click-through, a sit
 
 A **live** source (`live: true`), such as an open-data portal's table or metadata API, changes in place. Its `sha256` identifies the snapshot the build used, and a later mismatch reports the source as changed since the snapshot, not as a failed download. The release id is the snapshot's date.
 
-An upstream package (gssrdoc, for instance) records the release tag or commit it was pinned to in `version`. A source that documents a release, such as a codebook or an upstream package, lists the releases it documents in `documents`, which can differ from the release it's used for: gssrdoc 0.9 documents `7224r3` and is used for `7224r3a`. A mismatch between `documents` and a source's use is then data, which `pdt check` can report, rather than a note.
+An upstream package (gssrdoc, for instance) records the release tag or commit it was pinned to in `version`. A source that documents a release, such as a codebook or an upstream package, lists the releases it documents in `documents`, which can differ from the release it's used for: gssrdoc 0.9 documents `7224r3` and is used for `7224r3a`. A mismatch between `documents` and a source's use is then data, which `pdt check` can report, rather than a note. A codebook that lists a code only when the data has cases with it, as the NSFG's does, says so with `lists_only_occurring_codes`, so a comparison of releases doesn't read a code's absence as a change.
 
 ### 2.3 README and CLAUDE.md
 
