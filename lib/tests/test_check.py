@@ -6,10 +6,15 @@ import subprocess
 import pytest
 import yaml
 
-from pdt.check import run
+from pdt.check import run as run_all
 from pdt.cli import main
 
 PUBLISHER = {"origin": "publisher", "source": "cb"}
+
+
+def run(root):
+    """Every check but C8: these repos have no generated views (C8's tests are in test_views.py)."""
+    return run_all(root, views=False)
 
 DATASET = {
     "standard_version": "0.1", "id": "toy", "title": "Toy Survey",
@@ -74,7 +79,10 @@ def test_valid_repo_passes(tmp_path):
 
 
 def test_cli_exit_codes(tmp_path, capsys):
-    assert main(["check", str(make_repo(tmp_path))]) == 0
+    root = make_repo(tmp_path)
+    assert main(["check", str(root)]) == 1                       # C8: no views generated yet
+    assert main(["views", str(root)]) == 0
+    assert main(["check", str(root)]) == 0
     (tmp_path / "CLAUDE.md").unlink()
     assert main(["check", str(tmp_path)]) == 1
 

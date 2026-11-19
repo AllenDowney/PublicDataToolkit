@@ -5,8 +5,14 @@ import pandas as pd
 import pytest
 
 from pdt import data
-from pdt.check import processed_name, run
+from pdt.check import processed_name
+from pdt.check import run as run_all
 from pdt.release import file_name
+
+
+def run(root):
+    """Every check but C8 (generated views), which these tests don't generate."""
+    return run_all(root, views=False)
 
 from test_check import DATASET, README, SOURCES, write_jsonl
 import yaml

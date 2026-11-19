@@ -339,3 +339,26 @@ def test_release_order_natural():
     assert views.release_order({"releases": [rel("2024"), rel("2017")]}) == ["2017", "2024"]
     assert views.release_order({"releases": [rel("r10"), rel("r2")]}) == ["r2", "r10"]
     assert views.release_order({"releases": [rel("7224r3a"), rel("7224r3", "superseded")]}) == ["7224r3", "7224r3a"]
+
+
+def c8(result):
+    return [f for f in result.failures if f.startswith("C8")]
+
+
+def test_c8_views_current(repo_dir):
+    from pdt.check import run as check
+    from pdt import site, export as dd
+    assert len(c8(check(repo_dir))) == 3                           # none generated
+    views.build(repo_dir)
+    site.build(repo_dir)
+    dd.build(repo_dir)
+    assert c8(check(repo_dir)) == []
+    write_jsonl(repo_dir / "metadata" / "derived" / "scale_signature.jsonl", [])
+    stale = c8(check(repo_dir))
+    assert len(stale) == 3 and all("out of date" in f for f in stale)
+    views.build(repo_dir)
+    site.build(repo_dir)
+    dd.build(repo_dir)
+    (repo_dir / "docs" / "variables" / "r1" / "q1.html").unlink()
+    assert c8(check(repo_dir)) == ["C8: docs/ is missing 1 generated file(s), e.g. variables/r1/q1.html; "
+                                   "run `make views`"]
