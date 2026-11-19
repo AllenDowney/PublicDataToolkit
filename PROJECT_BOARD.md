@@ -122,6 +122,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (yrbss)`. A slice of CDC's Youth Risk Behavior Survey (high school, 1991–2023) in `~/pdt-yrbss`, built from the Copier template: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-29.md`](planning/tasks/task-29.md).
 
+### Task 30 — A BRFSS slice
+
+`DOING (brfss)`. A slice of CDC's Behavioral Risk Factor Surveillance System (adults, by state, 2011–2023) in `~/pdt-brfss`, built from the Copier template: about 25 variables from Twenge's *Generations*. Details: [`planning/tasks/task-30.md`](planning/tasks/task-30.md).
+
 ## Working in parallel
 
 Several Claude threads work at once. The coordinator is the thread named **"main: standard + FARS"**. It assigns tasks, decides questions about the standard (or takes them to Allen), and owns `STANDARD.md`, `schema/`, `PROPOSAL.md`, `planning/plan.md` and this board's structure.
