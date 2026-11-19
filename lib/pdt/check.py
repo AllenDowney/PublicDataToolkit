@@ -1,8 +1,9 @@
 """`pdt check`: check a dataset repository against the standard (STANDARD.md §9).
 
-Implemented: C1, C2, C6, C7, C9, C10, C11.
-Not yet: C3-C5 (need the data; dataset repos run them in their build for now)
-and C8 (needs the generated views).
+Implemented: C1-C7, C9-C12. C3-C5 and C12 read the common-format files in
+data/processed/ (written by the repo's `make data`) and are skipped, with a
+notice, when they're absent or were built from other records.
+Not yet: C8 (needs the generated views).
 """
 
 import json
@@ -367,8 +368,171 @@ def check_docs(repo, result):
         result.fail("C11", "no CLAUDE.md")
 
 
+# ------------------------------------------------------------ data checks
+
+PROCESSED = Path("data") / "processed"
+MAX_LISTED = 5  # examples listed per message
+
+
+def processed_name(dataset, release, table=None):
+    """The common-format file for a release or table; the same name pdt.release writes."""
+    return f"{dataset}-{release}" + (f"-{table}" if table else "") + ".parquet"
+
+
+def listed(items):
+    items = list(items)
+    more = f", and {len(items) - MAX_LISTED} more" if len(items) > MAX_LISTED else ""
+    return ", ".join(str(i) for i in items[:MAX_LISTED]) + more
+
+
+def same_value(a, b):
+    """A data cell and a metadata value are equal: numbers by value, anything else as text."""
+    from .data import is_number
+    if is_number(a) and is_number(b):
+        return float(a) == float(b)
+    return str(a) == str(b)
+
+
+def load_data(repo, result):
+    """{(release, table): (frame, records)} for the files that exist and match the current records."""
+    from . import data
+    frames, missing = {}, []
+    for release, ts in repo.tables.items():
+        for table, records in ts.items():
+            name = processed_name(repo.dataset.get("id"), release, table)
+            path = repo.root / PROCESSED / name
+            if not path.exists():
+                missing.append(name)
+                continue
+            variables = repo.root / "metadata" / "releases" / release / (table or "") / "variables.jsonl"
+            ident = data.identity_of(path)
+            if ident.get("metadata_sha256") != data.metadata_sha256(variables):
+                result.report("C3-C5, C12", f"skipped {name}: built from other records; rebuild it (make data)")
+                continue
+            frames[(release, table)] = (data.read(path), records)
+    if missing:
+        result.report("C3-C5, C12", f"skipped, no data file in {PROCESSED}/ (make data): {listed(missing)}")
+    return frames
+
+
+def value_columns(frame):
+    from .data import CODE_SUFFIX, ROW
+    return [c for c in frame.columns if c != ROW and not c.endswith(CODE_SUFFIX)]
+
+
+def check_coverage(name, frame, records, result):
+    """C3: every record has a column and every column a record (in the repo's data file, which
+    holds the variables it has records for)."""
+    names, columns = [r["name"] for r in records], value_columns(frame)
+    if missing := [n for n in names if n not in columns]:
+        result.fail("C3", f"{name}: records without a column: {listed(missing)}")
+    if extra := [c for c in columns if c not in names]:
+        result.fail("C3", f"{name}: columns without a record: {listed(extra)}")
+
+
+def check_codes(name, frame, records, result):
+    """C4: every code in a code column is in the record's values. Valid values of a categorical
+    variable that aren't listed (and aren't in valid_range) are reported."""
+    from .data import CODE_SUFFIX, code_text
+    for r in records:
+        documented = {code_text(v["code"]) for v in r.get("values", [])}
+        col = r["name"] + CODE_SUFFIX
+        if col in frame:
+            counts = frame[col].dropna().value_counts()
+            if bad := [f"{c} ({n:,} rows)" for c, n in counts.items() if c not in documented]:
+                result.fail("C4", f"{name}/{r['name']}: codes not in values: {listed(bad)}")
+        valid = [v["code"] for v in r.get("values", []) if v["kind"] == "valid"]
+        if r.get("measure") in ("categorical", "ordinal") and valid and r["name"] in frame:
+            rng = r.get("valid_range") or {}
+            seen = frame[r["name"]].dropna().unique()
+            extra = [x for x in seen if not any(same_value(x, v) for v in valid)
+                     and not ("min" in rng and rng["min"] <= x <= rng.get("max", rng["min"]))]
+            if extra:
+                result.report("C4", f"{name}/{r['name']}: valid values not listed in values: "
+                                    f"{listed(sorted(code_text(x) for x in extra))}")
+
+
+def check_availability(name, frame, records, wave_column, result):
+    """C5 (warns): the waves in each record's availability are the waves with non-missing values."""
+    declared_all = {str(a["wave"]) for r in records for a in r.get("availability", [])}
+    if wave_column in frame:
+        from .data import code_text
+        waves = frame[wave_column].map(lambda w: None if w is None or w != w else code_text(w))
+    elif len(declared_all) == 1:
+        waves = None  # one wave per file: the release (NSFG cycle, FARS data year)
+    else:
+        if declared_all:
+            result.report("C5", f"{name}: skipped, no wave column ({wave_column}) and several waves declared")
+        return
+    for r in records:
+        if not r.get("availability") or r["name"] not in frame:
+            continue
+        has = frame[r["name"]].notna()
+        in_data = set(waves[has].dropna()) if waves is not None else (declared_all if has.any() else set())
+        declared = {str(a["wave"]) for a in r["availability"]}
+        if empty := sorted(declared - in_data):
+            result.report("C5", f"warning: {name}/{r['name']}: waves in availability with no non-missing "
+                                f"values: {listed(empty)}")
+        if undeclared := sorted(in_data - declared):
+            result.report("C5", f"warning: {name}/{r['name']}: waves with non-missing values not in "
+                                f"availability: {listed(undeclared)}")
+
+
+def check_keys_in_data(release, tables, frames, result):
+    """C12: each table's key is unique and non-blank; each reference finds its target, for the
+    rows its `when` selects."""
+    for t in tables:
+        if (release, t["id"]) not in frames:
+            continue
+        frame, _ = frames[(release, t["id"])]
+        name = f"{release}/{t['id']}"
+        key = t.get("key", [])
+        if key:
+            if absent := [c for c in key if c not in frame]:
+                result.report("C12", f"{name}: skipped key, columns not in the data file: {listed(absent)}")
+            else:
+                if blank := int(frame[key].isna().any(axis=1).sum()):
+                    result.fail("C12", f"{name}: {blank:,} rows with a blank key ({', '.join(key)})")
+                if dupes := int(frame.duplicated(key).sum()):
+                    result.fail("C12", f"{name}: {dupes:,} duplicate keys ({', '.join(key)})")
+        for ref in t.get("references", []):
+            if ref.get("dataset") or ref.get("release", release) != release:
+                continue  # another dataset or release; not checked here
+            if (release, ref["table"]) not in frames:
+                result.report("C12", f"{name} -> {ref['table']}: skipped, no data file for {ref['table']}")
+                continue
+            target, _ = frames[(release, ref["table"])]
+            cols, when = ref["columns"], ref.get("when")
+            needed = cols + ([when["column"]] if when else [])
+            if absent := [c for c in needed if c not in frame] + [c for c in cols if c not in target]:
+                result.report("C12", f"{name} -> {ref['table']}: skipped, columns not in the data: {listed(absent)}")
+                continue
+            rows = frame
+            if when:
+                rows = frame[frame[when["column"]].map(lambda x: any(same_value(x, v) for v in when["in"]))]
+            have = set(map(tuple, target[cols].dropna().astype(object).itertuples(index=False)))
+            unmatched = sum(tuple(k) not in have for k in rows[cols].astype(object).itertuples(index=False))
+            if unmatched:
+                cond = f" when {when['column']} in {when['in']}" if when else ""
+                result.fail("C12", f"{name} ({', '.join(cols)}) -> {ref['table']}{cond}: "
+                                   f"{unmatched:,} of {len(rows):,} rows without a match")
+
+
+def check_data(repo, result):
+    """C3, C4, C5 and C12, on the common-format files in data/processed/."""
+    frames = load_data(repo, result)
+    wave_column = ((repo.dataset.get("dimensions") or {}).get("wave") or {}).get("column")
+    for (release, table), (frame, records) in frames.items():
+        name = release + (f"/{table}" if table else "")
+        check_coverage(name, frame, records, result)
+        check_codes(name, frame, records, result)
+        check_availability(name, frame, records, wave_column, result)
+    for r in repo.dataset.get("releases", []):
+        check_keys_in_data(r["id"], r.get("tables") or [], frames, result)
+
+
 CHECKS = [check_schemas, check_references, check_provenance, check_corrections,
-          check_terms, check_extensions, check_docs]
+          check_terms, check_extensions, check_docs, check_data]
 
 
 def run(root):
@@ -377,5 +541,5 @@ def run(root):
     repo = Repo.load(root)
     for check in CHECKS:
         check(repo, result)
-    result.report("--", "not yet implemented: C3-C5 (need the data), C8 (generated views)")
+    result.report("--", "not yet implemented: C8 (generated views)")
     return result
