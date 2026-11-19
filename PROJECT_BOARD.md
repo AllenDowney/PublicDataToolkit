@@ -80,7 +80,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 19 — `extract.py`, the extract builder
 
-`DOING (nsfg)`. `extract.py`, the extract builder. Must report inferred classifications (STANDARD.md §5.3). Details: [`planning/tasks/task-19.md`](planning/tasks/task-19.md).
+`DONE (nsfg)`. `pdt.extract` and `scripts/extract.py` in all four repos; reports inferred classifications; GSS columns identical to CultureWar's extract. Details: [`planning/tasks/task-19.md`](planning/tasks/task-19.md).
 
 ### Task 20 — ANES codebook errors
 
