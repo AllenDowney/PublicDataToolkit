@@ -1,0 +1,40 @@
+# Answer key: religion, in the GSS, ANES CDF and NSFG slices.
+# Built by hand on 2026-11-19 by reading every line of the release shards
+# (agent/shards/table/*.txt) in ../pdt-gss, ../pdt-anes-cdf and ../pdt-nsfg.
+# Scope: affiliation, attendance, importance, prayer, belief.
+question: religion
+expected_label: approximate
+label_reason: >
+  A topic query across three datasets. No single shard or filter covers it,
+  so the answer is assembled by judgment. (The GSS part alone is exactly the
+  publisher's subject "Religion", which is `complete` with respect to that list.)
+scope:
+  gss: {release: 7224r3a, variables: 50}
+  anes-cdf: {release: "20260205", variables: 37}
+  nsfg: {release: 2022-2023, variables: 52}
+items:
+  # GSS: exactly the members of the publisher subject "Religion".
+  - {dataset: gss, table: null, name: relig, status: hit, why: affiliation}
+  - {dataset: gss, table: null, name: attend, status: hit, why: attendance}
+  - {dataset: gss, table: null, name: reliten, status: hit, why: strength of affiliation}
+  - {dataset: gss, table: null, name: pray, status: hit, why: prayer}
+  - {dataset: gss, table: null, name: bible, status: hit, why: belief about the Bible}
+  # ANES CDF: no subject lists; found by reading the release shard.
+  - {dataset: anes-cdf, table: null, name: VCF0128, status: hit, why: affiliation (major group)}
+  - {dataset: anes-cdf, table: null, name: VCF0130, status: hit, why: attendance}
+  - {dataset: anes-cdf, table: null, name: VCF0846, status: hit, why: importance}
+  - {dataset: anes-cdf, table: null, name: VCF0847, status: hit, why: guidance from religion (importance)}
+  - {dataset: anes-cdf, table: null, name: VCF0850, status: hit, why: authority of the Bible (belief)}
+  # NSFG: one record per table.
+  - {dataset: nsfg, table: female, name: RELIGION, status: hit, why: affiliation}
+  - {dataset: nsfg, table: female, name: ATTND14, status: hit, why: attendance at age 14}
+  - {dataset: nsfg, table: female, name: RELDLIFE, status: hit, why: importance}
+  - {dataset: nsfg, table: female, name: ATTNDNOW, status: hit, why: attendance}
+  - {dataset: nsfg, table: male, name: RELIGION, status: hit, why: affiliation}
+  - {dataset: nsfg, table: male, name: ATTND14, status: hit, why: attendance at age 14}
+  - {dataset: nsfg, table: male, name: RELDLIFE, status: hit, why: importance}
+  - {dataset: nsfg, table: male, name: ATTNDNOW, status: hit, why: attendance}
+  - {dataset: nsfg, table: pregnancy, name: RELIGION, status: hit, why: affiliation, copied to the pregnancy file}
+# Considered and left out: ANES VCF0230 (thermometer for anti-abortionists) and
+# the GSS and ANES abortion and homosexuality items, which are moral attitudes
+# often correlated with religion but don't ask about it.
