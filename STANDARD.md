@@ -74,6 +74,8 @@ Names the dataset and its publisher, records the terms (§8), and lists the rele
 
 **Release ids** use the publisher's own name for the release, written lowercase, with no spaces: `7224r3a` for the GSS (from NORC's file name), `20260205` for the ANES (its version date), `2022-2023` for the NSFG (its cycle), `2024` for FARS (its data year). When the publisher has no name for a release, use its date, `YYYYMMDD`.
 
+**Revisions within a release.** A publisher can reissue a release's files without making a new release: NHTSA reissued the 2017 FARS files until 2022, and revised the 2017 data itself in December 2020. A release may list these in `revisions`, each with its date, what changed, and its source (such as a release note). The checksums in `sources.yaml` identify which revision a build used. A revision isn't a link: `data_revised` (§5.2) is for changes between releases.
+
 **Tables.** Some releases have several files: the NSFG has female respondents, male respondents and pregnancies, and FARS has crashes, vehicles and persons. A release like that lists its `tables`. Each table has:
 - an `id`, which is also its directory under the release;
 - a label, and the source files it comes from;
@@ -300,7 +302,7 @@ A release's record says only what that release means (§4.2), and links (§5.2) 
 - the publisher's `periods`, in wave units;
 - its `attributes`: each row's label, verbatim, and its code in each period, or `null` where the publisher shows none.
 
-A history can generate any wave's codes, compare releases row by row, and generate `codes_changed` and `renamed` links by rule. When the publisher prints several matrices for one variable (FARS's `HARM_EV` has one for 1975–1981 and another from 1982), join their periods into one history, without matching rows across them, and say so in its `note`. Periods record changes only where the publisher's columns change. A change inside a period, such as FARS's `WEATHER` code 99 relabeled in 2018 within the 2013–Later column, survives only in the label's own year note ("Unknown/Reported as Unknown (Since 2018)"), which stays verbatim.
+A history can generate any wave's codes, compare releases row by row, and generate `codes_changed` and `renamed` links by rule. When the publisher prints several matrices for one variable (FARS's `HARM_EV` has one for 1975–1981 and another from 1982), join their periods into one history, without matching rows across them, and say so in its `note`. Periods record changes only where the publisher's columns change. A change inside a period, such as FARS's `WEATHER` code 99 relabeled in 2018 within the 2013–Later column, survives only in the label's own year note ("Unknown/Reported as Unknown (Since 2018)"), which stays verbatim. A rule that compares releases may read those notes: a label ending "(Since Y)" marks a change in wave Y, inside its period. FARS's link rule does this for `WEATHER`, `SEAT_POS` and `REST_USE` code 99, and the 2017 and 2024 data confirm it.
 
 The file is optional. A dataset whose documentation covers one release at a time doesn't need it, and a variable without a history is fine. The format is provisional (§10).
 

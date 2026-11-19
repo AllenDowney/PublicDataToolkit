@@ -290,6 +290,30 @@
               ],
               "additionalProperties": false
             }
+          },
+          "revisions": {
+            "description": "Reissues of this release's files by the publisher, without a new release (STANDARD.md §2.1), e.g. NHTSA's December 2020 revision of the 2017 FARS data.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "$ref": "common.schema.json#/$defs/date"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "source": {
+                  "description": "Id in sources.yaml of the document that describes it, e.g. a release note.",
+                  "$ref": "common.schema.json#/$defs/id"
+                }
+              },
+              "required": [
+                "date",
+                "description"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
