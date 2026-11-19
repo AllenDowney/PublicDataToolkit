@@ -2,7 +2,7 @@
 
 PublicDataToolkit holds instructions and agent skills for turning a public dataset into a well-documented repository. The resulting repository publishes the dataset's metadata in three forms: human-readable, programmable, and LLM access. See [`README.md`](README.md).
 
-`PROJECT_BOARD.md` holds the numbered tasks and is the place to record findings and decisions. `planning/` holds the longer designs.
+`PROJECT_BOARD.md` lists the numbered tasks, one short block each. Each task's findings and decisions go in its own file, `planning/tasks/task-NN.md`. `planning/` holds the longer designs.
 
 ## Layout
 
@@ -13,6 +13,7 @@ schema/        JSON Schemas for the records, examples, and check_examples.py
 lib/pdt/       the shared library: `pdt check` (lib/tests/ has its tests; run pytest)
 pyproject.toml packages lib/pdt as `publicdatatoolkit`, with schema/ bundled
 planning/      designs and context
+  tasks/task-NN.md                   one file per board task: description, progress, findings, decisions
   plan.md                            the plan (Task 1)
   data_dict.md                       note for Hadley: relationship to data-dict, questions (Task 6)
   review_1.md                        first review of PROPOSAL.md, triaged, with decisions (Task 10)
