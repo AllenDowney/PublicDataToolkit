@@ -106,3 +106,20 @@ The first row is the main one. An `enum` with `{"1": "yes"}` passes `validate-sp
 9. **Rendering.** We'd like each dataset repository's website to come from `render-spec`, plus a few pages of our own (changes between releases, corrections). Is `render-spec` meant to be extended or themed that way?
 
 Whichever of the gaps in §2 belong upstream in data-dict, we'd rather contribute there than keep a parallel format. We'll keep whatever doesn't belong there in our own records.
+
+## 5. Public discussion, and what we'll do (2026-11-20)
+
+The discussion is on [tidyverse/data-dict#9](https://github.com/tidyverse/data-dict/issues/9):
+- [Our use case](https://github.com/tidyverse/data-dict/issues/9#issuecomment-7027122678): the `abany` example, the share of labels lost in our exports, and the two-column missing-code design.
+- [Hadley's question](https://github.com/tidyverse/data-dict/issues/9#issuecomment-7029156100): why keep numeric codes rather than store the labels as an enum, and why not store missing types rather than codes.
+- [Our reply](https://github.com/tidyverse/data-dict/issues/9#issuecomment-7042301177): codes that are numbers, codes that outlast labels, and codes that don't map one to one to missing types. It asks for two separable capabilities: integer enums with labels, and typed missing codes.
+
+Theming of rendered pages is [#196](https://github.com/tidyverse/data-dict/issues/196).
+
+**What we'll do:**
+- Keep the export at spec 0.1.0 (pinned), and keep losing labels on numeric codes (in `details`) until #9 settles.
+- Propose `x-` extension keys, so the exporter can carry missing types, availability and provenance instead of dropping them (export.py and LOSSES.md). Then export links and histories as `x-pdt` keys.
+- Offer the codebook failure modes ([codebook_failure_modes.md](codebook_failure_modes.md)).
+- Link our own pages next to the data-dict page, and say on #196 what embedding would need.
+
+Drafts of any message go outside this repo.
