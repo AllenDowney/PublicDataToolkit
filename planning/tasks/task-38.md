@@ -11,3 +11,11 @@ A design, not code: Task 33's deferred proposal 4. [`planning/code_lists_design.
 No changes to STANDARD.md, `schema/` or the library.
 
 **Files:** `planning/code_lists_design.md`, this file, and Task 38's block on the board.
+
+## Ready for review (orange, 2026-11-19)
+
+The design is [`planning/code_lists_design.md`](../code_lists_design.md).
+- **Recommendation:** keep inline `values` as the default. Add an optional `metadata/code_lists.jsonl` for lists the publisher publishes separately or that several variables share, referenced by `code_list`, which the library expands in `Repo.load`. Missing codes stay in each record. Retired codes get `retired` and `waves` fields.
+- **Rejected:** a reference to a code-list *table*, because its codes would live in the gitignored data and not in the metadata.
+- **The numbers:** the 54 GSS records with 100 or more valid codes hold only 15 distinct lists. Records that share a list differ in their missing codes. Sharing saves 5–10% of GSS's 21.4 MB, so the reason to change is having one place for a list's source, retired codes, corrections and changes, not size.
+- **For the coordinator:** the changes to STANDARD.md and three schemas are written as diffs in the design.
