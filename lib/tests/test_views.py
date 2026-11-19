@@ -200,3 +200,8 @@ def test_gss_abortion_items_are_complete():
     result = search(index_of(GSS), {"subject": "Abortion"})
     assert result.label == "complete"
     assert set(names(result)) >= {"abany", "abdefect", "abnomore", "abhlth", "abpoor", "abrape", "absingle"}
+
+
+def test_line_falls_back_to_notes():
+    assert views.line_question({"notes": "Coded from the police report."}) == "[notes] Coded from the police report."
+    assert views.line_question({}) == ""

@@ -391,6 +391,20 @@ Search results label themselves `complete`, `complete_by_rule` or `approximate`,
 
 **Done when:** the four dataset repos have `agent/`, the tests pass, and an agent given only `agent/` can find every GSS abortion item and say the answer is `complete`.
 
+**Progress (2026-11-19, views thread):**
+- **Built.** [`lib/pdt/views.py`](lib/pdt/views.py) writes `agent/`: `index.md`, `SKILL.md`, `manifest.json`, and shards by release/table, group, publisher subject, scale signature and topic annotation. Each shard comes as `.txt` (one line per variable) and `.jsonl` (corrected records with a `view` block), and is split into parts above about 20k tokens. [`lib/pdt/search.py`](lib/pdt/search.py) holds the filter language and assigns the completeness label. Every shard is a filter result, and a test reruns each shard's filter. CLI: `pdt views [PATH]` and `pdt search PATH --filter JSON`. Tests: [`lib/tests/test_views.py`](lib/tests/test_views.py).
+- **All four dataset repos** have `make views` and a generated `agent/`, and `pdt check` passes in each.
+- **Blind test passed.** A fresh agent given only a copy of `pdt-gss/agent/` found the 7 abortion items, labeled the list `complete` with respect to NORC's subject list and the 50 variables in scope, and read about 3,000 tokens. It went SKILL.md → index.md → `shards/subject/abortion.txt`.
+- **Fixed from the blind test.** The agent read the gap in `1972-1985,1987-2024` as "no survey in 1986". The index now lists each release's waves and says that a gap means the variable wasn't available in those waves.
+
+**Decisions and findings:**
+- **Publisher subjects are groups** (Task 25 decision, f3d70d9). The `subject` filter and subject shards use groups of kind `subject`, and topic annotations are always `approximate`.
+- **JSONL header:** the first line is `{"shard": {...}}`, and `agent/manifest.json` holds the input hash (now in §7). `views.is_current(root)` is ready for C8 when Task 17 wants it.
+- **Size:** JSONL costs about 1,200 tokens per GSS variable (availability 36%, provenance and origins 36%). The line form costs about 60. Recorded as open in Task 25.
+- **Non-surveys:** FARS has no question text, so the line form falls back to `notes`, marked `[notes]`. If Task 25 adds a definition field, the line form should use it.
+- **Redundant shards:** in the GSS slice, `subject-abortion` and `battery-abdefect` have the same members, labeled `complete` and `complete_by_rule`. SKILL.md says to cite the one with the better label.
+- **`cli.py` is shared:** Tasks 15 and 16 will add subcommands too, so whoever goes next should check for conflicts there.
+
 ## Task 15 — Human-readable site: `docs/`
 
 **Status:** `TODO` — ready for a second thread
