@@ -51,7 +51,7 @@ No. None of the earlier repos has a per-variable measure or level of measurement
 
 About 17 of the 123 GSS, ANES and NSFG assignments agree with that earlier evidence, and about 85 have none. So the project's assignments are new judgments, and some happen to agree with Allen's earlier code.
 
-**One disagreement, for Allen:** GSS `partyid` is `categorical` in pdt-gss, but CultureWar models it as a 0–6 ordinal (`ordinal.py`, lines 72–75). That's a substantive question, apart from attribution.
+**One disagreement, for Allen:** GSS `partyid` is `categorical` in pdt-gss, but CultureWar models it as a 0–6 ordinal (`ordinal.py`, lines 72–75). That's a substantive question, apart from attribution. **Resolved (2026-11-19, Allen's decision as relayed by the coordinator thread):** `partyid` is categorical, because code 7 (other party) is off the 0–6 scale. CultureWar's ordinal registry treats it as 0–6 for its own analyses, which is an analysis choice, not a property of the variable. Blue is to record this `measure` in pdt-gss as a hand fact authored by Allen.
 
 ## What each option would have changed
 
