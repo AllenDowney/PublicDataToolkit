@@ -39,7 +39,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 19:** `extract.py`, the extract builder.
 - **Task 20:** ANES codebook errors: verify and record as corrections. `DONE (anes-errata)`; report sent.
 - **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc. `DONE` (gssrdoc 0.9 pinned; 7224r3 added; r3→r3a links)
-- **Task 22:** NSFG question text and earlier cycles.
+- **Task 22:** NSFG question text and earlier cycles. `DOING (nsfg)`
 - **Task 23:** Answer keys and scoring for the topic and structural queries. `DONE (eval)`; [`eval/`](eval/)
 - **Task 24:** Agent instructions and skills. `DOING (instructions)`
 - **Task 25:** Standard changes from the findings so far. Main thread only.
@@ -687,7 +687,7 @@ Either way, `sources.yaml` should stop calling 0.8.2 a 7224r3a source once 0.9 i
 
 ## Task 22 — NSFG question text and earlier cycles
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (nsfg)`
 
 - **Question text:** the codebooks give item references ("AD-7b") but no wording. Find the CAPI questionnaire documents on the CDC site, and add `questions` to records by item reference.
 - **Earlier cycles:** add 2017–2019 as a second release (data and download code in MarriageNSFG; codebooks from CDC), and link items across cycles.
