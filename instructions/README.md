@@ -15,7 +15,7 @@ For an agent (or a person) turning a public dataset into a repository that meets
 
 The parsers for each kind of source are skills, in [`skills/`](../skills/): an upstream package, an HTML codebook, a PDF or text codebook, the data file's own labels, and release notes.
 
-**Improving an existing repo** (adding variables, a release, a source): read the repo's CLAUDE.md and `build/report.md` first, start at the step the change belongs to, and redo the checks of every later step. Adding variables to a slice is step 3 onward; a new release is step 2 onward; a new erratum is step 6.
+**Improving an existing repo** (adding variables, a release, a source): read the repo's CLAUDE.md and `build/report.md` first, start at the step the change belongs to, and redo the checks of every later step. Adding variables to a slice is step 3 onward; a new release is step 2 onward; a new erratum is step 6. To bring a repo up to a newer toolkit release, run `copier update` in it, then `make views` and `make check` ([`templates/README.md`](../templates/README.md#updating-a-repo-from-a-newer-template), STANDARD.md §2.4).
 
 **Using a finished repo** to find variables is a different job. Each repo's generated `agent/SKILL.md` covers it; don't write another version.
 
@@ -56,5 +56,5 @@ Read their build scripts in `build/` and their `build/report.md` before writing 
 | C12, keys and references against the data | In the standard, not yet in `pdt check` (Task 17). The FARS build verifies every key and reference and lists the results in its report; the NSFG pregnancy → female reference was checked against the data by hand. Script it, as FARS does |
 | `scripts/download.py`, the data release | Working (Task 18): `pdt download`, wrapped by `scripts/download.py` and `make download`; `pdt.release` writes the common-format files. The template includes `download.py`; `make data` needs a reader for each dataset |
 | `scripts/extract.py` | Not written yet (Task 19) |
-| `templates/` and Copier | Working for `copier copy` ([`templates/`](../templates/README.md)). `copier update` doesn't work yet, because the template isn't at the root of the toolkit's git repo (Task 28) |
+| `templates/` and Copier | Working: `copier copy` from a tagged toolkit release, and `copier update` to a later one ([`templates/`](../templates/README.md); `copier.yml` is at the toolkit's root) |
 | `pdt views`, `pdt search`, `pdt check` | Working. Run from the dataset repo with `PYTHONPATH=../PublicDataToolkit/lib python -m pdt <command> .` |

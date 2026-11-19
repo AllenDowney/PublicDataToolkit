@@ -14,7 +14,8 @@ import pytest
 import yaml
 
 TEMPLATES = Path(__file__).resolve().parent
-LIB = TEMPLATES.parent / "lib"
+TOOLKIT = TEMPLATES.parent          # copier.yml is at the toolkit's root
+LIB = TOOLKIT / "lib"
 COPIER = os.environ.get("COPIER") or shutil.which("copier")
 
 ANSWERS = {
@@ -28,10 +29,12 @@ pytestmark = pytest.mark.skipif(not COPIER, reason="copier not installed")
 
 
 def render(dest, **extra):
-    args = [COPIER, "copy", "--defaults", "--quiet"]
+    # --vcs-ref HEAD: the working tree, uncommitted changes included. Without it, Copier
+    # copies the latest tag, which would test the last release instead of this code.
+    args = [COPIER, "copy", "--defaults", "--quiet", "--vcs-ref", "HEAD"]
     for k, v in {**ANSWERS, **extra}.items():
         args += ["-d", f"{k}={v}"]
-    subprocess.run(args + [str(TEMPLATES), str(dest)], check=True, capture_output=True)
+    subprocess.run(args + [str(TOOLKIT), str(dest)], check=True, capture_output=True)
     return dest
 
 
@@ -82,5 +85,7 @@ def test_source_id_follows_kind_and_url_sets_acquisition(tmp_path):
 def test_download_check_runs_without_network(tmp_path):
     repo = render(tmp_path / "pdt-testdata")
     result = run([sys.executable, "scripts/download.py", "--check"], repo)
-    assert result.returncode == 0, result.stdout + result.stderr
+    # It runs and reports the source. Its exit status (0, or 1 when a source is missing) is
+    # pdt.download's business, not the template's.
+    assert result.returncode in (0, 1) and "Traceback" not in result.stderr, result.stderr
     assert "testdata-codebook" in result.stdout

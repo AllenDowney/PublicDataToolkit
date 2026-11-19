@@ -9,7 +9,7 @@
 1. **Make the repo** next to this one from the template ([`templates/`](../templates/README.md)):
 
    ```bash
-   copier copy /path/to/PublicDataToolkit/templates pdt-<dataset-id>
+   copier copy --vcs-ref v0.1.0 /abs/path/to/PublicDataToolkit pdt-<dataset-id>
    ```
 
    That gives:
@@ -19,7 +19,7 @@
    - `EXTENSIONS.md` and `.gitignore`;
    - a `build/` stub that writes `build/report.md`.
 
-   `pdt check` on the new repo fails only C6, until the first source is fetched (below). Don't commit `metadata/` until a person has decided the terms, because C9 fails while records are tracked and `terms.metadata` is `unknown`.
+   `pdt check` on the new repo fails only C6, until the first source is fetched (below). Records may be committed locally before a person decides the terms, but not published: with no git remote, C9 only reports them, and once there's a remote it fails (STANDARD.md §9). Don't add a remote or push until the terms are decided.
 2. **Fill in `dataset.yaml`:** the id, publisher, the terms the person decided (§8), `dimensions`, and the releases with their tables, keys and references. Example: [`pdt-fars/dataset.yaml`](../../pdt-fars/dataset.yaml) has four tables and two conditional references.
 3. **Fill in `sources.yaml`:** one entry for every data file, codebook, questionnaire, release-notes PDF, errata page, terms page and upstream package. Each one gets:
    - `kind`, `format`, `path` (under `data/raw/`), `releases`;

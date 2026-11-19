@@ -1,8 +1,14 @@
 # Copier template for a PublicDataToolkit dataset repo (STANDARD.md §2, §2.4).
-#   copier copy ../PublicDataToolkit/templates ../pdt-<dataset-id>
-# It runs no tasks or migrations, so it needs no --trust. See templates/README.md.
+# The template's files are in templates/template/; templates/README.md explains it.
+# This file is at the toolkit's root because Copier records the template's version
+# (a git tag) only when copier.yml is at a git repo's root, and `copier update` needs it.
+#
+#   copier copy --vcs-ref v0.1.0 /abs/path/to/PublicDataToolkit pdt-<dataset-id>
+#   copier update            # from inside the dataset repo, to the latest tag
+#
+# It runs no tasks or migrations, so it needs no --trust.
 
-_subdirectory: template
+_subdirectory: templates/template
 _templates_suffix: .jinja
 _answers_file: .copier-answers.yml
 _min_copier_version: "9.0.0"

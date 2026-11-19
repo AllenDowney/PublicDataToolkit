@@ -20,7 +20,7 @@
 
 - [ ] `pdt check` reports no failures. Read its reports too: records without label, question text or values, unresolved codes, unreviewed model output.
 - [ ] The build report's data checks (C3–C5, keys and references) are clean or explained.
-- [ ] **C9: nothing whose terms are `build-only` or `unknown` is tracked in git.** `git ls-files data/` is empty.
+- [ ] **C9: nothing whose terms are `build-only` or `unknown` is published** (pushed to a git remote or put in a data release). Without a remote, `pdt check` reports such files instead of failing, so read its C9 reports before adding a remote. `git ls-files data/` is empty.
 - [ ] **C11:** the README has the six sections in order, and CLAUDE.md exists.
 - [ ] The repo's commits are small and say what changed.
 
