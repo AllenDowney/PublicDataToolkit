@@ -404,7 +404,7 @@ An agent that reaches a terms question stops and asks a person.
 | C11 | README has the sections in §2.3; CLAUDE.md exists | | fail |
 | C12 | Keys and references hold in the data: each table's `key` is unique and non-blank, and each reference (§2.1) finds its target row, for the rows its `when` selects | data | fail |
 
-`pdt check` is in the shared library, [`lib/pdt/`](lib/pdt/). Version 0.1 implements every check except C8, which waits for the generated views. The data checks read `data/processed/` and skip a file, with a notice, when it's missing or when its `metadata_sha256` doesn't match the current records. To run it from a dataset repo with a toolkit checkout next to it:
+`pdt check` is in the shared library, [`lib/pdt/`](lib/pdt/). Version 0.1 implements every check. C8 compares the manifest each generator writes (the SHA-256 of `dataset.yaml` and all of `metadata/`) with the current records, and only reports a different toolkit version. The data checks read `data/processed/` and skip a file, with a notice, when it's missing or when its `metadata_sha256` doesn't match the current records. To run it from a dataset repo with a toolkit checkout next to it:
 
 ```bash
 PYTHONPATH=../PublicDataToolkit/lib python -m pdt check .
