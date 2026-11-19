@@ -1,5 +1,11 @@
 """Compare two releases' records: `pdt diff <repo> <release-a> <release-b> [--table T]`.
 
+Pairing: the links between the two releases (links.jsonl) pair variables first, and
+names pair the rest. A release that renumbers its items (YRBSS: 2021 q26 "Considered
+suicide" is 2023 q27) is then compared item by item, not number by number. A name present
+in both releases whose links pair it elsewhere is listed under `name_conflicts`. Links
+that aren't one-to-one (derived_from, split_from, merged_into) don't pair.
+
 What it reports, per table (or for the release, when it has none):
 - variables only in A, only in B, and rename candidates among them, ranked by similarity
   of label, question text and codes (candidates only: a link needs the publisher's word);
@@ -122,6 +128,47 @@ def code_changes(a, b, omits=(False, False)):
     return {k: v for k, v in out.items() if v}
 
 
+def numeric_codes(record):
+    return [v["code"] for v in record.get("values") or []
+            if v.get("kind") == "valid" and isinstance(v["code"], (int, float)) and not isinstance(v["code"], bool)]
+
+
+def range_origin(record):
+    prov = record.get("provenance") or {}
+    return ((prov.get("fields") or {}).get("valid_range") or prov.get("record") or {}).get("origin")
+
+
+def range_changed(a, b):
+    """How the valid range changed: "documented", "observed", or None.
+
+    "documented" is a change of codes (FPOVCUT's documented cap went from 60000 to 99999),
+    and so is any change in top or bottom coding. "observed" is a range read from each
+    release's data (origin data_file: FARS MOD_YEAR 1927-2018 vs 1929-2025), reported but
+    not a change. Identifiers aren't compared: their range is which ids a release used.
+
+    Both state a range: compare min and max. Only one does: a change only if the other
+    release's valid codes fall outside it (NSFG 2017-2019 gives AGE_R as 15-50, 2022-2023
+    lists 15 to 50 one by one: no change)."""
+    if "identifier" in (a.get("measure"), b.get("measure")):
+        return None
+    va, vb = a.get("valid_range") or {}, b.get("valid_range") or {}
+    if va and vb:
+        if [va.get(k) for k in ("top_coded", "bottom_coded")] != [vb.get(k) for k in ("top_coded", "bottom_coded")]:
+            return "documented"
+        if (va.get("min"), va.get("max")) == (vb.get("min"), vb.get("max")):
+            return None
+    elif va or vb:
+        stated, other = (va, b) if va else (vb, a)
+        lo, hi = stated.get("min"), stated.get("max")
+        if not (isinstance(lo, (int, float)) and isinstance(hi, (int, float))) or all(
+                lo <= c <= hi for c in numeric_codes(other)):
+            return None
+    else:
+        return None
+    observed = all(range_origin(r) == "data_file" for r in (a, b) if r.get("valid_range"))
+    return "observed" if observed else "documented"
+
+
 def compare_pair(a, b, omits=(False, False)):
     """Every difference between two records of the same variable."""
     out = {}
@@ -134,6 +181,19 @@ def compare_pair(a, b, omits=(False, False)):
     codes = code_changes(a, b, omits)
     if codes:
         out["codes"] = codes
+    how = range_changed(a, b)
+    if how:
+        out["valid_range"] = {"how": how,
+                              "from": {k: v for k, v in (a.get("valid_range") or {}).items() if k != "note"} or None,
+                              "to": {k: v for k, v in (b.get("valid_range") or {}).items() if k != "note"} or None}
+    if a.get("implied_decimals") != b.get("implied_decimals"):
+        out["implied_decimals"] = {"from": a.get("implied_decimals"), "to": b.get("implied_decimals")}
+    if a.get("flag_for") != b.get("flag_for"):
+        out["flag_for"] = {"from": a.get("flag_for"), "to": b.get("flag_for")}
+    numbers = lambda r: [q.get("number") for q in r.get("questions") or []]
+    if any(numbers(a)) or any(numbers(b)):
+        if numbers(a) != numbers(b):
+            out["question_number"] = {"how": "reference_only", "from": numbers(a), "to": numbers(b)}
     if a.get("measure") != b.get("measure"):
         out["measure"] = {"from": a.get("measure"), "to": b.get("measure")}
     return out
@@ -143,7 +203,8 @@ def relations(changes):
     """Link relations read off the differences (STANDARD.md §5.2)."""
     rel = []
     codes = changes.get("codes", {})
-    if codes.get("added") or codes.get("dropped") or codes.get("kind_changed"):
+    if (codes.get("added") or codes.get("dropped") or codes.get("kind_changed")
+            or changes.get("valid_range", {}).get("how") == "documented" or "implied_decimals" in changes):
         rel.append("codes_changed")
     if codes.get("relabeled") or changes.get("label", {}).get("how") == "changed":
         rel.append("labels_changed")
@@ -203,6 +264,47 @@ def merge_split_candidates(only_a, only_b, ra, rb, renamed, threshold=RENAME_THR
     return out
 
 
+PAIRING = {"same_item", "renamed", "wording_changed", "codes_changed", "labels_changed",
+           "universe_changed", "data_revised"}
+
+
+class Linked(dict):
+    """{name in A: name in B} from links, with each pair's relations in .relations."""
+
+    def __init__(self):
+        super().__init__()
+        self.relations = {}
+
+
+def linked_pairs(repo, rel_a, rel_b, table, ra, rb):
+    """One-to-one pairs from the links between two releases, for one table."""
+    out = Linked()
+    for link in repo.links:
+        f, t = link["from"], link["to"]
+        if not PAIRING & set(link["relations"]):
+            continue
+        if (f.get("release"), t.get("release")) == (rel_a, rel_b):
+            a, b = f, t
+        elif (f.get("release"), t.get("release")) == (rel_b, rel_a):
+            a, b = t, f
+        else:
+            continue
+        if a.get("table") != table or b.get("table") != table:
+            continue
+        if a["name"] in ra and b["name"] in rb and a["name"] not in out and b["name"] not in out.values():
+            out[a["name"]] = b["name"]
+            out.relations[(a["name"], b["name"])] = link["relations"]
+    return out
+
+
+def comparable(rels):
+    """Relations as the records can show them: without renamed, and without same_item beside others."""
+    out = set(rels) - {"renamed", "data_revised"}
+    if len(out) > 1:
+        out.discard("same_item")
+    return out or {"same_item"}
+
+
 def lists_only_occurring(repo, record):
     """Whether the source documenting a record's codes lists only codes that occur."""
     sources = {s["id"]: s for s in (repo.sources or {}).get("sources", [])}
@@ -227,20 +329,34 @@ def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
     tables = sorted(set(repo.tables[rel_a]) | set(repo.tables[rel_b]), key=str)
     if table is not None:
         tables = [table]
+    periods = {r["id"]: r.get("reference_period") for r in repo.dataset.get("releases", [])}
     result = {"dataset": repo.dataset.get("id"), "from": rel_a, "to": rel_b, "tables": [],
+              "reference_periods": {rel_a: periods.get(rel_a), rel_b: periods.get(rel_b)},
               "corrections": [c["id"] for c in repo.corrections],
               "rule": RULE, "rule_version": RULE_VERSION, "pdt_version": __version__,
               "omitted_codes_have_no_cases": omitted_codes_have_no_cases}
     for tab in tables:
         ra = {r["name"]: r for r in repo.tables[rel_a].get(tab, [])}
         rb = {r["name"]: r for r in repo.tables[rel_b].get(tab, [])}
-        # names that differ only in case are the same variable
-        lower_b = {n.lower(): n for n in rb}
-        pairs = []
+        linked = linked_pairs(repo, rel_a, rel_b, tab, ra, rb)
+        pairs = list(linked.items())
+        paired_a, paired_b = {p[0] for p in pairs}, {p[1] for p in pairs}
+        # then names, among the variables no link pairs; names that differ only in case match
+        lower_b = {n.lower(): n for n in rb if n not in paired_b}
+        conflicts = []
         for n in ra:
-            m = n if n in rb else lower_b.get(n.lower())
+            if n in paired_a:
+                continue
+            m = n if (n in rb and n not in paired_b) else lower_b.get(n.lower())
             if m is not None:
                 pairs.append((n, m))
+                paired_a.add(n)
+                paired_b.add(m)
+        for n in sorted(set(ra) & set(rb)):
+            if linked.get(n) != n and (n in linked or n in set(linked.values())):
+                conflicts.append({"name": n,
+                                  "from_linked_to": linked.get(n) if n in linked else None,
+                                  "to_linked_from": next((a for a, b in linked.items() if b == n), None)})
         paired_a, paired_b = {p[0] for p in pairs}, {p[1] for p in pairs}
         only_a = [ra[n] for n in ra if n not in paired_a]
         only_b = [rb[n] for n in rb if n not in paired_b]
@@ -249,8 +365,12 @@ def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
             omits = (omitted_codes_have_no_cases or lists_only_occurring(repo, ra[na]),
                      omitted_codes_have_no_cases or lists_only_occurring(repo, rb[nb]))
             changes = compare_pair(ra[na], rb[nb], omits)
-            entry = {"from": na, "to": nb, "relations": relations(changes), "changes": changes}
-            if na != nb:
+            entry = {"from": na, "to": nb, "paired_by": "link" if (na, nb) in linked.items() else "name",
+                     "relations": relations(changes), "changes": changes}
+            if entry["paired_by"] == "link":
+                entry["link_relations"] = linked.relations[(na, nb)]
+                entry["link_agrees"] = comparable(entry["relations"]) == comparable(entry["link_relations"])
+            if na != nb and na.lower() == nb.lower():
                 entry["name_case_changed"] = True
             both.append(entry)
         result["tables"].append({
@@ -259,6 +379,7 @@ def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
             "only_in_to": [r["name"] for r in only_b],
             "rename_candidates": (renamed := rename_candidates(only_a, only_b)),
             "merge_split_candidates": merge_split_candidates(only_a, only_b, ra, rb, renamed),
+            "name_conflicts": conflicts,
             "in_both": both,
             "spans": {"from": waves_span(ra.values()), "to": waves_span(rb.values())},
         })
@@ -344,6 +465,10 @@ def write_proposals(repo, result, directory):
 
 def summary(result):
     lines = [f"{result['dataset']}: {result['from']} -> {result['to']}"]
+    rp = result.get("reference_periods") or {}
+    if any(rp.values()):
+        lines.append(f"  reference periods: {result['from']} {rp.get(result['from'])}; "
+                     f"{result['to']} {rp.get(result['to'])}")
     for t in result["tables"]:
         both = t["in_both"]
         rel_counts = {}
@@ -351,7 +476,11 @@ def summary(result):
             key = ", ".join(e["relations"])
             rel_counts[key] = rel_counts.get(key, 0) + 1
         head = f"\n[{t['table']}]" if t["table"] else ""
-        lines.append(f"{head}\n  in both: {len(both)}  only in {result['from']}: {len(t['only_in_from'])}  "
+        by_link = [e for e in both if e["paired_by"] == "link"]
+        disagree = [e for e in by_link if not e["link_agrees"]]
+        lines.append(f"{head}\n  paired by link: {len(by_link)}  by name: {len(both) - len(by_link)}"
+                     + (f"  (links whose relations the records don't match: {len(disagree)})" if by_link else ""))
+        lines.append(f"  in both: {len(both)}  only in {result['from']}: {len(t['only_in_from'])}  "
                      f"only in {result['to']}: {len(t['only_in_to'])}  rename candidates: "
                      f"{len(t['rename_candidates'])}")
         for k, n in sorted(rel_counts.items()):
@@ -359,7 +488,10 @@ def summary(result):
         for e in both:
             if e["relations"] == ["same_item"] and not e["changes"]:
                 continue
-            lines.append(f"  {e['to']}: {', '.join(e['relations'])}")
+            via = f" (linked from {e['from']})" if e["paired_by"] == "link" and e["from"] != e["to"] else ""
+            linked_as = (f"  [link: {', '.join(e['link_relations'])}{'' if e['link_agrees'] else '; differs'}]"
+                         if e["paired_by"] == "link" else "")
+            lines.append(f"  {e['to']}{via}: {', '.join(e['relations'])}{linked_as}")
             for field, v in e["changes"].items():
                 if field == "codes":
                     for kind, items in v.items():
@@ -373,12 +505,23 @@ def summary(result):
                         shown = "; ".join(show(i) for i in items[:6])
                         more = f" (+{len(items) - 6})" if len(items) > 6 else ""
                         lines.append(f"      codes {kind}: {shown}{more}")
-                elif field == "measure":
-                    lines.append(f"      measure: {v['from']} -> {v['to']}")
+                elif field == "valid_range":
+                    lines.append(f"      valid_range ({v['how']}): {v['from']} -> {v['to']}")
+                elif field in ("measure", "implied_decimals", "flag_for"):
+                    lines.append(f"      {field}: {v['from']} -> {v['to']}")
+                elif field == "question_number":
+                    lines.append(f"      question number (reference_only): {v['from']} -> {v['to']}")
                 else:
                     lines.append(f"      {field} ({v['how']})")
         for c in t["rename_candidates"]:
             lines.append(f"  rename candidate: {c['from']} -> {c['to']} (similarity {c['score']})")
+        for c in t["name_conflicts"]:
+            lines.append(f"  name conflict: {c['name']} is in both releases, but links pair "
+                         + "; ".join(x for x in (
+                             f"{result['from']} {c['name']} with {result['to']} {c['from_linked_to']}"
+                             if c["from_linked_to"] else None,
+                             f"{result['to']} {c['name']} with {result['from']} {c['to_linked_from']}"
+                             if c["to_linked_from"] else None) if x))
         for c in t["merge_split_candidates"]:
             lines.append(f"  {c['kind']} candidate: {c['from']} -> {c['to']} (similarity {c['score']})")
         if t["only_in_from"]:

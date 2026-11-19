@@ -173,3 +173,69 @@ def test_sources_list_only_occurring_codes(tmp_path):
     (root / "sources.yaml").write_text(yaml.safe_dump(sources))
     e = entries(diff.diff(Repo.load(root), "r1", "r2"))["order"]
     assert e["relations"] == ["same_item"] and e["changes"]["codes"]["no_cases_in_other"][0]["code"] == 2
+
+
+def test_valid_range_question_number_and_links(tmp_path):
+    dataset = dict(DATASET, releases=[
+        {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
+        {"id": "r2", "label": "R2", "status": "current", "sources": ["cb"], "reference_period": "2021"}])
+    cut_a = rec("r1", "cut", "Poverty cutoff", [V(-1, "NIU")])
+    cut_a["valid_range"] = {"min": 1, "max": 60000}
+    cut_b = rec("r2", "cut", "Poverty cutoff", [V(-1, "NIU")])
+    cut_b["valid_range"] = {"min": 1, "max": 99999}
+    age_a = rec("r1", "age", "Age", [V(-1, "NIU")])
+    age_a["valid_range"] = {"min": 15, "max": 17}
+    age_b = rec("r2", "age", "Age", [V(15, "15"), V(16, "16"), V(17, "17")])    # the same span, listed
+    num_a = rec("r1", "num", "Num", [V(1, "Yes")], "Agree?")
+    num_a["questions"][0]["number"] = "Q26"
+    num_b = rec("r2", "num", "Num", [V(1, "Yes")], "Agree?")
+    num_b["questions"][0]["number"] = "Q27"
+    # renumbered: r1 q26 is r2 q27; r2 q26 is new
+    q26_a = rec("r1", "q26", "Considered suicide", [V(1, "Yes")])
+    q27_b = rec("r2", "q27", "Considered suicide", [V(1, "Yes")])
+    q26_b = rec("r2", "q26", "Sad or hopeless", [V(1, "Yes")])
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "variables.jsonl", [cut_a, age_a, num_a, q26_a])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl", [cut_b, age_b, num_b, q27_b, q26_b])
+    write_jsonl(root / "metadata" / "links.jsonl", [
+        {"from": {"release": "r1", "name": "q26"}, "to": {"release": "r2", "name": "q27"},
+         "relations": ["same_item", "renamed"], "origin": {"origin": "publisher", "source": "cb"}}])
+    result = diff.diff(Repo.load(root), "r1", "r2")
+    t = result["tables"][0]
+    e = entries(result)
+    assert e["cut"]["relations"] == ["codes_changed"] and e["cut"]["changes"]["valid_range"]["to"]["max"] == 99999
+    assert e["cut"]["changes"]["valid_range"]["how"] == "documented"
+    assert "valid_range" not in e["age"]["changes"]
+    assert e["num"]["relations"] == ["same_item"]
+    assert e["num"]["changes"]["question_number"] == {"how": "reference_only", "from": ["Q26"], "to": ["Q27"]}
+    assert e["q26"]["to"] == "q27" and e["q26"]["paired_by"] == "link" and e["q26"]["link_agrees"]
+    assert e["q26"]["relations"] == ["same_item"]
+    assert t["only_in_to"] == ["q26"]
+    assert t["name_conflicts"] == [{"name": "q26", "from_linked_to": "q27", "to_linked_from": None}]
+    assert result["reference_periods"] == {"r1": None, "r2": "2021"}
+    assert "name conflict: q26" in diff.summary(result)
+
+
+def test_observed_and_identifier_ranges(tmp_path):
+    dataset = dict(DATASET, releases=[
+        {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
+        {"id": "r2", "label": "R2", "status": "current", "sources": ["cb"]}])
+    data_prov = {"record": PUB, "fields": {"valid_range": {"origin": "data_file", "source": "cb"}}}
+    def ranged(rel, name, lo, hi, measure="continuous", prov=None, top=None):
+        r = rec(rel, name, name, [V(-1, "NIU")])
+        r["measure"] = measure
+        r["valid_range"] = {"min": lo, "max": hi, **({"top_coded": top} if top is not None else {})}
+        if prov:
+            r["provenance"] = prov
+        return r
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "variables.jsonl", [
+        ranged("r1", "modyear", 1927, 2018, prov=data_prov), ranged("r1", "case", 10001, 560105, "identifier"),
+        ranged("r1", "age", 18, 89, prov=data_prov, top=False)])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl", [
+        ranged("r2", "modyear", 1929, 2025, prov=data_prov), ranged("r2", "case", 10001, 560102, "identifier"),
+        ranged("r2", "age", 18, 89, prov=data_prov, top=True)])
+    e = entries(diff.diff(Repo.load(root), "r1", "r2"))
+    assert e["modyear"]["relations"] == ["same_item"] and e["modyear"]["changes"]["valid_range"]["how"] == "observed"
+    assert e["case"]["changes"] == {}
+    assert e["age"]["relations"] == ["codes_changed"]                      # top coding changed
