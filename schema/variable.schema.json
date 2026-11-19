@@ -88,7 +88,7 @@
       }
     },
     "code_list": {
-      "description": "Id of a shared code list in metadata/code_lists.jsonl (STANDARD.md §4.5). Its codes come before this record's own values.",
+      "description": "Id of a shared code list in metadata/code_lists.jsonl (STANDARD.md \u00a74.5). Its codes come before this record's own values.",
       "$ref": "common.schema.json#/$defs/id"
     },
     "valid_range": {
@@ -189,7 +189,9 @@
               "notes",
               "source_location",
               "description",
-              "variable_type"
+              "variable_type",
+              "flag_for",
+              "implied_decimals"
             ]
           },
           "additionalProperties": {
@@ -310,7 +312,7 @@
           "minimum": 0
         },
         "retired": {
-          "description": "The publisher marks the code retired; it may still occur in earlier data, so it stays valid (STANDARD.md §4.2).",
+          "description": "The publisher marks the code retired; it may still occur in earlier data, so it stays valid (STANDARD.md \u00a74.2).",
           "type": "boolean"
         },
         "waves": {
