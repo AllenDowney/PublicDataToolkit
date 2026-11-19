@@ -3,7 +3,7 @@
 Moved from [`PROJECT_BOARD.md`](../../PROJECT_BOARD.md) on 2026-11-19. The board has the current status; this file holds the task's description, progress, findings and decisions.
 
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (nsfg)`
 
 Part of Task 11. `scripts/extract.py` in a dataset repo: the user names the variables, waves and how to treat each missing type, and gets an extract, with no analysis choices built in. It uses `pdt.data.recode`. Test it by rebuilding a CultureWar GSS extract column and comparing.
 
