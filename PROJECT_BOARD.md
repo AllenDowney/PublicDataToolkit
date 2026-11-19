@@ -18,9 +18,9 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 12:** Tables in a release: in the standard, the schemas and `pdt check`, and used for the NSFG (female, male, pregnancy).
 - **Task 14:** Agent views: `agent/` in all four dataset repos, `pdt views` and `pdt search` with completeness labels.
 - **Task 15:** Human-readable site: `docs/` in all four dataset repos, built by `make views` with `agent/`.
+- **Task 16:** data-dict export: `export/data-dict/` in all four dataset repos, valid under data-dict 0.0.3, with counted losses.
 
 **Doing**
-- **Task 16:** Export data-dict YAML and validate it with data-dict. `DOING (views + site)`
 - **Task 1:** The plan. [`planning/plan.md`](planning/plan.md); remaining decisions in plan §10.
 - **Task 5:** The snake_case spike.
   - GSS: 50 variables (`pdt-gss`).
@@ -41,7 +41,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc. `DONE` (gssrdoc 0.9 pinned; 7224r3 added; r3→r3a links)
 - **Task 22:** NSFG question text and earlier cycles. `DOING (nsfg)`
 - **Task 23:** Answer keys and scoring for the topic and structural queries. `DONE (eval)`; [`eval/`](eval/)
-- **Task 24:** Agent instructions and skills. `DOING (instructions)`
+- **Task 24:** Agent instructions and skills. `DONE (instructions)`; [`instructions/`](instructions/), [`skills/`](skills/)
 - **Task 25:** Standard changes from the findings so far. Main thread only.
 
 - **Task 26:** The full GSS release (all 6,943 variables). `DOING (gss)`
@@ -515,11 +515,30 @@ A static site per dataset repo, from STANDARD.md §7: a page per variable, per g
 
 ## Task 16 — Export data-dict YAML
 
-**Status:** `DOING (views + site)`
+**Status:** `DONE` (views + site thread, 2026-11-19; not pushed)
 
 Export one `data-dict.yaml` per release (per table, for releases with tables), following the mapping in [`planning/data_dict.md`](planning/data_dict.md) §2, and validate it with data-dict's own CLI (`uvx data-dict validate-spec`). Record what the export loses, as evidence for the conversation with Hadley (Task 6).
 
 **Files:** new `lib/pdt/export.py` and its tests; `export/data-dict/` in the dataset repos (generated); notes in this task's section.
+
+**Result (views + site thread):**
+- [`lib/pdt/export.py`](lib/pdt/export.py) writes `export/data-dict/<release>.yaml`, one dictionary per release with the release's tables inside, as STANDARD.md §2 lays out (not one file per table: data-dict holds several tables and their relationships). It also writes `LOSSES.md` and `manifest.json`. `make views` builds it with `agent/` and `docs/`; `pdt views --only export` builds it alone.
+- **Validated:** every file passes `data-dict validate-spec` (data-dict-yaml 0.0.3, spec 0.1.0). A test builds a small common-format parquet with `pdt.data.split` and runs `validate-data` against the export; it passes. The test runs when `data-dict` is on PATH or `PDT_DATA_DICT` names it, and is skipped otherwise.
+- **Install note:** the PyPI package is `data-dict-yaml`. `uv` isn't installed here. `pip install data-dict-yaml` into a venv works, but the wheel installs the `data-dict` binary without its execute bit; `chmod +x` fixes it.
+- **The export describes the common format:** a value column per variable, and an enum `<name>__code` column for its missing codes, with the types in brackets (`.d: don't know [dk]`). Tables have no `source` yet, because the parquet file names wait on Task 18.
+
+**What data-dict can't hold (evidence for Task 6, Hadley):** counts per release are in each repo's `export/data-dict/LOSSES.md`. The main findings:
+1. **Numeric codes can't be labeled.** data-dict's `enum` is a string column, and our value columns hold numbers. An enum with `{"1": yes}` passes `validate-spec` but fails `validate-meta` (M01: "the data is `number`"). Labels go in `details` as text: 47 of 50 GSS variables, 34 of 37 ANES, 42 of 52 NSFG, 24 of 40 FARS. This is probably the most important question for Hadley, since most survey data is labeled integers.
+2. **No ordered enum.** An ordinal scale is `number(ordinal)` with the range of codes, and its labels are in text.
+3. **Missing codes and their types:** only as text in the `__code` enum's labels (182 GSS codes, 89 ANES).
+4. **Availability by wave and form:** one line of text (2,871 entries for the GSS release).
+5. **Wording by wave:** flattened into `details` (7 ANES variables).
+6. **Corrections:** only the corrected text survives (4 GSS, 11 ANES).
+7. **Provenance per field:** dropped (about 300 field origins per repo).
+8. **Groups, links between releases, derived properties, code histories:** dropped (25 GSS groups, 50 GSS links, 42 FARS histories).
+9. **Conditional joins:** FARS person → vehicle "when PER_TYP is 1, 2 or 9" can only be a description.
+10. **Release versions:** ids like `7224r3a` or `2022-2023` are neither semver nor a date, so `version` is left out.
+11. **Keys:** a join's "one" side must be `primary_key` or `unique`, so key columns are marked; composite keys work by marking each column.
 
 ## Task 17 — Data checks C3–C5 in `pdt check`
 
@@ -722,7 +741,7 @@ Then a scoring script for recall, precision and tokens read. Write the protocol 
 
 ## Task 24 — Agent instructions and skills
 
-**Status:** `DOING (instructions)`
+**Status:** `DONE` (instructions thread, 2026-11-19; not pushed)
 
 Write `instructions/` (the eight-step procedure in plan §5) and the first skills in plan §6, using what the four slices taught. Examples:
 - probe a PDF before parsing it;
@@ -733,6 +752,24 @@ Write `instructions/` (the eight-step procedure in plan §5) and the first skill
 Each step should say what to check before moving on.
 
 **Files:** new `instructions/` and `skills/` in this repo.
+
+**Done (instructions thread):**
+- **[`instructions/`](instructions/)** has a README and one file for each of plan §5's eight steps. Each step says what to do, which STANDARD.md sections apply, what to check before moving on (`pdt check`; coverage, codes, availability, keys and references against the data), and when to stop and ask a person. The examples are the four builds' real traps. The README also says what exists today and what doesn't: C3–C5 run in each build, and `download.py`, `extract.py` and the template aren't written yet.
+- **[`skills/`](skills/)** has five Claude Code skills, each with `name` and `description` frontmatter: `from-upstream-package` (gssrdoc), `from-html-codebook` (ANES), `from-pdf-codebook` (NSFG; FARS's code matrices), `from-data-labels` (Stata, SAS, CSV label columns) and `from-release-notes` (GSS notes into links).
+- **Using a finished repo** links to the generated `agent/SKILL.md` rather than adding a second version.
+
+**Findings:**
+- **Skill names differ from plan §6.** `from-upstream-package` matches the standard's origin `upstream_package` (the plan says `from-structured-package`). `from-release-notes` is new: the plan's `release-diff` compares two releases' records, which is a different job and is still unwritten, along with `from-ddi-xml` and `from-open-data-portal`, for want of a real case.
+- **No build used an LLM to draft records.** All four sources parsed deterministically once their traps were handled, so the model-drafting path (rule 8) is untested.
+- **What every build had to do that the standard doesn't name:** write `build/report.md`; check keys and references against the data (FARS, NSFG); check that an upstream package documents the release it's used for (gssrdoc). Proposals below.
+- **Derived rules are copied into each build.** `scale_signature_from_valid_labels` is in all four `build_slice.py`, although STANDARD.md §6 puts derived properties in the shared library. This is the same drift `check_metadata.py` had before it moved into `lib/`.
+
+**Proposals sent to the coordinator** (STANDARD.md is the main thread's):
+1. §0 still says `instructions/` is "not written yet"; link it.
+2. A numbered data check for keys and references (unique keys; each reference holds in the data, under its `when`).
+3. Record which release an upstream source documents (e.g. `documents: [7224r3]` in `sources.yaml`), so a mismatch like gssrdoc's is data, not a note.
+4. Name `build/report.md` in §2's layout, as the place for the data checks until `pdt check` runs C3–C5.
+5. (`lib/`, not the standard) Move the scale-signature rule into the shared library.
 
 ## Task 25 — Standard changes from the findings
 
