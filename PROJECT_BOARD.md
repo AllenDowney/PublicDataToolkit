@@ -25,7 +25,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
   - ANES CDF: 37 variables (`pdt-anes-cdf`).
   - NSFG: 52 variables in three tables (`pdt-nsfg`).
   - FARS: started (`pdt-fars`); see Task 13.
-  - MTF: waiting for ICPSR ([`planning/icpsr_email.md`](planning/icpsr_email.md)).
+  - MTF: waiting for ICPSR's answer to Allen's email about LLM use and publishing metadata.
   - Religion is the cross-survey topic.
 - **Task 6:** Talk to Hadley Wickham about data-dict. [`planning/data_dict.md`](planning/data_dict.md)
 - **Task 11:** Data releases, download scripts and extract builders. The common data format is accepted and implemented (`lib/pdt/data.py`); the rest is in Tasks 18 and 19.

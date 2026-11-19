@@ -78,7 +78,7 @@ Results are recorded in [`missing_codes_design.md`](missing_codes_design.md) §9
 
 1. **Tables:** add a table level to the standard (Task 12).
 2. **NSFG terms:** confirmed as recorded (everything `ship`).
-3. **MTF:** ask ICPSR first. Claude drafts the email and Allen sends it; MTF waits for the answer. The draft is [`icpsr_email.md`](icpsr_email.md).
+3. **MTF:** ask ICPSR first. Claude drafts the email and Allen sends it; MTF waits for the answer. The draft is kept outside this repo.
 4. **Non-survey case:** the [Fatality Analysis Reporting System](https://www.nhtsa.gov/research-data/fatality-analysis-reporting-system-fars) (FARS, NHTSA) instead of a city portal.
    - It has several tables per year (crash, vehicle, person and others), so it tests the table level.
    - Its codes change across years, and it is a federal dataset.
