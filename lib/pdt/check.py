@@ -269,7 +269,10 @@ def check_provenance(repo, result):
         if s["kind"] == "upstream_package" and not s.get("version"):
             result.report("C6", f"upstream package {s['id']} has no pinned version")
     recs = repo.records
-    for name in ["label", "questions", "values"]:
+    # Question text is expected only of surveys (STANDARD.md §2.1, `kind`); other data has a
+    # description instead. No kind means a survey, as before kind existed.
+    survey = repo.dataset.get("kind", "survey") == "survey"
+    for name in ["label", "questions" if survey else "description", "values"]:
         missing = sum(name not in r for r in recs)
         if missing:
             result.report("C6", f"{missing} of {len(recs)} records have no {name}")
@@ -354,16 +357,39 @@ def check_extensions(repo, result):
             result.fail("C10", f"extension {key} isn't listed in EXTENSIONS.md")
 
 
+def normalized(text):
+    """Text with blockquote markers and runs of whitespace removed, so a wrapped or quoted
+    notice still matches."""
+    return " ".join(word for line in text.splitlines() for word in line.lstrip().lstrip(">").split())
+
+
+def section_text(markdown, word):
+    """The text of the first `## ` section whose heading contains word (any case)."""
+    out, inside = [], False
+    for line in markdown.splitlines():
+        if line.startswith("## "):
+            if inside:
+                break
+            inside = word in line.lower()
+        elif inside:
+            out.append(line)
+    return "\n".join(out)
+
+
 def check_docs(repo, result):
     """C11: README has the required sections; CLAUDE.md exists."""
     readme = repo.root / "README.md"
     if not readme.exists():
         result.fail("C11", "no README.md")
     else:
-        headings = [line.lower() for line in readme.read_text().splitlines() if line.startswith("## ")]
+        text = readme.read_text()
+        headings = [line.lower() for line in text.splitlines() if line.startswith("## ")]
         for section in README_SECTIONS:
             if not any(section in h for h in headings):
                 result.fail("C11", f"README.md has no section about '{section}'")
+        notice = (repo.dataset.get("terms") or {}).get("notice")
+        if notice and normalized(notice) not in normalized(section_text(text, "terms")):
+            result.fail("C11", "README.md's terms section doesn't include terms.notice verbatim")
     if not (repo.root / "CLAUDE.md").exists():
         result.fail("C11", "no CLAUDE.md")
 
@@ -463,9 +489,16 @@ def check_codes(name, frame, records, result):
                                     f"{listed(sorted(code_text(x) for x in extra))}")
 
 
-def check_availability(name, frame, records, wave_column, result):
-    """C5 (warns): the waves in each record's availability are the waves with non-missing values."""
-    declared_all = {str(a["wave"]) for r in records for a in r.get("availability", [])}
+def check_availability(name, frame, records, wave_column, result, data_waves=None):
+    """C5 (warns): the waves in each record's availability are the waves with non-missing values.
+
+    With data_waves (the file holds only those waves; STANDARD.md §2.1), availability is
+    checked only for them.
+    """
+    def kept(availability):
+        waves = {str(a["wave"]) for a in availability}
+        return waves if data_waves is None else waves & data_waves
+    declared_all = {w for r in records for w in kept(r.get("availability", []))}
     if wave_column in frame:
         from .data import code_text
         waves = frame[wave_column].map(lambda w: None if w is None or w != w else code_text(w))
@@ -480,7 +513,7 @@ def check_availability(name, frame, records, wave_column, result):
             continue
         has = frame[r["name"]].notna()
         in_data = set(waves[has].dropna()) if waves is not None else (declared_all if has.any() else set())
-        declared = {str(a["wave"]) for a in r["availability"]}
+        declared = kept(r["availability"])
         if empty := sorted(declared - in_data):
             result.report("C5", f"warning: {name}/{r['name']}: waves in availability with no non-missing "
                                 f"values: {listed(empty)}")
@@ -529,6 +562,14 @@ def check_keys_in_data(release, tables, frames, result):
                                    f"{unmatched:,} of {len(rows):,} rows without a match")
 
 
+def data_waves(repo, release, table):
+    """The waves a release's (or table's) data file holds, as text, or None for all."""
+    r = next((r for r in repo.dataset.get("releases", []) if r["id"] == release), {})
+    t = next((t for t in r.get("tables") or [] if t["id"] == table), {})
+    waves = t.get("data_waves") or r.get("data_waves")
+    return {str(w) for w in waves} if waves else None
+
+
 def check_data(repo, result):
     """C3, C4, C5 and C12, on the common-format files in data/processed/."""
     frames = load_data(repo, result)
@@ -537,7 +578,7 @@ def check_data(repo, result):
         name = release + (f"/{table}" if table else "")
         check_coverage(name, frame, records, result)
         check_codes(name, frame, records, result)
-        check_availability(name, frame, records, wave_column, result)
+        check_availability(name, frame, records, wave_column, result, data_waves(repo, release, table))
     for r in repo.dataset.get("releases", []):
         check_keys_in_data(r["id"], r.get("tables") or [], frames, result)
 

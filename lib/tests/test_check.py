@@ -176,6 +176,36 @@ def test_c9_model_output_fails_without_remote(tmp_path):
     assert failed(run(root), "C9")
 
 
+def subdir(tmp_path, name):
+    path = tmp_path / name
+    path.mkdir()
+    return path
+
+
+def test_c6_questions_expected_only_of_surveys(tmp_path):
+    no_questions = [{k: v for k, v in r.items() if k != "questions"} for r in VARIABLES]
+    result = run(make_repo(tmp_path, variables=no_questions))
+    assert "C6: 2 of 2 records have no questions" in result.reports          # no kind: a survey
+    result = run(make_repo(subdir(tmp_path, "b"), dataset=dict(DATASET, kind="administrative"), variables=no_questions))
+    assert not any("questions" in r for r in result.reports)
+    assert "C6: 2 of 2 records have no description" in result.reports
+
+
+NOTICE = "This site provides applications using data that has been modified for use from its original source."
+
+
+def test_c11_terms_notice_in_readme(tmp_path):
+    dataset = dict(DATASET, terms=dict(DATASET["terms"], notice=NOTICE))
+    assert any("terms.notice" in f for f in run(make_repo(tmp_path, dataset=dataset)).failures)
+    # Wrapped and quoted in the terms section, it matches.
+    quoted = "> This site provides applications using data that has been\n> modified for use from its original source."
+    readme = README.replace("## Terms of use\n", "## Terms of use\n\n" + quoted + "\n")
+    assert not run(make_repo(subdir(tmp_path, "b"), dataset=dataset, readme=readme)).failures
+    # In another section, it doesn't.
+    readme = README.replace("## How to cite\n", "## How to cite\n\n" + NOTICE + "\n")
+    assert any("terms.notice" in f for f in run(make_repo(subdir(tmp_path, "c"), dataset=dataset, readme=readme)).failures)
+
+
 def test_c10_undocumented_extension(tmp_path):
     bad = edited(VARIABLES, 1, extensions={"toy": {"module": "Core"}})
     assert failed(run(make_repo(tmp_path, variables=bad)), "C10")

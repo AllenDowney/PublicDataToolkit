@@ -18,6 +18,11 @@ A fetched file whose checksum differs from the record is kept beside the target 
 
 Manual sources (`acquisition: manual`) are never fetched; their `manual_steps` are printed.
 
+Live sources (`live: true`, an open-data portal's table or API) change in place, so their
+`sha256` identifies the snapshot a release was built from (STANDARD.md §2.2). A difference is
+reported as "changed since snapshot <fetched_on>", not as a mismatch or a failure, and a
+fetched copy is kept beside the target as `<path>.new`: a new snapshot is a new release.
+
 Converted sources: a source's `convert` names the converter and its version, e.g.
 "pdftotext -layout (poppler 24.02)" (STANDARD.md §8). The download is kept beside the
 path (a PDF as <path stem>.pdf) and converted to the path; the checksum is of the result.
@@ -70,8 +75,13 @@ def installed_version(tool):
     return m.group(1) if m else None
 
 
+def snapshot_changed(src, got):
+    return (f"changed since snapshot {src.get('fetched_on', '(no date)')}: sha256 {got}, "
+            f"snapshot {src['sha256']}; a new snapshot is a new release")
+
+
 def status(root, src):
-    """(state, detail) for one source: ok, missing, mismatch, unverified, no_path."""
+    """(state, detail) for one source: ok, missing, mismatch, changed (a live source), unverified, no_path."""
     if not src.get("path"):
         return "no_path", "no path recorded (an upstream package or a web page)"
     target = Path(root) / src["path"]
@@ -85,6 +95,8 @@ def status(root, src):
         return "unverified", f"present, no sha256 recorded (it is {sha256(target)})"
     got = sha256(target)
     if got != want:
+        if src.get("live"):
+            return "changed", snapshot_changed(src, got)
         return "mismatch", f"sha256 {got}, recorded {want}"
     return "ok", str(src["path"])
 
@@ -138,7 +150,7 @@ def get(root, src, force=False, log=print):
     if state == "ok":
         log(f"  ok        {src['id']}: {detail}")
         return "ok"
-    if state in ("mismatch", "unverified") and not force:
+    if state in ("mismatch", "changed", "unverified") and not force:
         log(f"  {state:9} {src['id']}: {detail}; not overwritten (use --force)")
         return state
     log(f"  fetching  {src['id']}: {src['url']}")
@@ -152,6 +164,9 @@ def get(root, src, force=False, log=print):
         fetch(src["url"], staged)
     got, want = sha256(staged), src.get("sha256")
     if want and got != want:
+        if src.get("live"):
+            log(f"  changed   {src['id']}: {snapshot_changed(src, got)}; kept as {staged.name}")
+            return "changed"
         log(f"  MISMATCH  {src['id']}: fetched sha256 {got}, recorded {want}; kept as {staged.name}")
         return "mismatch"
     if target.is_symlink():
@@ -197,7 +212,7 @@ def main(argv=None):
                      args.source, args.release)
 
     if args.check:
-        counts = {"missing": 0, "manual": 0, "mismatch": 0}
+        counts = {"missing": 0, "manual": 0, "mismatch": 0, "changed": 0}
         for s in sources:
             state, detail = status(root, s)
             if s.get("acquisition") == "manual" and state == "missing":
@@ -207,7 +222,8 @@ def main(argv=None):
                 counts[state] += 1
         missing = counts["missing"] + counts["manual"]
         print(f"\n{len(sources)} source(s): {missing} missing ({counts['manual']} to fetch by hand), "
-              f"{counts['mismatch']} mismatched")
+              f"{counts['mismatch']} mismatched"
+              + (f", {counts['changed']} live changed since their snapshot" if counts["changed"] else ""))
         return 1 if missing or counts["mismatch"] else 0
 
     if not args.accept_terms:

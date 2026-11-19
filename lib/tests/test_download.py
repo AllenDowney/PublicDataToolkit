@@ -77,6 +77,44 @@ def test_mismatch_is_kept_aside(repo, capsys):
     assert (repo / "data" / "raw" / "data.csv").read_text() == "changed\n"
 
 
+def make_live(repo, snapshot):
+    """Mark the data source live, with a recorded snapshot, and change the remote file."""
+    sources = yaml.safe_load((repo / "sources.yaml").read_text())
+    src = sources["sources"][0]
+    src.update(live=True, sha256=sha(snapshot), fetched_on="2026-11-19")
+    (repo / "sources.yaml").write_text(yaml.safe_dump(sources))
+    remote = download_path(src["url"])
+    remote.write_text("a,b\n1,2\n3,4\n")      # the portal added a row
+    return src
+
+
+def download_path(url):
+    from urllib.parse import urlparse
+    from pathlib import Path
+    return Path(urlparse(url).path)
+
+
+def test_live_source_changed_since_snapshot(repo, capsys):
+    snapshot = "a,b\n1,2\n"
+    make_live(repo, snapshot)
+    raw = repo / "data" / "raw"
+    raw.mkdir(parents=True)
+    (raw / "data.csv").write_text("a,b\n1,2\n3,4\n")    # a later download replaced the snapshot
+    assert download.main([str(repo), "--check", "--source", "data"]) == 0
+    out = capsys.readouterr().out
+    assert "changed    data: changed since snapshot 2026-11-19" in out
+    assert "mismatched, 1 live changed since their snapshot" in out
+
+
+def test_live_source_fetch_keeps_new_snapshot_aside(repo, capsys):
+    make_live(repo, "a,b\n1,2\n")
+    assert download.main([str(repo), "--accept-terms", "--source", "data"]) == 0    # not a failure
+    out = capsys.readouterr().out
+    assert "changed   data: changed since snapshot 2026-11-19" in out and "kept as data.csv.new" in out
+    assert (repo / "data" / "raw" / "data.csv.new").read_text() == "a,b\n1,2\n3,4\n"
+    assert not (repo / "data" / "raw" / "data.csv").exists()
+
+
 def test_unknown_source(repo):
     with pytest.raises(SystemExit):
         download.main([str(repo), "--check", "--source", "nope"])

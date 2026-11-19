@@ -207,3 +207,14 @@ def test_checks_use_corrected_records(tmp_path):
     result = run(root)
     assert result.ok, result.failures
     assert not reports(result, "C4")
+
+
+def test_c5_data_waves_limits_the_check(tmp_path):
+    # The records say 2019-2021; the file holds 2020 and 2021 only.
+    three = [{"wave": 2019}, {"wave": 2020}, {"wave": 2021}]
+    recs = [dict(r, availability=three) for r in crash_records()]
+    root = make_data_repo(tmp_path, crash_recs=recs)
+    assert any("no non-missing values: 2019" in m for m in reports(run(root), "C5"))
+    tables = [dict(TABLES[0], data_waves=["2020", "2021"]), TABLES[1]]
+    root = make_data_repo(tmp_path / "b", crash_recs=recs, tables=tables)
+    assert not [m for m in reports(run(root), "C5") if "crash" in m]
