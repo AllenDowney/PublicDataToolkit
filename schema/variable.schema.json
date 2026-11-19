@@ -246,6 +246,10 @@
         },
         "note": {
           "type": "string"
+        },
+        "origin": {
+          "description": "Where this wording came from, when it differs from the record's provenance (wordings gathered from several documents).",
+          "$ref": "common.schema.json#/$defs/origin"
         }
       },
       "required": [

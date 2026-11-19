@@ -88,6 +88,8 @@ Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A relea
 
 **Partial data files.** When a release's or table's common-format file holds only some waves, because the table is too large or keeps growing, `data_waves` lists them, and C5 checks availability only for those.
 
+`design` names the survey design variables: `weights`, `strata` and `psu`. A release or table can override it. It's descriptive: which weight suits an analysis is the user's choice.
+
 `dimensions` says what availability's `wave`, `form`, `sample`, `mode` and `phase` mean for this dataset. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
 
 ### 2.2 `sources.yaml`
@@ -162,7 +164,7 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `dataset`, `release`, `name` | Required. Together with `table`, when the release has tables, they identify the record |
 | `label` | The publisher's short label |
 | `description` | The publisher's definition or description, verbatim. For data without questions, such as FARS, this is the main text |
-| `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). A wording used only under a condition ("if R is married") says so in `condition`, in the publisher's words. When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text` |
+| `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). A wording used only under a condition ("if R is married") says so in `condition`, in the publisher's words. When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text`. A wording from a different document than the record's other facts carries its own `origin` |
 | `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other` |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime, boolean, geometry |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
@@ -304,7 +306,7 @@ Source records keep the original of *our* corrections. The library applies corre
 Some publishers document every year of a long-running dataset in one place, as FARS's 1975–2024 manual does with a matrix of codes by year range for each element. That matrix records two kinds of change. The same code can change meaning (FARS `LGT_COND` 9 is "Unknown" until 2017 and "Reported as Unknown" from 2018), and the same answer can change code (`WEATHER`'s "Unknown" goes from 9 to 99).
 
 A release's record says only what that release means (§4.2), and links (§5.2) connect variables, not codes. So the publisher's history is kept as data in `metadata/histories.jsonl`, written by the build with the publisher as its origin, one line per variable. Each line has:
-- the variable's `name` and `table`, its earlier `names` with the waves each applies to, and the publisher's `element` id when there is one;
+- the variable's `name` and `table`, its earlier `names` with the waves each applies to (names in another of the publisher's products, such as YRBSS's single-year files, name that product's `source`), and the publisher's `element` id when there is one;
 - the publisher's `periods`, in wave units;
 - its `attributes`: each row's label, verbatim, and its code in each period, or `null` where the publisher shows none.
 
@@ -426,7 +428,7 @@ The spike should try to break these:
 - **`Link` relations as a flat list.** Identity (`same_item`), change (`renamed`, `wording_changed`) and derivation (`derived_from`) are different kinds of statement. A list lets a pair carry several, but it may not be enough.
 - **Availability as (wave, form, sample, mode, phase).** Tested on GSS ballots and ANES pre/post so far. MTF forms are the next test; an open-portal dataset, which has snapshots rather than waves, is the one after.
 - **Missing types.** Eleven types, from the GSS, ANES, NSFG and FARS. `unknown` was added for administrative data and `unspecified` for codes marked missing without a reason. MTF may need more.
-- **Provenance per field rather than per value.** Values and missing codes have their own origin; other fields share one per field. Per-value provenance for question text may turn out to be needed when wordings come from different documents.
+- **Provenance per field rather than per value.** Values, missing codes and question wordings have their own origin; other fields share one per field.
 - **Versioned schema paths.** At 1.0, schemas move to `schema/v1/` and their `$id`s include the version, so older versions stay available to `pdt check`.
 - **The common data format** (§8) was adopted after review, but no release has used it yet. MTF and NSFG will test it further.
 - **Code histories** (§5.4) were added for FARS's code matrices and so far have one implementation. The ANES CDF and the GSS cumulative file may need them too; whether one format fits all three is untested.

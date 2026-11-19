@@ -170,6 +170,29 @@
         "additionalProperties": false
       }
     },
+    "design": {
+      "description": "The survey design variables, by name, so tools can find them: weights, strata and PSU. A release or table can override it. Descriptive only; which weight suits an analysis is the user's choice.",
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/name"
+          },
+          "minItems": 1
+        },
+        "strata": {
+          "$ref": "common.schema.json#/$defs/name"
+        },
+        "psu": {
+          "$ref": "common.schema.json#/$defs/name"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "releases": {
       "type": "array",
       "minItems": 1,
@@ -302,6 +325,9 @@
                     "type": "string"
                   },
                   "minItems": 1
+                },
+                "design": {
+                  "$ref": "#/properties/design"
                 }
               },
               "required": [
@@ -342,6 +368,9 @@
               "type": "string"
             },
             "minItems": 1
+          },
+          "design": {
+            "$ref": "#/properties/design"
           }
         },
         "required": [
