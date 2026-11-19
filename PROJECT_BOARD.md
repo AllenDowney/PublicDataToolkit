@@ -40,7 +40,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 20:** ANES codebook errors: verify and record as corrections.
 - **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc.
 - **Task 22:** NSFG question text and earlier cycles.
-- **Task 23:** Answer keys and scoring for the topic and structural queries.
+- **Task 23:** Answer keys and scoring for the topic and structural queries. `DOING (eval)`
 - **Task 24:** Agent instructions and skills.
 - **Task 25:** Standard changes from the findings so far. Main thread only.
 
@@ -509,7 +509,7 @@ Check each one against the PDF codebook (`../pdt-anes-cdf/data/raw/`) and ANES's
 
 ## Task 23 — Answer keys for the topic and structural queries
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (eval)`
 
 Spike step 5. Before any search tool exists, build by hand:
 - the **religion answer key** across the GSS, ANES and NSFG slices, and the full files where practical: every variable about religious affiliation, attendance, importance or belief;
