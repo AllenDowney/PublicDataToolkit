@@ -145,6 +145,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (red)`. `lib/pdt/compare.py` for `text_only` and `reference_only`; NSFG's link rule rebuilt on it (0.4, EVRMARRY and FMARITAL relinked); `values[].n` from NSFG's codebook frequencies, used by `pdt diff`. Details: [`planning/tasks/task-35.md`](planning/tasks/task-35.md).
 
+### Task 36 — Non-survey data in the library
+
+`DOING (orange)`. `data_waves`, dataset `kind`, `terms.notice` and live sources in `pdt check` and `pdt download`, applied to the five dataset repos. Details: [`planning/tasks/task-36.md`](planning/tasks/task-36.md).
+
 
 ## Working in parallel
 
