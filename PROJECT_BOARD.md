@@ -143,7 +143,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 `DONE (orange)`. Chicago's "Crimes - 2001 to Present" (Socrata) in `~/pdt-chicago-crimes`, a dated portal snapshot, 27 records, `pdt check` 0 failures; the `from-open-data-portal` skill; 8 proposals for the standard. Details: [`planning/tasks/task-33.md`](planning/tasks/task-33.md).
 ### Task 35 — Shared text comparison; NSFG links and code counts
 
-`DOING (red)`. `lib/pdt/compare.py` for `text_only` and `reference_only`; NSFG's link rule rebuilt on it (0.4, EVRMARRY and FMARITAL relinked); `values[].n` from NSFG's codebook frequencies, used by `pdt diff`. Details: [`planning/tasks/task-35.md`](planning/tasks/task-35.md).
+`DONE (red)`. `pdt.compare` shared by `pdt diff` and NSFG's link rule 0.4 (17 links; the opposite-sex marital labels relinked by hand); NSFG `values[].n`, which `pdt diff` uses to tell codes with no cases from recodings. Details: [`planning/tasks/task-35.md`](planning/tasks/task-35.md).
 
 ### Task 36 — Non-survey data in the library
 
