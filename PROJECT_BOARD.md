@@ -48,7 +48,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 
 ### Working in parallel
 
-Two or more Claude threads can work at once if they don't edit the same files. Rules:
+Two or more Claude threads can work at once if they don't edit the same files. **The coordinator is the thread named "main: standard + FARS".** It assigns tasks, decides questions about the standard (or takes them to Allen), and owns the files listed below. Other threads send it questions and a short report when they finish, with SendMessage (find it with ListAgents), and also record findings in their own task sections. Rules:
 
 - **One thread per task, and one task per thread at a time.** Claim a task by setting its status to `DOING (thread name)` in its section and in the list above. Don't start a task another thread has claimed.
 - **File ownership.** Each task lists the files it may change. Stay inside them. Read anything.
