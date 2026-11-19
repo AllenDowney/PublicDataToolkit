@@ -172,7 +172,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 43 — The older repos and the new fields
 
-`DOING (yellow)`. `questions[].number`, `flag_for` and `design` in pdt-nsfg, pdt-cps-asec, pdt-anes-cdf and pdt-fars. Details: [`planning/tasks/task-43.md`](planning/tasks/task-43.md).
+`DONE (yellow)`. `questions[].number`, `flag_for` and `design` in pdt-nsfg, pdt-cps-asec and pdt-anes-cdf; pdt-fars needed nothing; notes to blue and purple. Details: [`planning/tasks/task-43.md`](planning/tasks/task-43.md).
 ### Task 44 — One line per variable across releases
 
 `DOING (red)`. The catalog, and the agent index where it fits, collapse a variable's lines across releases by its links (same item, renamed, relabeled), showing its names and release span; a change of meaning keeps lines apart but shows them together. Details: [`planning/tasks/task-44.md`](planning/tasks/task-44.md).
