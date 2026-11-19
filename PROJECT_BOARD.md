@@ -166,6 +166,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 ### Task 41 — Shared code lists
 
 `DOING (orange)`. Task 38's design: `metadata/code_lists.jsonl`, `retired` and `waves` on codes, in the standard, the library, pdt-chicago-crimes and (if blue is free) the GSS. Details: [`planning/tasks/task-41.md`](planning/tasks/task-41.md).
+### Task 42 — A cross-dataset catalog
+
+`DOING (red)`. `pdt catalog` combines the dataset repos whose metadata may ship into one agent index and a site page (in `~/pdt-catalog`), and `pdt search --catalog` searches across them with completeness labels. Details: [`planning/tasks/task-42.md`](planning/tasks/task-42.md).
+
 
 
 
