@@ -38,7 +38,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 18:** `download.py` and the data-release workflow.
 - **Task 19:** `extract.py`, the extract builder.
 - **Task 20:** ANES codebook errors: verify and record as corrections. `DONE (anes-errata)`; report sent.
-- **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc. `DOING (gss)`
+- **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc. `DONE` (gssrdoc 0.9 pinned; 7224r3 added; r3→r3a links)
 - **Task 22:** NSFG question text and earlier cycles.
 - **Task 23:** Answer keys and scoring for the topic and structural queries. `DONE (eval)`; [`eval/`](eval/)
 - **Task 24:** Agent instructions and skills. `DOING (instructions)`
@@ -590,7 +590,7 @@ Check each one against the PDF codebook (`../pdt-anes-cdf/data/raw/`) and ANES's
 
 ## Task 21 — GSS follow-ups
 
-**Status:** `DOING (gss)`
+**Status:** `DONE` — 2026-11-19 (gss thread)
 
 - **The 39 missing variables:** release 7224r3a has 6,943 variables, and gssrdoc 6,904. Find the 39 and decide how to document them, perhaps from the NORC PDF codebook.
 - **Pin gssrdoc,** or decide to build from NORC sources (plan §10 item 3; ask Allen).
@@ -660,7 +660,30 @@ Either way, `sources.yaml` should stop calling 0.8.2 a 7224r3a source once 0.9 i
 
 **Standard gaps raised.**
 - `data_revised`: decided and added (commit `dfac1da`).
-- Still open, minor: a corrected variable label (RADIOACT, R3 notes) or corrected value labels (IMPTHNGS, PAIDLV) have no relation of their own. I used `same_item` (+ `codes_changed` for value labels), with NORC's fix in the note.
+- `labels_changed`: decided and added (commit `d50a601`). It's used for RADIOACT, IMPTHNGS and PAIDLV.
+
+**Decision implemented (2026-11-19).** Allen chose option C, starting as A (plan §10 item 3, commit `f60fc37`). pdt-gss commit `35d1f59`; `pdt check` gives 0 failures.
+- **gssrdoc 0.9 is pinned.**
+  - `make gssrdoc` downloads `gss_doc.rda` at commit `112286d`, checks its SHA-256, and converts it with `build/convert_gssrdoc.R` (base R and jsonlite; the pdt-xlang env).
+  - Its output has the same shape as the old `gssrdoc_full.json`.
+  - Its 6,942 names are exactly R3's.
+  - Source id `gssrdoc` replaces `gssrdoc-json`.
+- **Release 7224r3 is added.** Its 50 slice records come from gssrdoc 0.9 and the R3 Stata file. C5 finds no differences between gssrdoc and the R3 data.
+- **7224r3a records:**
+  - Their text now comes from 0.9.
+  - `provenance.record.note` says the text documents Release 3, and that labels and missing codes come from the R3a Stata file.
+  - The only content change from 0.8.2 is grass's 2024 n, which goes from 867 to 862 and now matches the data.
+  - C5's one remaining difference is racopen 2024 (gssrdoc 462, data 981). That is the R3a fix NORC describes.
+  - Oddity: NORC says R3 "inadvertently removed" racopen's 2024 data, yet R3 still has the R2 count (462). Only racopenv is empty in R3.
+- **Links (50 written).**
+  - racopen r3→r3a (`same_item`, `data_revised`), from the R3a notes, p. 1.
+  - `same_item` for the other 49, by rule `gss_same_name_same_item`. A name in two consecutive releases that the notes don't mention is unchanged; NORC lists the exceptions in its notes.
+  - Still pending, because they need r1 or r2 records: 427 links from the notes, plus 48 within-release `derived_from` links whose ends (`migage`/`mighist`, `vote_ts`/`pres_ts` and their sources) are not in the slice.
+- **The slice is unchanged:** 50 variables per release.
+- **Deferred:** `vote_ts` and `pres_ts` (and every name gssrdoc lacks) need a fallback to the R3a codebook and Stata file. That fallback goes with the full-release build, where it can be tested on all 40 names (coordinator, 2026-11-19).
+- **For the eval thread:**
+  - `data/raw/gssrdoc_full.json` (0.8.2) is still linked locally for its key builder, but pdt-gss no longer uses it.
+  - With two releases, a name-only search returns two records per variable.
 
 ## Task 22 — NSFG question text and earlier cycles
 
