@@ -20,6 +20,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 15:** Human-readable site: `docs/` in all four dataset repos, built by `make views` with `agent/`.
 
 **Doing**
+- **Task 16:** Export data-dict YAML and validate it with data-dict. `DOING (views + site)`
 - **Task 1:** The plan. [`planning/plan.md`](planning/plan.md); remaining decisions in plan §10.
 - **Task 5:** The snake_case spike.
   - GSS: 50 variables (`pdt-gss`).
@@ -33,7 +34,6 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 
 **To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
 - **Task 13:** FARS, continued: the PARKWORK table, history across years, a second release. `DOING (fars)`
-- **Task 16:** Export data-dict YAML and validate it with data-dict.
 - **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
 - **Task 18:** `download.py` and the data-release workflow.
 - **Task 19:** `extract.py`, the extract builder.
@@ -513,7 +513,7 @@ A static site per dataset repo, from STANDARD.md §7: a page per variable, per g
 
 ## Task 16 — Export data-dict YAML
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (views + site)`
 
 Export one `data-dict.yaml` per release (per table, for releases with tables), following the mapping in [`planning/data_dict.md`](planning/data_dict.md) §2, and validate it with data-dict's own CLI (`uvx data-dict validate-spec`). Record what the export loses, as evidence for the conversation with Hadley (Task 6).
 
