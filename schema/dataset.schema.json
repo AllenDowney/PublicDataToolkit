@@ -371,6 +371,26 @@
           },
           "design": {
             "$ref": "#/properties/design"
+          },
+          "reference_period": {
+            "description": "The period the data describe, when it differs from when they were collected (ASEC 2024 asks about income in 2023).",
+            "type": "object",
+            "properties": {
+              "from": {
+                "$ref": "common.schema.json#/$defs/date"
+              },
+              "to": {
+                "$ref": "common.schema.json#/$defs/date"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [

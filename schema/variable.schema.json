@@ -72,6 +72,14 @@
         "other"
       ]
     },
+    "flag_for": {
+      "description": "For an allocation, imputation, top-code or swapping flag: the names of the variables it flags, in the same release and table.",
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/name"
+      },
+      "minItems": 1
+    },
     "values": {
       "description": "Every documented code, valid and missing, in the publisher's order.",
       "type": "array",
@@ -103,6 +111,11 @@
     },
     "units": {
       "type": "string"
+    },
+    "implied_decimals": {
+      "description": "When the publisher stores a number without its decimal point (a weight stored as 255212 for 2552.12): how many decimal places are implied. The data file keeps the stored value; tools divide.",
+      "type": "integer",
+      "minimum": 1
     },
     "universe": {
       "description": "Who was asked, verbatim from the publisher when available.",
@@ -208,6 +221,10 @@
           "description": "The full text as the publisher gives it, including stem and interviewer instructions if they aren't separated.",
           "type": "string",
           "minLength": 1
+        },
+        "number": {
+          "description": "The publisher's number for this item in the questionnaire, as printed (AD-7b, Q26, BC-6a). Per wording, since numbers change by wave.",
+          "type": "string"
         },
         "stem": {
           "description": "Text shared by every item in a battery, when the publisher separates it.",

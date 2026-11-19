@@ -72,6 +72,8 @@ Hand edits to source records are not allowed because the next build would silent
 
 Names the dataset and its publisher, records the terms (§8), and lists the releases the repo covers. Each release has an `id`, which is also its directory under `metadata/releases/`, and the list of source files its records were built from.
 
+A release whose data describe an earlier period than the collection, such as ASEC 2024's income in 2023, gives it in `reference_period`.
+
 **Release ids** use the publisher's own name for the release, written lowercase, with no spaces: `7224r3a` for the GSS (from NORC's file name), `20260205` for the ANES (its version date), `2022-2023` for the NSFG (its cycle), `2024` for FARS (its data year). When the publisher has no name for a release, use its date, `YYYYMMDD`.
 
 **Revisions within a release.** A publisher can reissue a release's files without making a new release: NHTSA reissued the 2017 FARS files until 2022, and revised the 2017 data itself in December 2020. A release may list these in `revisions`, each with its date, what changed, and its source (such as a release note). The checksums in `sources.yaml` identify which revision a build used. A revision isn't a link: `data_revised` (§5.2) is for changes between releases.
@@ -164,12 +166,13 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `dataset`, `release`, `name` | Required. Together with `table`, when the release has tables, they identify the record |
 | `label` | The publisher's short label |
 | `description` | The publisher's definition or description, verbatim. For data without questions, such as FARS, this is the main text |
-| `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). A wording used only under a condition ("if R is married") says so in `condition`, in the publisher's words. When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text`. A wording from a different document than the record's other facts carries its own `origin` |
-| `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other` |
+| `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). A wording used only under a condition ("if R is married") says so in `condition`, in the publisher's words. When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text`. The questionnaire's item number (AD-7b, Q26) goes in the wording's `number`. A wording from a different document than the record's other facts carries its own `origin` |
+| `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other`. A flag variable (allocation, imputation, top-code, swapping) names what it flags in `flag_for` |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime, boolean, geometry |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
 | `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one |
-| `valid_range` | For numeric variables whose valid values aren't all labeled, such as thermometers and ages: min, max, and whether the ends are top- or bottom-coded |
+| `valid_range` | For numeric variables whose valid values aren't all labeled, such as thermometers and ages: min, max, and whether the ends are top- or bottom-coded. Labeled points inside the range (A_AGE's 80 "80-84 years of age") are listed in `values` as valid codes too |
+| `implied_decimals` | When numbers are stored without their decimal point (a weight of 255212 meaning 2552.12): the number of implied places. The data keep the stored value |
 | `units`, `universe`, `notes` | Verbatim from the publisher |
 | `availability` | One entry per (wave, form, sample, mode, phase) combination the publisher documents. An entry with only `wave` means everyone in that wave. `n` is the count of non-missing responses, when known |
 | `source_location` | Where a person can read this variable's documentation: source, page, URL, anchor, and the publisher's own id for it |
