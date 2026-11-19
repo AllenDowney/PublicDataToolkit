@@ -41,7 +41,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc. `DOING (gss)`
 - **Task 22:** NSFG question text and earlier cycles.
 - **Task 23:** Answer keys and scoring for the topic and structural queries. `DONE (eval)`; [`eval/`](eval/)
-- **Task 24:** Agent instructions and skills.
+- **Task 24:** Agent instructions and skills. `DOING (instructions)`
 - **Task 25:** Standard changes from the findings so far. Main thread only.
 
 **Withdrawn:** Task 7.
@@ -697,7 +697,7 @@ Then a scoring script for recall, precision and tokens read. Write the protocol 
 
 ## Task 24 — Agent instructions and skills
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (instructions)`
 
 Write `instructions/` (the eight-step procedure in plan §5) and the first skills in plan §6, using what the four slices taught. Examples:
 - probe a PDF before parsing it;
