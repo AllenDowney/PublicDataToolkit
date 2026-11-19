@@ -184,6 +184,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 ### Task 46 — Who made the hand facts
 
 `DOING (orange)`. A read-only audit for Allen's decision on labeling agent-made judgments: every `origin: hand` fact, who made it and when. [`planning/attribution_audit.md`](planning/attribution_audit.md). Details: [`planning/tasks/task-46.md`](planning/tasks/task-46.md).
+### Task 47 — Large sites: docs/ built for Pages
+
+`DOING (red)`. C8 checks `docs/` only where it exists; a GitHub Pages workflow in the template builds and deploys `docs/` without the data; a proposal for fewer site files on large releases. Details: [`planning/tasks/task-47.md`](planning/tasks/task-47.md).
+
 
 
 
