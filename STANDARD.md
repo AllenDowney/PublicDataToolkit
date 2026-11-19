@@ -397,7 +397,7 @@ An agent that reaches a terms question stops and asks a person.
 | C6 | Provenance: every source used by a release has `fetched_on` and `sha256`; every upstream package has `version`. Reports counts of records without label, question text or values, of unresolved codes, and of unreviewed model output | | fail on missing hashes; report the rest |
 | C7 | Each correction's `original` still appears in its target | | fail |
 | C8 | `docs/`, `agent/` and `export/` are current with the records | | fail |
-| C9 | Terms: nothing whose terms are `build-only` or `unknown` is tracked in git or attached to a release; no `origin: model` when `llm_processing` isn't `allowed` | | fail |
+| C9 | Terms: nothing whose terms are `build-only` or `unknown` is published, meaning pushed to a git remote or put in a data release. A repo with no remote may commit such files locally, and the check reports them instead of failing. No `origin: model` when `llm_processing` isn't `allowed` | | fail (report only when there's no remote) |
 | C10 | Every extension key in the records is listed in `EXTENSIONS.md` | | fail |
 | C11 | README has the sections in §2.3; CLAUDE.md exists | | fail |
 | C12 | Keys and references hold in the data: each table's `key` is unique and non-blank, and each reference (§2.1) finds its target row, for the rows its `when` selects | data | fail |

@@ -32,7 +32,13 @@ Task 8 decided that dataset repos are generated from `templates/` with Copier, b
 
 **Added after the board text above was written (instructions thread):** the template also includes `scripts/download.py`, a wrapper for `pdt.download`, and `make download` (b676e48).
 
-**Decisions for Allen:**
+**Decisions for Allen** (decided 2026-11-19, see below):
 1. `copier update` can't work while `copier.yml` is in `templates/`: Copier records the template's version only when the template is at a git repo's root. The proposal is to move `copier.yml` to the toolkit's root, with `_subdirectory: templates/template`, and to tag releases as STANDARD.md §2.4 says. It was tested in scratch repos: a repo copied at tag v0.1.0 recorded it, and `copier update` to v0.1.1 merged a template change while keeping a local edit. Copier also records the template path as given, so use an absolute path or a URL.
 2. C9 blocks even the first *local* commit of records until the terms are decided, not just publishing. If that's not intended, C9 needs to separate "tracked" from "published".
 3. Minor, for Task 18's owner: `download --check` on a missing manual source prints "0 missing or mismatched".
+
+**Decided (Allen, 2026-11-19):**
+1. Move `copier.yml` to the toolkit's root, with `_subdirectory: templates/template`, and tag toolkit releases (v0.1.0, ...) as STANDARD.md §2.4 says. Assigned to the instructions thread. Tags stay local until Allen pushes.
+2. C9 blocks only publishing: a git remote or a data release. Local commits of records are fine while the terms are `unknown`. STANDARD.md §9 updated; the `pdt check` change is assigned to the fars thread.
+3. The `download --check` message is passed to views + site (Task 18).
+
