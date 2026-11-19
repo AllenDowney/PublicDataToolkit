@@ -55,6 +55,7 @@ Two or more Claude threads can work at once if they don't edit the same files. R
 - **The main thread owns** `STANDARD.md`, `schema/`, `PROPOSAL.md` and `planning/plan.md`. Another thread that needs a change there writes the proposal in its own task section, and the main thread makes it.
 - **The board.** Each thread edits only its own task sections and their lines in the list above. Record findings there.
 - **`lib/`:** a thread may add new modules and tests. Only one thread at a time changes an existing module: `check.py` is Task 17's while it's `DOING`, and `data.py` is Task 19's.
+- **Shared checkout:** threads share this repo's working tree. Stage only the files you changed (`git add <path>`, never `git add -A` or `git commit -a`), and check `git diff --cached` before committing, so you never commit another thread's unfinished edits.
 - **Commits:** commit locally, in small commits, with the task number in the message. Run `pytest` in this repo before committing here. **Don't push** anything; Allen checks before anything goes public.
 - **Environment:** the `CultureWar` conda env has everything except R, DuckDB and Polars, which are in `pdt-xlang`. Use the scratchpad for temporary files, never `/tmp` directly.
 - **Web:** if a site returns 403, try a headless browser (Playwright, in the CultureWar env). Stop at a bot check and ask Allen.
