@@ -321,6 +321,38 @@ def waves_span(records):
     return {"from": waves[0], "to": waves[-1]} if waves else None
 
 
+def code_list_changes(repo, rel_a, rel_b):
+    """Shared code lists (STANDARD.md §4.5) compared once, not per variable: for each variable
+    that names a list in either release, the list in each; then each pair of different lists,
+    with the codes added, dropped, relabeled and newly retired. The same content under another
+    id isn't a change."""
+    lists = {cl["id"]: cl for cl in repo.code_lists}
+    used = {}
+    for rel in (rel_a, rel_b):
+        for tab, recs in repo.stored.get(rel, {}).items():
+            for r in recs:
+                if r.get("code_list"):
+                    used.setdefault((tab, r["name"]), {})[rel] = r["code_list"]
+    pairs = sorted({(u.get(rel_a), u.get(rel_b)) for u in used.values() if u.get(rel_a) != u.get(rel_b)},
+                   key=lambda p: (str(p[0]), str(p[1])))
+    out = []
+    for a, b in pairs:
+        ca = {code_key(c["code"]): c for c in (lists.get(a) or {}).get("codes", [])}
+        cb = {code_key(c["code"]): c for c in (lists.get(b) or {}).get("codes", [])}
+        change = {"from": a, "to": b,
+                  "variables": sorted(f"{t + '/' if t else ''}{n}" for (t, n), u in used.items()
+                                      if (u.get(rel_a), u.get(rel_b)) == (a, b)),
+                  "added": [cb[k]["code"] for k in sorted(set(cb) - set(ca))],
+                  "dropped": [ca[k]["code"] for k in sorted(set(ca) - set(cb))],
+                  "relabeled": [cb[k]["code"] for k in sorted(set(ca) & set(cb)) if ca[k].get("label") != cb[k].get("label")],
+                  "retired": [cb[k]["code"] for k in sorted(set(ca) & set(cb))
+                              if cb[k].get("retired") and not ca[k].get("retired")]}
+        change["same_content"] = a is not None and b is not None and not any(
+            change[k] for k in ("added", "dropped", "relabeled", "retired"))
+        out.append(change)
+    return out
+
+
 def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
     """The full comparison, as a dict that serializes to JSON."""
     for rel in (rel_a, rel_b):
@@ -334,7 +366,8 @@ def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
               "reference_periods": {rel_a: periods.get(rel_a), rel_b: periods.get(rel_b)},
               "corrections": [c["id"] for c in repo.corrections],
               "rule": RULE, "rule_version": RULE_VERSION, "pdt_version": __version__,
-              "omitted_codes_have_no_cases": omitted_codes_have_no_cases}
+              "omitted_codes_have_no_cases": omitted_codes_have_no_cases,
+              "code_lists": code_list_changes(repo, rel_a, rel_b)}
     for tab in tables:
         ra = {r["name"]: r for r in repo.tables[rel_a].get(tab, [])}
         rb = {r["name"]: r for r in repo.tables[rel_b].get(tab, [])}
@@ -469,6 +502,16 @@ def summary(result):
     if any(rp.values()):
         lines.append(f"  reference periods: {result['from']} {rp.get(result['from'])}; "
                      f"{result['to']} {rp.get(result['to'])}")
+    for c in result.get("code_lists") or []:
+        if c["from"] is None or c["to"] is None:
+            what = f"starts using {c['to']}" if c["from"] is None else f"stops using {c['from']}"
+        elif c["same_content"]:
+            what = f"{c['from']} -> {c['to']}: same codes and labels"
+        else:
+            what = f"{c['from']} -> {c['to']}: " + "; ".join(
+                f"{len(c[k])} {k}" for k in ("added", "dropped", "relabeled", "retired") if c[k])
+        lines.append(f"  code list: {what} ({len(c['variables'])} variables: {', '.join(c['variables'][:5])}"
+                     + (", ..." if len(c["variables"]) > 5 else "") + ")")
     for t in result["tables"]:
         both = t["in_both"]
         rel_counts = {}

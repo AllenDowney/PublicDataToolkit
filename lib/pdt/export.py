@@ -77,6 +77,12 @@ class Dumper(yaml.SafeDumper):
 Dumper.add_representer(Literal, _literal)
 
 
+def code_label(value):
+    """A code's label, with "(retired)" when the publisher retired it (STANDARD.md §4.2)."""
+    label = value.get("label") or ""
+    return f"{label} (retired)".strip() if value.get("retired") else label
+
+
 def block(text):
     text = text.rstrip()
     return Literal(text + "\n") if "\n" in text else text
@@ -270,7 +276,7 @@ class Exporter:
         typed = self.value_type(rel, rec, valid)
         col.update(typed)
         if valid and typed.get("type") != "enum":
-            details.append("Codes: " + "; ".join(f"{code_text(v['code'])} = {v.get('label', '')}" for v in valid))
+            details.append("Codes: " + "; ".join(f"{code_text(v['code'])} = {code_label(v)}" for v in valid))
             self.losses.add(rel, "numeric_code_labels")
         if len(questions) > 1:
             self.losses.add(rel, "wordings")
@@ -331,7 +337,7 @@ class Exporter:
         string_codes = [v["code"] for v in valid if isinstance(v["code"], str)]
 
         if string_codes and not numeric_codes and storage in (None, "string"):
-            return {"type": "enum", "values": {c: v.get("label") or c for c, v in
+            return {"type": "enum", "values": {c: code_label(v) or c for c, v in
                                                ((v["code"], v) for v in valid)}}
         rng = None
         if is_number(vr.get("min")) and is_number(vr.get("max")):

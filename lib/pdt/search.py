@@ -75,11 +75,20 @@ def apply_corrections(record, release, table, corrections):
     out = record
     for c in corrections:
         t = c["target"]
-        if t["name"] != record["name"] or t.get("table") not in (None, table):
+        if "code_list" in t:
+            # A correction to a shared code list (STANDARD.md §4.5) applies to every record that
+            # uses the list. The list's codes come first in the expanded values, so /codes/N is
+            # /values/N.
+            if record.get("code_list") != t["code_list"] or not t["field"].startswith("/codes/"):
+                continue
+            field = "/values/" + t["field"][len("/codes/"):]
+        elif t["name"] != record["name"] or t.get("table") not in (None, table):
             continue
+        else:
+            field = t["field"]
         if t.get("releases") and release not in t["releases"]:
             continue
-        parts = [int(p) if p.isdigit() else p for p in t["field"].strip("/").split("/")]
+        parts = [int(p) if p.isdigit() else p for p in field.strip("/").split("/")]
         try:
             current = get_path(out, parts)
         except (KeyError, IndexError, TypeError):
@@ -89,7 +98,7 @@ def apply_corrections(record, release, table, corrections):
         if out is record:
             out = deep_copy(record)
         set_path(out, parts, c["corrected"])
-        applied.append({"id": c["id"], "field": t["field"], "original": c["original"],
+        applied.append({"id": c["id"], "field": field, "original": c["original"],
                         "confidence": c["confidence"], "problem": c["problem"]})
     return out, applied
 

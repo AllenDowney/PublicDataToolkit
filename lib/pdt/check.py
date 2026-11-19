@@ -48,19 +48,23 @@ class Repo:
     histories: list
     annotations: list
     derived: list
+    code_lists: list = field(default_factory=list)
+    stored: dict = field(default_factory=dict)   # tables as on disk, before code lists are expanded
 
     @classmethod
     def load(cls, root):
         root = Path(root)
         meta = root / "metadata"
         dataset = yaml.safe_load((root / "dataset.yaml").read_text())
-        tables = {}
+        stored = {}
         for r in dataset.get("releases", []):
             base = meta / "releases" / r["id"]
             if r.get("tables"):
-                tables[r["id"]] = {t["id"]: read_jsonl(base / t["id"] / "variables.jsonl") for t in r["tables"]}
+                stored[r["id"]] = {t["id"]: read_jsonl(base / t["id"] / "variables.jsonl") for t in r["tables"]}
             else:
-                tables[r["id"]] = {None: read_jsonl(base / "variables.jsonl")}
+                stored[r["id"]] = {None: read_jsonl(base / "variables.jsonl")}
+        code_lists = read_jsonl(meta / "code_lists.jsonl")
+        tables = expand_code_lists(stored, code_lists)
         return cls(
             root=root,
             dataset=dataset,
@@ -73,6 +77,8 @@ class Repo:
             histories=read_jsonl(meta / "histories.jsonl"),
             annotations=[a for p in sorted((meta / "annotations").glob("*.jsonl")) for a in read_jsonl(p)],
             derived=[d for p in sorted((meta / "derived").glob("*.jsonl")) for d in read_jsonl(p)],
+            code_lists=code_lists,
+            stored=stored,
         )
 
     def resolve(self, name, release=None, table=None):
@@ -90,6 +96,24 @@ class Repo:
     @property
     def records(self):
         return [r for recs in self.variables.values() for r in recs]
+
+
+def expand_code_lists(stored, code_lists):
+    """Tables with each record's shared code list (STANDARD.md §4.5) expanded: the list's codes,
+    then the record's own values. A record whose list doesn't exist is left as it is (C2 fails it)."""
+    lists = {cl["id"]: cl for cl in code_lists}
+    out = {}
+    for rel, ts in stored.items():
+        out[rel] = {}
+        for tab, recs in ts.items():
+            expanded = []
+            for r in recs:
+                cl = lists.get(r.get("code_list"))
+                if cl is not None:
+                    r = {**r, "values": [dict(c) for c in cl["codes"]] + list(r.get("values") or [])}
+                expanded.append(r)
+            out[rel][tab] = expanded
+    return out
 
 
 def read_jsonl(path):
@@ -135,10 +159,11 @@ def check_schemas(repo, result):
              ("links.jsonl", "link.schema.json", repo.links),
              ("corrections.jsonl", "correction.schema.json", repo.corrections),
              ("histories.jsonl", "history.schema.json", repo.histories),
+             ("code_lists.jsonl", "code_list.schema.json", repo.code_lists),
              ("annotations", "annotation.schema.json", repo.annotations),
              ("derived", "derived.schema.json", repo.derived)]
     files += [(f"releases/{rel}" + (f"/{tab}" if tab else ""), "variable.schema.json", recs)
-              for rel, ts in repo.tables.items() for tab, recs in ts.items()]
+              for rel, ts in (repo.stored or repo.tables).items() for tab, recs in ts.items()]
     for label, schema, records in files:
         for i, record in enumerate(records):
             for e in errors(v[schema], record):
@@ -218,7 +243,11 @@ def check_references(repo, result):
             if ref.get("dataset", dataset_id) == dataset_id:
                 check_ref(repo, result, f"link {end}", ref["name"], ref["release"], ref.get("table"))
     for c in repo.corrections:
-        check_ref(repo, result, f"correction {c['id']}", c["target"]["name"], None, c["target"].get("table"))
+        if "code_list" in c["target"]:
+            if c["target"]["code_list"] not in {cl["id"] for cl in repo.code_lists}:
+                result.fail("C2", f"correction {c['id']}: unknown code list {c['target']['code_list']}")
+        else:
+            check_ref(repo, result, f"correction {c['id']}", c["target"]["name"], None, c["target"].get("table"))
         for rel in c["target"].get("releases", []):
             if rel not in repo.variables:
                 result.fail("C2", f"correction {c['id']}: unknown release {rel}")
@@ -283,10 +312,50 @@ def check_provenance(repo, result):
     result.report("C6", f"{unreviewed} unreviewed model-made facts")
 
 
+def check_code_lists(repo, result):
+    """C2 for shared code lists (STANDARD.md §4.5): unique ids, codes unique within a list, every
+    record's list exists, and no code both in a record's list and in its own values."""
+    from .data import code_text
+    ids = [cl["id"] for cl in repo.code_lists]
+    for dupe in sorted({i for i in ids if ids.count(i) > 1}):
+        result.fail("C2", f"duplicate code list id {dupe}")
+    lists = {cl["id"]: cl for cl in repo.code_lists}
+    for cl in repo.code_lists:
+        codes = [code_text(c["code"]) for c in cl.get("codes", [])]
+        if dupes := sorted({c for c in codes if codes.count(c) > 1}):
+            result.fail("C2", f"code list {cl['id']}: duplicate codes {listed(dupes)}")
+    for rel, ts in repo.stored.items():
+        for tab, recs in ts.items():
+            for r in recs:
+                if "code_list" not in r:
+                    continue
+                where = f"{rel}/" + (f"{tab}/" if tab else "") + r["name"]
+                cl = lists.get(r["code_list"])
+                if cl is None:
+                    result.fail("C2", f"{where}: unknown code list {r['code_list']}")
+                    continue
+                in_list = {code_text(c["code"]) for c in cl["codes"]}
+                if both := sorted(in_list & {code_text(v["code"]) for v in r.get("values") or []}):
+                    result.fail("C2", f"{where}: codes both in list {cl['id']} and in values: {listed(both)}")
+
+
 def check_corrections(repo, result):
     """C7: each correction's original value still appears in its target."""
+    lists = {cl["id"]: cl for cl in repo.code_lists}
     for c in repo.corrections:
         t = c["target"]
+        if "code_list" in t:
+            cl = lists.get(t["code_list"])
+            if cl is None:
+                continue  # C2 reports it
+            try:
+                current = resolve_pointer(cl, t["field"])
+            except (KeyError, IndexError, ValueError, TypeError):
+                result.fail("C7", f"{c['id']}: field {t['field']} not found in code list {cl['id']}")
+                continue
+            if current != c["original"]:
+                result.fail("C7", f"{c['id']}: original no longer matches in code list {cl['id']} (fixed upstream?)")
+            continue
         releases = t.get("releases") or list(repo.tables)
         for rel, tab, record in repo.resolve(t["name"], None, t.get("table")):
             if rel not in releases:
@@ -430,6 +499,8 @@ def load_data(repo, result):
     from .search import apply_corrections
     corrections_file = repo.root / "metadata" / "corrections.jsonl"
     corrections_sha = data.metadata_sha256(corrections_file) if corrections_file.exists() else None
+    lists_file = repo.root / "metadata" / "code_lists.jsonl"
+    lists_sha = data.metadata_sha256(lists_file) if lists_file.exists() else None
     frames, missing = {}, []
     for release, ts in repo.tables.items():
         for table, records in ts.items():
@@ -441,8 +512,9 @@ def load_data(repo, result):
             variables = repo.root / "metadata" / "releases" / release / (table or "") / "variables.jsonl"
             ident = data.identity_of(path)
             if ident.get("metadata_sha256") != data.metadata_sha256(variables) or \
-                    ("corrections_sha256" in ident and ident["corrections_sha256"] != corrections_sha):
-                result.report("C3-C5, C12", f"skipped {name}: built from other records or corrections; "
+                    ("corrections_sha256" in ident and ident["corrections_sha256"] != corrections_sha) or \
+                    ("code_lists_sha256" in ident and ident["code_lists_sha256"] != lists_sha):
+                result.report("C3-C5, C12", f"skipped {name}: built from other records, corrections or code lists; "
                                             "rebuild it (make data)")
                 continue
             fixed = [apply_corrections(r, release, table, repo.corrections)[0] for r in records]
@@ -625,7 +697,7 @@ def check_views(repo, result):
                                 f"this is {__version__}")
 
 
-CHECKS = [check_schemas, check_references, check_provenance, check_corrections,
+CHECKS = [check_schemas, check_references, check_code_lists, check_provenance, check_corrections,
           check_terms, check_extensions, check_docs, check_data, check_views]
 
 

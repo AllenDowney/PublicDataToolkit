@@ -32,6 +32,15 @@ def esc(value):
     return html.escape("" if value is None else str(value))
 
 
+def retired_note(value):
+    """" (retired)", with the years in use when the publisher gives them (STANDARD.md §4.2)."""
+    waves = value.get("waves")
+    span = f"{waves['from']}–{waves.get('to', '')}" if waves else ""
+    if value.get("retired"):
+        return f' <span class="origin">(retired{", in use " + esc(span) if span else ""})</span>'
+    return f' <span class="origin">(in use {esc(span)})</span>' if span else ""
+
+
 def text_block(value):
     return f'<div class="text">{esc(value)}</div>'
 
@@ -324,12 +333,19 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         if values:
             default = (rec.get("provenance") or {}).get("codes")
             body.append("<h2>Codes</h2>")
+            cl = next((c for c in self.repo.code_lists if c["id"] == rec.get("code_list")), None)
+            if cl is not None:
+                n_list = len(cl["codes"])
+                body.append(f'<p>The first {n_list:,} codes are the shared code list <code>{esc(cl["id"])}</code>, '
+                            f'{esc(cl["label"])}, used by every variable that names it'
+                            + (f' (<span class="origin">{esc(origin_text(cl["origin"]))}</span>)' if cl.get("origin") else "")
+                            + "; the rest are this variable's own.</p>")
             counts = any("n" in v for v in values)
             rows = []
             for i, v in enumerate(values):
                 origin = v.get("origin") or (default if v.get("kind") != "valid" else None)
                 row = [f"<code>{esc(v.get('code'))}</code>",
-                       esc(v.get("label")) + mark(applied, f"/values/{i}/label"),
+                       esc(v.get("label")) + mark(applied, f"/values/{i}/label") + retired_note(v),
                        f'<span class="kind-{esc(v.get("kind"))}">{esc(v.get("kind"))}</span>',
                        esc(", ".join(v.get("missing_types") or [])),
                        f'<span class="origin">{esc(origin_text(origin))}</span>' if origin else ""]

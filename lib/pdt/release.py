@@ -129,6 +129,9 @@ def write_one(root, repo, release, table, raw, source_id, log=print):
         "source_sha256": sources.get(source_id, {}).get("sha256"),
         "corrections_sha256": data.metadata_sha256(root / "metadata" / "corrections.jsonl")
         if (root / "metadata" / "corrections.jsonl").exists() else None,
+        # Shared code lists (STANDARD.md §4.5) are part of the records the file was split with.
+        "code_lists_sha256": data.metadata_sha256(root / "metadata" / "code_lists.jsonl")
+        if (root / "metadata" / "code_lists.jsonl").exists() else None,
         "corrections": applied,
     }
     if refusal:
