@@ -11,7 +11,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 **Done**
 - **Task 2:** Recover the earlier planning session. [`planning/`](planning/)
 - **Task 3:** Inventory the GSS and ANES work in CultureWar. [`planning/inventory.md`](planning/inventory.md)
-- **Task 4:** Publish this repo on GitHub. https://github.com/AllenDowney/PublicDataToolkit (local `main` is ahead; push after Allen checks)
+- **Task 4:** Publish this repo on GitHub. https://github.com/AllenDowney/PublicDataToolkit (pushed 2026-11-19 with Tasks 11–25 work; dataset repos are still local)
 - **Task 8:** Versions, layout and names for dataset repos. [`planning/versions_layout_names.md`](planning/versions_layout_names.md)
 - **Task 9:** Remove private information before publishing.
 - **Task 10:** Respond to review 1 of the proposal. [`planning/review_1.md`](planning/review_1.md)
