@@ -42,3 +42,5 @@ Task 8 decided that dataset repos are generated from `templates/` with Copier, b
 2. C9 blocks only publishing: a git remote or a data release. Local commits of records are fine while the terms are `unknown`. STANDARD.md §9 updated; the `pdt check` change is assigned to the fars thread.
 3. The `download --check` message is passed to views + site (Task 18).
 
+
+**Decision 2 implemented (fars thread, 2026-11-19):** with no git remote, `pdt check` now reports restricted tracked files and records tracked under unknown terms instead of failing them; with a remote they fail as before, and model output without permission fails either way (`lib/pdt/check.py`, 4 tests, `8f5d35e`). Refusing non-`ship` data in `pdt.release` is with views + site, which owns `release.py` (Task 18).
