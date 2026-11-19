@@ -123,7 +123,7 @@ def test_c9_model_output_without_llm_permission(tmp_path):
     assert failed(run(make_repo(tmp_path, dataset=dict(DATASET, terms=terms), variables=bad)), "C9")
 
 
-def test_c9_build_only_file_tracked(tmp_path):
+def repo_with_build_only_file(tmp_path, remote=False):
     sources = {"sources": SOURCES["sources"] + [
         {"id": "raw", "kind": "data", "path": "data/raw/toy.csv", "redistribution": "build-only",
          "acquisition": "manual", "manual_steps": "Ask."}]}
@@ -132,6 +132,39 @@ def test_c9_build_only_file_tracked(tmp_path):
     (root / "data" / "raw" / "toy.csv").write_text("x\n")
     subprocess.run(["git", "init", "-q"], cwd=root, check=True)
     subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    if remote:
+        subprocess.run(["git", "remote", "add", "origin", "https://example.org/toy.git"], cwd=root, check=True)
+    return root
+
+
+def test_c9_build_only_file_tracked_without_remote_is_reported(tmp_path):
+    result = run(repo_with_build_only_file(tmp_path))
+    assert not failed(result, "C9")
+    assert any(r.startswith("C9: data/raw/toy.csv is build-only") for r in result.reports)
+
+
+def test_c9_build_only_file_tracked_with_remote_fails(tmp_path):
+    assert failed(run(repo_with_build_only_file(tmp_path, remote=True)), "C9")
+
+
+def test_c9_metadata_tracked_with_unknown_terms(tmp_path):
+    terms = dict(DATASET["terms"], metadata="unknown")
+    root = make_repo(tmp_path, dataset=dict(DATASET, terms=terms))
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    result = run(root)
+    assert not failed(result, "C9")
+    assert any("terms.metadata is unknown" in r and "no git remote" in r for r in result.reports)
+    subprocess.run(["git", "remote", "add", "origin", "https://example.org/toy.git"], cwd=root, check=True)
+    assert failed(run(root), "C9")
+
+
+def test_c9_model_output_fails_without_remote(tmp_path):
+    terms = dict(DATASET["terms"], llm_processing="not_allowed")
+    model = {"origin": "model", "model": "m", "date": "2026-11-19", "reviewed": True}
+    root = make_repo(tmp_path, dataset=dict(DATASET, terms=terms),
+                     variables=edited(VARIABLES, 1, provenance={"record": model}))
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
     assert failed(run(root), "C9")
 
 

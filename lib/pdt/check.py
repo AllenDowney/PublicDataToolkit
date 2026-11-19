@@ -302,8 +302,20 @@ def tracked_files(root):
     return proc.stdout.split() if proc.returncode == 0 else None
 
 
+def has_remote(root):
+    """Whether the git repository at root has any remote (`git remote` lists one)."""
+    proc = subprocess.run(["git", "remote"], cwd=root, capture_output=True, text=True)
+    return proc.returncode == 0 and bool(proc.stdout.strip())
+
+
 def check_terms(repo, result):
-    """C9: nothing restricted is published; no model output when LLM processing isn't allowed."""
+    """C9: nothing restricted is published; no model output when LLM processing isn't allowed.
+
+    Publishing means pushing to a git remote or putting files in a data release
+    (STANDARD.md §9). A repo with no remote may commit restricted files locally:
+    they're reported, and fail once a remote is added. Model output without
+    permission for LLM processing fails either way.
+    """
     terms = repo.dataset.get("terms", {})
     everything = [repo.records, repo.groups, repo.links, repo.annotations]
     if terms.get("llm_processing") != "allowed" and any(o["origin"] == "model" for o in origins(everything)):
@@ -315,13 +327,20 @@ def check_terms(repo, result):
     if tracked is None:
         result.report("C9", "not a git repository; tracked files not checked")
         return
+    problems = []
     for s in repo.sources.get("sources", []):
         path = s.get("path")
         if path and s["redistribution"] != "ship" and any(t == path or t.startswith(path.rstrip("/") + "/")
                                                           for t in tracked):
-            result.fail("C9", f"{path} is {s['redistribution']} but tracked in git")
+            problems.append(f"{path} is {s['redistribution']} but tracked in git")
     if terms.get("metadata") != "ship" and any(t.startswith("metadata/") for t in tracked):
-        result.fail("C9", f"metadata is tracked in git, but terms.metadata is {terms.get('metadata')}")
+        problems.append(f"metadata is tracked in git, but terms.metadata is {terms.get('metadata')}")
+    if has_remote(repo.root):
+        for p in problems:
+            result.fail("C9", p)
+    else:
+        for p in problems:
+            result.report("C9", f"{p} (no git remote, so not published; this fails once a remote is added)")
 
 
 def check_extensions(repo, result):
