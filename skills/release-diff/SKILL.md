@@ -16,6 +16,8 @@ pdt diff . 2017-2019 2022-2023 --omitted-codes-have-no-cases   # for codebooks t
 
 It reads the source records (corrections are listed, not applied) and never writes into `metadata/`.
 
+**Pairing.** Links already in `links.jsonl` between the two releases pair variables first; names pair the rest. A release that renumbers its items, as the YRBSS does (2021 q26 "Considered suicide" is 2023 q27), is compared item by item, and each linked pair says whether the link's relations match what the records show. Compare by name alone (no links yet) and you get wording changes and renames that aren't real: write the links first, then rerun.
+
 ## Read the report
 
 For each table:
@@ -32,6 +34,9 @@ For each table:
 | `reference_only` | differs only in questionnaire item references ("IC-9" vs "IC-7", "(FC A-2b)"); not a change |
 | rename candidates | an unpaired name in each release with similar label, question and codes (NSFG `WGT2017_2019` → `WGT2022_2023`) |
 | merge / split candidates | an unpaired name that resembles one present in both (GSS `strvbiasy` merged into `strvbias`) |
+| name conflicts | a name in both releases whose links pair it with a different variable (YRBSS q26) |
+| valid_range (documented / observed) | a documented range or top/bottom coding changed: `codes_changed` (CPS FPOVCUT, max 60000 to 99999); a range read from the data moved: reported only. Identifiers aren't compared |
+| question number | the item's number changed (Q26 to Q27): `reference_only` |
 
 ## Do
 

@@ -161,7 +161,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 `DOING (purple)`. Library changes from Task 29: `valid_labels` without labels, `read_sas_input`, a warning on name reuse across releases, `not_asked` from availability, and `design` in pdt-yrbss. Details: [`planning/tasks/task-39.md`](planning/tasks/task-39.md).
 ### Task 40 — `pdt diff` pairs by links first
 
-`DOING (red)`. When a release renumbers its variables (YRBSS: 2021 q26 "Considered suicide" is 2023 q27), `pdt diff` pairs by existing links first and by name for the rest, and flags names that match while the links say otherwise. Details: [`planning/tasks/task-40.md`](planning/tasks/task-40.md).
+`DONE (red)`. `pdt diff` pairs by links first (YRBSS's renumbering: 28 of 28 by link, 7 name conflicts flagged), compares valid ranges (CPS FPOVCUT) and question numbers. Details: [`planning/tasks/task-40.md`](planning/tasks/task-40.md).
 
 ### Task 41 — Shared code lists
 
