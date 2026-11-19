@@ -67,6 +67,8 @@ The names `data/raw`, `data/interim`, `data/processed`, `references/` and `docs/
 | `annotations/` | people, rules or models | yes, with origin recorded |
 | `docs/`, `agent/`, `export/` | the shared library | no |
 
+**Large views.** `agent/` and `export/` are committed, because agents and data-dict read them from a clone. `docs/` may be left out of git (listed in `.gitignore`) and built and published to GitHub Pages instead; a repo should do that once `docs/` passes about 25 MB, as the full GSS's 123 MB does. C8 then checks `docs/` only where it exists.
+
 Hand edits to source records are not allowed because the next build would silently undo them. A fact the parser can't produce goes in through a hand-written input to `build/` (a small YAML of additions, for instance), recorded with `origin: hand`.
 
 ### 2.1 `dataset.yaml`
@@ -419,7 +421,7 @@ An agent that reaches a terms question stops and asks a person.
 | C5 | Availability: every wave in `availability` has non-missing values in the data, and every wave with non-missing values is in `availability`. Version 0.1 compares waves only, not forms or counts, and skips a table with no wave column in a release with several waves | data | warn |
 | C6 | Provenance: every source used by a release has `fetched_on` and `sha256`; every upstream package has `version`. Reports counts of records without label, question text or values, of unresolved codes, and of unreviewed model output | | fail on missing hashes; report the rest |
 | C7 | Each correction's `original` still appears in its target | | fail |
-| C8 | `docs/`, `agent/` and `export/` are current with the records | | fail |
+| C8 | `agent/` and `export/` are current with the records, and `docs/` too wherever it exists (a repo may build `docs/` for Pages without committing it, §2) | | fail |
 | C9 | Terms: nothing whose terms are `build-only` or `unknown` is published, meaning pushed to a git remote or put in a data release. A repo with no remote may commit such files locally, and the check reports them instead of failing. No `origin: model` when `llm_processing` isn't `allowed` | | fail (report only when there's no remote) |
 | C10 | Every extension key in the records is listed in `EXTENSIONS.md` | | fail |
 | C11 | README has the sections in §2.3; CLAUDE.md exists | | fail |
