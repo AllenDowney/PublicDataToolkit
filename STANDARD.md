@@ -299,7 +299,9 @@ A release's record says only what that release means (§4.2), and links (§5.2) 
 - the publisher's `periods`, in wave units;
 - its `attributes`: each row's label, verbatim, and its code in each period, or `null` where the publisher shows none.
 
-A history can generate any wave's codes, compare releases row by row, and generate `codes_changed` and `renamed` links by rule. The file is optional. A dataset whose documentation covers one release at a time doesn't need it, and a variable without a history is fine. The format is provisional (§10).
+A history can generate any wave's codes, compare releases row by row, and generate `codes_changed` and `renamed` links by rule. When the publisher prints several matrices for one variable (FARS's `HARM_EV` has one for 1975–1981 and another from 1982), join their periods into one history, without matching rows across them, and say so in its `note`. Periods record changes only where the publisher's columns change. A change inside a period, such as FARS's `WEATHER` code 99 relabeled in 2018 within the 2013–Later column, survives only in the label's own year note ("Unknown/Reported as Unknown (Since 2018)"), which stays verbatim.
+
+The file is optional. A dataset whose documentation covers one release at a time doesn't need it, and a variable without a history is fine. The format is provisional (§10).
 
 ## 6. Derived properties and annotations
 

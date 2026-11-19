@@ -242,7 +242,7 @@ Every dataset gets a terms entry before anything is shipped: whether the data ca
 
 1. **Delivery — decided 2026-11-19:** one repo per dataset, built from this toolkit, with a shared library.
 2. **Canonical format — decided 2026-11-19:** our JSONL records are the source of truth, and data-dict YAML is exported for each release. Still talk to Hadley (Task 6) about which gaps might go upstream.
-3. **GSS upstream:** wrap gssrdoc and send corrections upstream (earlier §9, recommended), or rebuild from NORC sources so the GSS takes the same path as other datasets? Either way, pin a gssrdoc version as a source, or remove the dependency.
+3. **GSS upstream — decided 2026-11-19:** option C, a hybrid that starts as A. Stay downstream of gssrdoc, pinned per release: 0.9 documents Release 3 exactly, so add a 7224r3 release; 7224r3a uses 0.9's text with the mismatch recorded. The Stata file stays the authority for labels and codes. Names gssrdoc lacks (`vote_ts`, `pres_ts`) come from the R3a codebook. The options are in the board's Task 21 section.
 4. **Dataset repo names — decided 2026-11-19:** `pdt-<dataset-id>`, with one version number and Copier for updates, and CCDS names for shared directories. See [`versions_layout_names.md`](versions_layout_names.md) (Task 8).
 5. **Extract builders — decided 2026-11-19:** dataset repos ship an extract builder, `scripts/extract.py`, like GssExtract did. The user names the variables, years and missing-value handling; the builder uses the shared library's recoding. Data releases hold the publisher's original files plus a common format (parquet) that keeps missing codes distinct. See STANDARD.md §1, §8 and §10.
 6. **The snake_case spike — decided 2026-11-19:** GSS, ANES and MTF (§9). An open-portal dataset is optional.
