@@ -99,7 +99,7 @@ def test_two_releases_links_and_changes(tmp_path):
     changes = read(root, "changes/r1--r2.html")
     assert "Added (1)" in changes and "q3" in changes
     assert "Removed (1)" in changes and "q2" in changes
-    assert "Changed (1)" in changes and "label" in changes
+    assert "Changed (1)" in changes and "<td>Question one</td><td>Question one, revised</td>" in changes
     assert "changes/r1--r2.html" in read(root, "index.html")
 
 

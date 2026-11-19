@@ -307,3 +307,20 @@ def test_anes_thermometers_1978_matches_eval_key():
     key_check(ANES, "anes_therm_1978.yaml",
               {"derived": {"scale_signature": "thermometer"}, "available": {"wave": 1978}},
               "complete_by_rule")
+
+
+def test_release_order_and_scoped_shards(tmp_path):
+    dataset = dict(DATASET, releases=[
+        {"id": "new", "label": "New", "status": "current", "sources": ["cb"]},
+        {"id": "old", "label": "Old", "status": "superseded", "sources": ["cb"]}])
+    assert views.release_order(dataset) == ["old", "new"]
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=GROUPS, corrections=[])
+    for rel in ("new", "old"):
+        write_jsonl(root / "metadata" / "releases" / rel / "variables.jsonl",
+                    [dict(v, release=rel) for v in VARIABLES])
+    manifest = views.build(root)
+    group = next(s for s in manifest["shards"] if s["kind"] == "group")
+    assert group["filter"] == {"release": "new", "group": "battery-q1"}
+    assert group["count"] == 2 and "current release (new)" in group["basis"]
+    tables = [s for s in manifest["shards"] if s["kind"] == "table"]
+    assert [s["filter"] for s in tables] == [{"release": "new"}, {"release": "old"}]

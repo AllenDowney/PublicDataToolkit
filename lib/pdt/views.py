@@ -58,9 +58,35 @@ def tokens(text):
 
 # ---------------------------------------------------------------- shard specs
 
+STATUS_ORDER = {"withdrawn": 0, "superseded": 1, "current": 2}
+
+
+def release_order(dataset):
+    """Release ids oldest first: withdrawn and superseded before current; file order within a status."""
+    releases = dataset.get("releases", [])
+    ranked = sorted(enumerate(releases), key=lambda ir: (STATUS_ORDER.get(ir[1].get("status"), 3), ir[0]))
+    return [r["id"] for _, r in ranked]
+
+
+def default_scope(dataset):
+    """The releases that cross-cutting shards cover: the current ones, when a repo has several."""
+    releases = dataset.get("releases", [])
+    if len(releases) < 2:
+        return None
+    current = [r["id"] for r in releases if r.get("status") == "current"]
+    return current or None
+
+
 def shard_specs(repo, index):
-    """Every shard to write: [(kind, slug, title, basis, filter)]."""
+    """Every shard to write: [(kind, slug, title, basis, filter)].
+
+    Release and table shards cover each release. Group, subject, scale and topic shards
+    cover the current release(s) when the repo has several, so a variable appears once.
+    """
     specs = []
+    scope = default_scope(repo.dataset)
+    scoped = (lambda f: {"release": scope if len(scope) > 1 else scope[0], **f}) if scope else (lambda f: f)
+    note = f" in the current release ({', '.join(scope)})" if scope else ""
     for r in repo.dataset.get("releases", []):
         tables = [t["id"] for t in r.get("tables") or []]
         if tables:
@@ -76,17 +102,18 @@ def shard_specs(repo, index):
         title = g.get("label") or g["id"]
         if g["kind"] == "subject":
             specs.append(("subject", slug(title), f"Subject: {title}",
-                          f"the publisher's subject list, from {origin}", {"subject": title}))
+                          f"the publisher's subject list, from {origin}{note}", scoped({"subject": title})))
         else:
             specs.append(("group", slug(g["id"]), f"{g['kind']}: {title}",
-                          f"members of group {g['id']} (origin {g['origin']['origin']})",
-                          {"group": g["id"]}))
+                          f"members of group {g['id']} (origin {g['origin']['origin']}){note}",
+                          scoped({"group": g["id"]})))
 
     signatures = sorted({d["value"] for d in repo.derived if d["property"] == "scale_signature"},
                         key=str)
     for s in signatures:
         specs.append(("scale", slug(s), f"Scale signature: {s}",
-                      "variables with this scale signature", {"derived": {"scale_signature": s}}))
+                      f"variables with this scale signature{note}",
+                      scoped({"derived": {"scale_signature": s}})))
 
     by_value = {}
     for a in index.topics:
@@ -95,7 +122,7 @@ def shard_specs(repo, index):
         value = tags[0]["value"]
         sources = sorted({a["origin"].get("source") or a["origin"]["origin"] for a in tags})
         specs.append(("topic", slug(value), f"Topic: {value}",
-                      f"topic annotations from {', '.join(sources)}", {"topic": value}))
+                      f"topic annotations from {', '.join(sources)}{note}", scoped({"topic": value})))
     return specs
 
 

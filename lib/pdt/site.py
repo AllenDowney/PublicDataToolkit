@@ -23,7 +23,7 @@ from urllib.parse import quote
 from . import __version__
 from .check import Repo
 from .search import Index
-from .views import inputs_hash, origin_text, sort_key, wave_list, wave_summary, when_text
+from .views import inputs_hash, origin_text, release_order, sort_key, wave_list, wave_summary, when_text
 
 DIRECTORY = "docs"
 
@@ -144,7 +144,7 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             self.variable_page(rel, tab, rec)
         for g in self.repo.groups:
             self.group_page(g)
-        releases = [r["id"] for r in self.ds.get("releases", [])]
+        releases = release_order(self.ds)
         for old, new in zip(releases, releases[1:]):
             self.changes_page(old, new)
         self.search_index()
@@ -207,7 +207,7 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                                  esc(a["confidence"])])
             body.append(table(["Variable", "Field", "Problem", "Confidence"], rows))
 
-        releases = [r["id"] for r in ds.get("releases", [])]
+        releases = release_order(ds)
         if len(releases) > 1:
             body.append("<h2>Changes between releases</h2><ul>" + "".join(
                 f"<li>{self.link(here, f'changes/{a}--{b}.html', f'{a} → {b}')}</li>"
@@ -519,9 +519,20 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                 " (and table). Links between releases are on each variable's page.</p>"]
         body.append(f"<h2>Added ({len(added)})</h2><ul>" + "".join(f"<li>{name(new, k)}</li>" for k in added) + "</ul>")
         body.append(f"<h2>Removed ({len(removed)})</h2><ul>" + "".join(f"<li>{name(old, k)}</li>" for k in removed) + "</ul>")
+        def show(rec, f):
+            v = rec.get(f)
+            if f == "questions":
+                v = " / ".join(q.get("text", "") for q in v or [])
+            elif f == "values":
+                v = "; ".join(f"{c.get('code')} {c.get('label')}" for c in v or [])
+            text = " ".join(str(v if v is not None else "—").split())
+            return esc(text if len(text) <= 160 else text[:157] + "...")
+        rows = []
+        for k, fields in changed:
+            for i, f in enumerate(fields):
+                rows.append([name(new, k) if i == 0 else "", esc(f), show(a[k], f), show(b[k], f)])
         body.append(f"<h2>Changed ({len(changed)})</h2>" + table(
-            ["Variable", "Fields that differ"],
-            [[name(new, k), esc(", ".join(f))] for k, f in changed]))
+            ["Variable", "Field", esc(old), esc(new)], rows))
         self.page(here, f"Changes from {old} to {new}", "\n".join(body))
 
     def search_index(self):
