@@ -11,6 +11,7 @@ When a dataset repo has records for two releases, `pdt diff` lists what changed 
 pdt diff . 2017 2024                          # a report, per table
 pdt diff . 2017 2024 --table person --json    # everything, as JSON
 pdt diff . 2017 2024 --proposals build/diff   # also proposed links and histories, for review
+pdt diff . 2017-2019 2022-2023 --omitted-codes-have-no-cases   # for codebooks that list only codes that occur
 ```
 
 It reads the source records (corrections are listed, not applied) and never writes into `metadata/`.
@@ -22,7 +23,9 @@ For each table:
 | Section | What it means |
 |---|---|
 | in both, by relations | names in both releases (case ignored), with the relations the records support: `same_item`, `labels_changed`, `codes_changed`, `wording_changed`, `universe_changed` |
-| codes added / dropped | a code in one release's values only |
+| codes added / dropped | a code in one release's values only, with its count `n` when the records have it |
+| codes in_other_range | a one-sided code inside the other release's `valid_range` (NSFG 2017-2019 prints AGE_R 49–50 as a range row) |
+| codes no_cases_in_other | with `--omitted-codes-have-no-cases`: a one-sided code whose count, scaled to the other release, is under 5, so zero cases there is chance (PREGORDR 15, 1 case); a recoding, like MARSTAT's 2,820 "Never married", stays a change |
 | codes relabeled | the same code, a different label: the meaning may have changed (FARS LGT_COND 9, "Unknown" to "Reported as Unknown") |
 | codes kind_changed | valid, missing or unresolved changed, or the missing types did |
 | `text_only` | differs only in case, spacing or dashes ("Dark - Not Lighted" vs "Dark – Not Lighted"); not a change |
@@ -41,7 +44,7 @@ For each table:
 ## What records can't show
 
 - **Revised data without a change in codes.** GSS 7224r3 → r3a has 20 `data_revised` links from NORC's notes. The diff saw 17, as `codes_changed`, because GSS records list the missing codes that occur in the data. It missed racopen, racopenv and strvbias, whose codes didn't change.
-- **Codes listed only when they have cases.** NSFG codebooks omit codes with no cases, so AGE_R 49–50 appear in one release only. The diff reports `codes_changed`; the NSFG rule `nsfg_count_labels_reworded` knows better.
+- **Codes listed only when they have cases.** NSFG codebooks omit codes with no cases. A count (`values[].n`) shows how rare a one-sided code is, but not that the other release had none, so use `--omitted-codes-have-no-cases` only when the documentation is known to work that way.
 - **Variables built from others in the same release** (GSS `vote_ts`, `pres_ts`, `derived_from` vote68…vote20). Those are within one release, not between two.
 - **Label rewording the publisher treats as the same answer.** FARS 2024 labels come from the CSV's text, so the diff reports 18 relabels for BODY_TYP where the manual's matrix has 3 changes of meaning. The matrix decides.
 
