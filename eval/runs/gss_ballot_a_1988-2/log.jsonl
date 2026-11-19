@@ -1,0 +1,3 @@
+{"time": 1795120512.7169473, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 3067, "tokens": 766, "printed": true, "spent_after": 766}
+{"time": 1795120514.7143695, "call": "read", "args": ["gss/agent/index.md"], "chars": 7227, "tokens": 1806, "printed": true, "spent_after": 2572}
+{"time": 1795120517.4465022, "call": "read", "args": ["gss/agent/shards/table/7224r3a.txt"], "chars": 10278, "tokens": 2569, "printed": true, "spent_after": 5141}

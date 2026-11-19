@@ -1,0 +1,227 @@
+{
+ "question": "gss_ballot_a_1988",
+ "label": "approximate",
+ "items": [
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "year"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "id"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "ballot"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "wtssps"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "age"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sex"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "abdefect"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "abnomore"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "abhlth"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "abpoor"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "abrape"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "absingle"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "abany"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natspac"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natenvir"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natheal"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natcity"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natcrime"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natdrug"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "nateduc"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natrace"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natarms"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "nataid"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natfare"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natroad"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natsoc"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natmass"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natpark"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natracey"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "natfarey"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "racfew"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "rachaf"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "racmost"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "homosex"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "cappun"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "gunlaw"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "polviews"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "partyid"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "relig"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "attend"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "reliten"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "pray"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "bible"
+  }
+ ],
+ "sources": [
+  "gss/agent/SKILL.md",
+  "gss/agent/index.md",
+  "gss/agent/shards/table/7224r3a.txt"
+ ],
+ "notes": "Read the complete release shard (50 vars) and picked variables whose waves-by-form include all-respondents or form A in 1988, by judgment, so approximate. Excluded: mode (2004+), racopen (form B,C in 1988), racschol (ended 1985), grass (B,C), natchld/natsci/natenrgy (2000+)."
+}

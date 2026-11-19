@@ -1,0 +1,41 @@
+{
+ "run": "religion-1",
+ "question": "religion",
+ "answered": true,
+ "key_hits": 19,
+ "reported": 19,
+ "found": 19,
+ "recall": 1.0,
+ "precision": 1.0,
+ "misses": [],
+ "false_positives": [],
+ "tokens_read": 9095,
+ "corpus_tokens": 193092,
+ "effort": 0.047,
+ "calls": 10,
+ "searches": 1,
+ "refused": 0,
+ "label": "approximate",
+ "expected_label": "approximate",
+ "label_ok": true,
+ "by_dataset": {
+  "anes-cdf": {
+   "recall": 1.0,
+   "precision": 1.0,
+   "found": 5,
+   "key_hits": 5
+  },
+  "gss": {
+   "recall": 1.0,
+   "precision": 1.0,
+   "found": 5,
+   "key_hits": 5
+  },
+  "nsfg": {
+   "recall": 1.0,
+   "precision": 1.0,
+   "found": 9,
+   "key_hits": 9
+  }
+ }
+}

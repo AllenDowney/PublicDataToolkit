@@ -1,0 +1,10 @@
+{
+ "run_id": "religion-2",
+ "question": "religion",
+ "budget": 40000,
+ "corpus_tokens": {
+  "gss": 146376,
+  "anes-cdf": 25843,
+  "nsfg": 20873
+ }
+}

@@ -1,0 +1,5 @@
+{"time": 1795120512.7338762, "call": "read", "args": ["anes-cdf/agent/SKILL.md"], "chars": 3104, "tokens": 776, "printed": true, "spent_after": 776}
+{"time": 1795120515.3988388, "call": "read", "args": ["anes-cdf/agent/index.md"], "chars": 3005, "tokens": 751, "printed": true, "spent_after": 1527}
+{"time": 1795120517.5680292, "call": "read", "args": ["anes-cdf/agent/shards/scale/thermometer.txt"], "chars": 1861, "tokens": 465, "printed": true, "spent_after": 1992}
+{"time": 1795120520.001377, "call": "read", "args": ["anes-cdf/agent/shards/table/20260205.txt"], "chars": 8100, "tokens": 2025, "printed": true, "spent_after": 4017}
+{"time": 1795120523.670735, "call": "search", "args": ["anes-cdf", "{\"derived\": {\"scale_signature\": \"thermometer\"}, \"wave\": 1978}"], "chars": 48, "tokens": 12, "printed": true, "spent_after": 4029}

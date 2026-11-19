@@ -1,0 +1,21 @@
+{
+ "run": "gss_ballot_a_1988-1",
+ "question": "gss_ballot_a_1988",
+ "answered": true,
+ "key_hits": 39,
+ "reported": 43,
+ "found": 39,
+ "recall": 1.0,
+ "precision": 1.0,
+ "misses": [],
+ "false_positives": [],
+ "tokens_read": 5141,
+ "corpus_tokens": 146376,
+ "effort": 0.035,
+ "calls": 3,
+ "searches": 0,
+ "refused": 0,
+ "label": "approximate",
+ "expected_label": "approximate",
+ "label_ok": true
+}

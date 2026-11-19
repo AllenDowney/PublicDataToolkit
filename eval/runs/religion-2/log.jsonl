@@ -1,0 +1,9 @@
+{"time": 1795120512.5667262, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 3067, "tokens": 766, "printed": true, "spent_after": 766}
+{"time": 1795120514.4571044, "call": "read", "args": ["gss/agent/index.md"], "chars": 7227, "tokens": 1806, "printed": true, "spent_after": 2572}
+{"time": 1795120514.4880393, "call": "read", "args": ["anes-cdf/agent/index.md"], "chars": 3005, "tokens": 751, "printed": true, "spent_after": 3323}
+{"time": 1795120514.5140426, "call": "read", "args": ["nsfg/agent/index.md"], "chars": 3135, "tokens": 783, "printed": true, "spent_after": 4106}
+{"time": 1795120517.4470828, "call": "read", "args": ["gss/agent/shards/table/7224r3a.txt"], "chars": 10278, "tokens": 2569, "printed": true, "spent_after": 6675}
+{"time": 1795120517.4705033, "call": "read", "args": ["anes-cdf/agent/shards/table/20260205.txt"], "chars": 8100, "tokens": 2025, "printed": true, "spent_after": 8700}
+{"time": 1795120517.4989276, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-female.txt"], "chars": 3584, "tokens": 896, "printed": true, "spent_after": 9596}
+{"time": 1795120517.5228734, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-male.txt"], "chars": 2755, "tokens": 688, "printed": true, "spent_after": 10284}
+{"time": 1795120517.5507786, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-pregnancy.txt"], "chars": 1748, "tokens": 437, "printed": true, "spent_after": 10721}

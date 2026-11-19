@@ -1,0 +1,10 @@
+{"time": 1795120512.7169518, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 3067, "tokens": 766, "printed": true, "spent_after": 766}
+{"time": 1795120515.2841897, "call": "read", "args": ["gss/agent/index.md"], "chars": 7227, "tokens": 1806, "printed": true, "spent_after": 2572}
+{"time": 1795120515.981488, "call": "search", "args": ["gss", "{\"subject\":\"Religion\"}"], "chars": 771, "tokens": 192, "printed": true, "spent_after": 2764}
+{"time": 1795120520.045899, "call": "read", "args": ["anes-cdf/agent/index.md"], "chars": 3005, "tokens": 751, "printed": true, "spent_after": 3515}
+{"time": 1795120520.0692687, "call": "read", "args": ["anes-cdf/agent/index.md"], "chars": 3005, "tokens": 751, "printed": true, "spent_after": 4266}
+{"time": 1795120520.0936267, "call": "read", "args": ["nsfg/agent/index.md"], "chars": 3135, "tokens": 783, "printed": true, "spent_after": 5049}
+{"time": 1795120523.7602742, "call": "read", "args": ["anes-cdf/agent/shards/table/20260205.txt"], "chars": 8100, "tokens": 2025, "printed": true, "spent_after": 7074}
+{"time": 1795120523.7827773, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-female.txt"], "chars": 3584, "tokens": 896, "printed": true, "spent_after": 7970}
+{"time": 1795120523.8045728, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-male.txt"], "chars": 2755, "tokens": 688, "printed": true, "spent_after": 8658}
+{"time": 1795120523.8263335, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-pregnancy.txt"], "chars": 1748, "tokens": 437, "printed": true, "spent_after": 9095}

@@ -1,0 +1,5 @@
+{"question": "anes_therm_1978",
+ "label": "complete_by_rule",
+ "items": [{"dataset": "anes-cdf", "table": null, "name": "VCF0218"}, {"dataset": "anes-cdf", "table": null, "name": "VCF0224"}],
+ "sources": ["anes-cdf/agent/shards/scale/thermometer.txt (filter derived.scale_signature=thermometer, complete_by_rule, rule scale_signature_from_valid_labels 0.1)", "anes-cdf/agent/shards/table/20260205.txt (checked for other thermometers)"],
+ "notes": "The thermometer shard has 10 variables; I kept those whose waves include 1978 (VCF0218, VCF0224) and dropped the rest by reading the wave lists. That pruning is by judgment, so strictly the label could be approximate; I chose complete_by_rule because the base shard is rule-labeled and the wave filter is mechanical. Release 20260205 has 37 variables and no other thermometer-like variable."}
