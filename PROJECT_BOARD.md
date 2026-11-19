@@ -37,7 +37,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
 - **Task 18:** `download.py` and the data-release workflow.
 - **Task 19:** `extract.py`, the extract builder.
-- **Task 20:** ANES codebook errors: verify and record as corrections.
+- **Task 20:** ANES codebook errors: verify and record as corrections. `DOING (anes-errata)`
 - **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc.
 - **Task 22:** NSFG question text and earlier cycles.
 - **Task 23:** Answer keys and scoring for the topic and structural queries. `DOING (eval)`
@@ -476,7 +476,7 @@ Part of Task 11. `scripts/extract.py` in a dataset repo: the user names the vari
 
 ## Task 20 — ANES codebook errors
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (anes-errata)`
 
 The ANES build found likely errors (Task 5, step 3):
 - VCF0878 is coded 1/2 in 2016 rather than 1/5, and 2016 is missing from its Sources;
