@@ -761,8 +761,8 @@ Each step should say what to check before moving on.
 **Findings:**
 - **Skill names differ from plan §6.** `from-upstream-package` matches the standard's origin `upstream_package` (the plan says `from-structured-package`). `from-release-notes` is new: the plan's `release-diff` compares two releases' records, which is a different job and is still unwritten, along with `from-ddi-xml` and `from-open-data-portal`, for want of a real case.
 - **No build used an LLM to draft records.** All four sources parsed deterministically once their traps were handled, so the model-drafting path (rule 8) is untested.
-- **What every build had to do that the standard doesn't name:** write `build/report.md`; check keys and references against the data (FARS, NSFG); check that an upstream package documents the release it's used for (gssrdoc). Proposals below.
-- **Derived rules are copied into each build.** `scale_signature_from_valid_labels` is in all four `build_slice.py`, although STANDARD.md §6 puts derived properties in the shared library. This is the same drift `check_metadata.py` had before it moved into `lib/`.
+- **What every build had to do that the standard doesn't name:** write `build/report.md`; check keys and references against the data (scripted in FARS, done by hand for the NSFG); check that an upstream package documents the release it's used for (gssrdoc). Proposals below.
+- **Derived rules are copied into each build.** `scale_signature_from_valid_labels` is in all four repos' build scripts, although STANDARD.md §6 puts derived properties in the shared library. This is the same drift `check_metadata.py` had before it moved into `lib/`.
 
 **Proposals sent to the coordinator** (STANDARD.md is the main thread's):
 1. §0 still says `instructions/` is "not written yet"; link it.
