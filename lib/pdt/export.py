@@ -107,7 +107,8 @@ class Losses:
         "availability": "availability entries (wave by form, with n), summarized as one line of text",
         "corrections": "corrections applied; only the corrected text is exported",
         "provenance_fields": "field origins (publisher, data file, rule, hand, model) not exported",
-        "conditional_references": "table references whose `when` condition is only in a description",
+        "conditional_references": "table references whose `when` condition is only in a description, "
+                                  "and whose columns aren't marked foreign_key",
         "external_references": "references to another dataset's table, not exported",
         "groups": "groups (batteries, subjects, sections), not exported",
         "links": "links between releases, not exported",
@@ -223,8 +224,10 @@ class Exporter:
                     "description": "The row's position in the publisher's file, from 0.",
                     "type": "number(id)", "examples": [0, 1, 2, 3, 4]}]
         key = set(t.get("key") or []) if t else set()
+        # data-dict checks every foreign key against the referenced key, and can't make that
+        # conditional, so a column used only in `when` references isn't marked foreign_key.
         foreign = {c for ref in (t.get("references") or []) if t and not ref.get("dataset")
-                   for c in ref["columns"]} if t else set()
+                   and not ref.get("when") for c in ref["columns"]} if t else set()
         for rec in recs:
             constraints = (["primary_key"] if rec["name"] in key else []) + \
                           (["foreign_key"] if rec["name"] in foreign else [])

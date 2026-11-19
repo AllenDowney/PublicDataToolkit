@@ -94,7 +94,7 @@ def test_tables_keys_and_relationships(tmp_path):
     doc = load(root)
     assert [t["name"] for t in doc["tables"]] == ["veh", "per"]
     assert columns(doc, 0)["q1"]["constraints"] == ["primary_key"]
-    assert columns(doc, 1)["q1"]["constraints"] == ["primary_key", "foreign_key"]
+    assert columns(doc, 1)["q1"]["constraints"] == ["primary_key"]     # conditional: not a foreign key
     assert doc["relationships"] == [{"join": "per.q1 = veh.q1", "cardinality": "many-to-one",
                                      "description": "Only for rows where q2 is 3."}]
     assert manifest["losses"]["r1"]["conditional_references"] == 1

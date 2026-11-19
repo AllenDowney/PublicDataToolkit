@@ -31,6 +31,7 @@ compares them with the reader's frame. A mismatch is an error and the file is re
 
 from pathlib import Path
 
+import pandas as pd
 import yaml
 
 from . import data
@@ -110,6 +111,15 @@ def write_one(root, repo, release, table, raw, source_id, log=print):
         raise ValueError(f"{release}/{table}: variables with records but not in the data: {missing}")
     raw = raw[list(records)]
     table_df = data.split(raw, records)
+    # A code column for every variable whose records list missing or unresolved codes, even
+    # when none occurs in this file, so every release has the same columns as its dictionary.
+    for name, rec in records.items():
+        col = name + data.CODE_SUFFIX
+        if col not in table_df.columns and any(v.get("kind") != "valid" for v in rec.get("values") or []):
+            at = table_df.columns.get_loc(name) + 1
+            texts = [data.code_text(v["code"]) for v in rec["values"] if v.get("kind") != "valid"]
+            table_df.insert(at, col, pd.Series(pd.Categorical([None] * len(table_df), categories=texts),
+                                               index=table_df.index))
     identity = {
         "dataset": repo.dataset["id"],
         "release": release,

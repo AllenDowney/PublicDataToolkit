@@ -217,3 +217,12 @@ def test_read_stata_dictionary(tmp_path):
     assert raw["pregend"].tolist()[0] == data.Code(".") and raw["pregend"].tolist()[1] == 1
     assert raw["wgt"].tolist() == [1234.567, 2.5]
     assert raw["code"].tolist()[0] == "abc"
+
+
+def test_code_column_even_when_no_code_occurs(tmp_path):
+    root = make_repo(tmp_path)
+    raw = pd.DataFrame({"q1": [1, 1], "q2": ["a", "b"]}, dtype=object)       # q1 lists code 9; none occurs
+    path, = release.write_release(root, lambda rel, tab, names: (raw, "cb"), log=lambda *a: None)
+    table = data.read(path)
+    assert list(table.columns) == ["_row", "q1", "q1__code", "q2"]
+    assert table["q1__code"].isna().all()
