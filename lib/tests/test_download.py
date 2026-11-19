@@ -149,3 +149,38 @@ def test_data_source(tmp_path):
     assert release.data_source(root, "r1")["id"] == "dta"
     with pytest.raises(ValueError):
         release.data_source(root, "r1", format="sas7bdat")
+
+
+def test_release_splits_with_corrected_records(tmp_path):
+    """A correction that makes an unresolved code valid moves it into the value column."""
+    variables = [dict(VARIABLES[0], values=[{"code": 1, "label": "yes", "kind": "valid"},
+                                            {"code": 2, "label": "", "kind": "unresolved",
+                                             "origin": {"origin": "data_file", "source": "cb"}}]),
+                 VARIABLES[1]]
+    fix = {"id": "q1-code-2", "target": {"name": "q1", "field": "/values/1"},
+           "original": variables[0]["values"][1],
+           "corrected": {"code": 2, "label": "no", "kind": "valid"},
+           "problem": "Code 2 is undocumented.", "evidence": [{"citation": "Data"}], "confidence": "inferred",
+           "upstream": {"status": "not_filed"}, "author": "Tester", "date": "2026-11-19"}
+    root = make_repo(tmp_path, variables=variables, corrections=[fix])
+    raw = pd.DataFrame({"q1": [1, 2, 2], "q2": ["a", "b", "c"]}, dtype=object)
+    path, = release.write_release(root, lambda rel, tab, names: (raw, "cb"), log=lambda *a: None)
+    table = data.read(path)
+    assert table["q1"].tolist() == [1, 2, 2] and "q1__code" not in table.columns
+    ident = data.identity_of(path)
+    assert ident["corrections"] == [{"id": "q1-code-2", "confidence": "inferred", "variable": "q1"}]
+    assert len(ident["corrections_sha256"]) == 64
+
+
+@pytest.mark.parametrize("terms, redistribution", [("unknown", "ship"), ("ship", "build-only")])
+def test_release_refuses_unless_ship(tmp_path, terms, redistribution):
+    root = make_repo(tmp_path, dataset=dict(DATASET, terms=dict(DATASET["terms"], data=terms)))
+    sources = yaml.safe_load((root / "sources.yaml").read_text())
+    sources["sources"][0]["redistribution"] = redistribution
+    (root / "sources.yaml").write_text(yaml.safe_dump(sources))
+    reader = lambda rel, tab, names: (raw_frame(), "cb")
+    with pytest.raises(ValueError, match="ship"):
+        release.write_release(root, reader, log=lambda *a: None)
+    assert not (root / "data" / "processed").exists() or not any((root / "data" / "processed").iterdir())
+    path, = release.write_release(root, reader, log=lambda *a: None, local=True)
+    assert "ship" in data.identity_of(path)["local_only"]

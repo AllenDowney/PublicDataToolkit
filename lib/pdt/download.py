@@ -60,6 +60,9 @@ def status(root, src):
     target = Path(root) / src["path"]
     if not target.exists():
         return "missing", str(src["path"])
+    if target.is_dir():
+        n = sum(1 for f in target.rglob("*") if f.is_file())
+        return "ok", f"{src['path']} (a directory of {n} file(s); no checksum)"
     want = src.get("sha256")
     if not want:
         return "unverified", f"present, no sha256 recorded (it is {sha256(target)})"
