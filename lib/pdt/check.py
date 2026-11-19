@@ -394,8 +394,16 @@ def same_value(a, b):
 
 
 def load_data(repo, result):
-    """{(release, table): (frame, records)} for the files that exist and match the current records."""
+    """{(release, table): (frame, records)} for the files that exist and match the current records.
+
+    The records are the corrected ones (corrections.jsonl applied), as pdt.release
+    splits the data with them: a code an inferred correction makes valid is in the
+    value column, not the code column.
+    """
     from . import data
+    from .search import apply_corrections
+    corrections_file = repo.root / "metadata" / "corrections.jsonl"
+    corrections_sha = data.metadata_sha256(corrections_file) if corrections_file.exists() else None
     frames, missing = {}, []
     for release, ts in repo.tables.items():
         for table, records in ts.items():
@@ -406,10 +414,13 @@ def load_data(repo, result):
                 continue
             variables = repo.root / "metadata" / "releases" / release / (table or "") / "variables.jsonl"
             ident = data.identity_of(path)
-            if ident.get("metadata_sha256") != data.metadata_sha256(variables):
-                result.report("C3-C5, C12", f"skipped {name}: built from other records; rebuild it (make data)")
+            if ident.get("metadata_sha256") != data.metadata_sha256(variables) or \
+                    ("corrections_sha256" in ident and ident["corrections_sha256"] != corrections_sha):
+                result.report("C3-C5, C12", f"skipped {name}: built from other records or corrections; "
+                                            "rebuild it (make data)")
                 continue
-            frames[(release, table)] = (data.read(path), records)
+            fixed = [apply_corrections(r, release, table, repo.corrections)[0] for r in records]
+            frames[(release, table)] = (data.read(path), fixed)
     if missing:
         result.report("C3-C5, C12", f"skipped, no data file in {PROCESSED}/ (make data): {listed(missing)}")
     return frames

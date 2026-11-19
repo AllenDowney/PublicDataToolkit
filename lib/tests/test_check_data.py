@@ -178,3 +178,26 @@ def test_c12_reference_respects_when(tmp_path):
     person = PERSON.assign(PTYPE=[1, 1, 1, 1])
     msgs = failures(run(make_data_repo(tmp_path / "b", person=person)), "C12")
     assert any("-> crash when PTYPE in [1]: 1 of 4 rows without a match" in m for m in msgs)
+
+
+def test_checks_use_corrected_records(tmp_path):
+    # The record lists code 3 as unresolved; a correction makes it valid, and the file
+    # is split with the corrected record, so 3 is in the value column.
+    unresolved = {"code": 3, "label": "", "kind": "unresolved", "origin": PUB}
+    valid = {"code": 3, "label": "Dusk", "kind": "valid"}
+    values = crash_records()[2]["values"] + [unresolved]
+    recs = crash_records(LIGHT={"values": values})
+    corrected = crash_records(LIGHT={"values": crash_records()[2]["values"] + [valid]})
+    root = make_data_repo(tmp_path, crash_recs=recs, crash=CRASH.assign(LIGHT=[1, 2, 3, 1]))
+    correction = {"id": "light-3", "target": {"name": "LIGHT", "table": "crash", "field": "/values/3"},
+                  "original": unresolved, "corrected": valid, "problem": "Undocumented.",
+                  "evidence": [{"citation": "Data"}], "confidence": "inferred",
+                  "upstream": {"status": "not_filed"}, "author": "Tester", "date": "2026-11-19"}
+    write_jsonl(root / "metadata" / "corrections.jsonl", [correction])
+    path = root / "data" / "processed" / "toy-r1-crash.parquet"
+    rec_path = root / "metadata" / "releases" / "r1" / "crash" / "variables.jsonl"
+    data.write(data.split(CRASH.assign(LIGHT=[1, 2, 3, 1]).astype(object), {r["name"]: r for r in corrected}), path,
+               {"dataset": "toy", "release": "r1", "metadata_sha256": data.metadata_sha256(rec_path)})
+    result = run(root)
+    assert result.ok, result.failures
+    assert not reports(result, "C4")
