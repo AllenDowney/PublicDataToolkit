@@ -205,3 +205,40 @@ def test_gss_abortion_items_are_complete():
 def test_line_falls_back_to_notes():
     assert views.line_question({"notes": "Coded from the police report."}) == "[notes] Coded from the police report."
     assert views.line_question({}) == ""
+
+
+def test_line_prefers_description_to_notes():
+    rec = {"description": "The year of the crash.", "notes": "Additional information."}
+    assert views.line_question(rec) == "[description] The year of the crash."
+
+
+def test_compact_availability_by_form():
+    avail = [{"wave": 1986, "n": 5}, {"wave": 1987}, {"wave": 1988, "form": "A"},
+             {"wave": 1989, "form": "A"}, {"wave": 1989, "form": "C"}]
+    assert views.compact_availability(avail, [1986, 1987, 1988, 1989]) == {
+        "all": "1986-1987", "form A": "1988-1989", "form C": "1989"}
+
+
+def test_codes_fall_back_to_provenance_codes():
+    rule = {"origin": "rule", "rule": "ext_missing", "rule_version": "0.2", "note": "long"}
+    values = [{"code": 1, "label": "yes", "kind": "valid"},
+              {"code": ".d", "label": "dk", "kind": "missing", "missing_types": ["dk"]},
+              {"code": ".i", "label": "iap", "kind": "missing", "missing_types": ["inap"]}]
+    out, shared = views.compact_values(values, rule)
+    assert shared == "rule:ext_missing@0.2"
+    assert all("origin" not in v for v in out)
+    values[2]["origin"] = {"origin": "hand", "author": "Tester", "date": "2026-11-19"}
+    out, shared = views.compact_values(values, rule)
+    assert shared is None
+    assert [v.get("origin") for v in out] == [None, "rule:ext_missing@0.2", "hand:Tester"]
+
+
+def test_jsonl_records_are_compact(repo_dir):
+    views.build(repo_dir)
+    lines = (repo_dir / "agent" / "shards" / "table" / "r1.jsonl").read_text().splitlines()
+    head = json.loads(lines[0])["shard"]
+    assert head["full_records"] == ["metadata/releases/r1/variables.jsonl"]
+    q1 = json.loads(lines[1])
+    assert "provenance" not in q1
+    assert q1["origins"] == {"record": "publisher:cb", "codes": "publisher:cb"}
+    assert all("origin" not in v for v in q1["values"])

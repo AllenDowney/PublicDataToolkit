@@ -101,30 +101,89 @@ def shard_specs(repo, index):
 
 # ---------------------------------------------------------------- rendering
 
+def runs(waves, all_waves):
+    """Waves as runs over the release's ordered waves: 1972-1985,1987-2024."""
+    order = [w for w in all_waves if w in waves]
+    if not order:
+        return "-"
+    pos = {w: i for i, w in enumerate(all_waves)}
+    out, start, prev = [], order[0], order[0]
+    for w in order[1:]:
+        if pos[w] == pos[prev] + 1:
+            prev = w
+            continue
+        out.append((start, prev))
+        start = prev = w
+    out.append((start, prev))
+    return ",".join(str(a) if a == b else f"{a}-{b}" for a, b in out)
+
+
 def wave_summary(record, all_waves):
-    """Compress a record's waves into runs over the release's ordered waves, plus forms."""
+    """A record's waves as runs, plus the forms it was on."""
     avail = record.get("availability") or []
     waves = {a["wave"] for a in avail if "wave" in a}
     forms = sorted({str(a["form"]) for a in avail if "form" in a})
-    if not waves:
-        text = "-"
-    else:
-        order = [w for w in all_waves if w in waves]
-        pos = {w: i for i, w in enumerate(all_waves)}
-        runs, start, prev = [], order[0], order[0]
-        for w in order[1:]:
-            if pos[w] == pos[prev] + 1:
-                prev = w
-                continue
-            runs.append((start, prev))
-            start = prev = w
-        runs.append((start, prev))
-        text = ",".join(str(a) if a == b else f"{a}-{b}" for a, b in runs)
-        if len(waves) == len(all_waves) and len(all_waves) > 1:
-            text += " (all)"
+    text = runs(waves, all_waves)
+    if waves and len(waves) == len(all_waves) and len(all_waves) > 1:
+        text += " (all)"
     if forms:
         text += f"; forms {','.join(forms)}"
     return text
+
+
+AVAIL_DIMS = ("form", "sample", "mode", "phase")
+
+
+def compact_availability(availability, all_waves):
+    """Availability as runs of waves, keyed by the other dimensions.
+
+    {"all": "1972-1987"} for entries with only a wave; {"form A": "1988-2024", ...} for the
+    rest. Counts (`n`) are dropped; the full records keep them.
+    """
+    groups = {}
+    for a in availability or []:
+        key = ", ".join(f"{d} {a[d]}" for d in AVAIL_DIMS if d in a) or "all"
+        groups.setdefault(key, set())
+        if "wave" in a:
+            groups[key].add(a["wave"])
+    return {k: runs(v, all_waves) if v else "-" for k, v in groups.items()}
+
+
+def origin_text(origin):
+    """One origin as a short string: upstream_package:gssrdoc-json, rule:gssrdoc_text@0.1."""
+    kind = origin.get("origin", "?")
+    if kind == "rule":
+        return f"rule:{origin.get('rule')}@{origin.get('rule_version')}"
+    if kind in ("hand", "model"):
+        who = origin.get("author") or origin.get("model")
+        text = f"{kind}:{who}" if who else kind
+        if kind == "model" and not origin.get("reviewed"):
+            text += " (unreviewed)"
+        return text
+    return f"{kind}:{origin['source']}" if origin.get("source") else kind
+
+
+def compact_values(values, default):
+    """Codes with their origins resolved: one shared origin, or one per code.
+
+    A missing or unresolved code without its own origin takes the record's
+    provenance.codes. Returns (values, shared origin text or None).
+    """
+    resolved = []
+    for v in values:
+        origin = v.get("origin") or (default if v.get("kind") != "valid" else None)
+        resolved.append((v, origin))
+    texts = {origin_text(o) for _, o in resolved if o}
+    shared = texts.pop() if len(texts) == 1 else None
+    out = []
+    for v, o in resolved:
+        c = {k: val for k, val in v.items() if k != "origin"}
+        if o and shared is None:
+            c["origin"] = origin_text(o)
+            if o.get("note"):
+                c["origin_note"] = o["note"]
+        out.append(c)
+    return out, shared
 
 
 def wave_list(waves):
@@ -153,10 +212,13 @@ def line_question(record):
     """The first wording, with a battery's shared stem shortened so the item text shows."""
     questions = record.get("questions") or []
     if not questions:
-        notes = record.get("notes")
-        if isinstance(notes, list):
-            notes = " ".join(map(str, notes))
-        return f"[notes] {notes}" if notes else ""
+        for key in ("description", "notes"):
+            text = record.get(key)
+            if isinstance(text, list):
+                text = " ".join(map(str, text))
+            if text:
+                return f"[{key}] {text}"
+        return ""
     q = questions[0]
     if q.get("stem") and q.get("item"):
         stem = re.sub(r"\s+", " ", q["stem"]).strip()
@@ -187,9 +249,25 @@ def one_line(release, table, record, ctx):
 
 
 def view_record(release, table, record, ctx):
-    """The record as it appears in a JSONL shard: corrected, with a `view` block."""
+    """The record as it appears in a JSONL shard: corrected, compact, with a `view` block.
+
+    Compact (STANDARD.md §7): availability as runs by form, origins as short strings,
+    and one origin for the codes when they share one. Notes on origins and the
+    per-wave counts are left out; the full record in metadata/ is canonical.
+    """
     key = (release, table, record["name"])
-    view = {}
+    out = {k: v for k, v in record.items() if k not in ("dataset", "release", "provenance")}
+    if record.get("availability"):
+        out["availability"] = compact_availability(record["availability"], ctx["waves"][release])
+    prov = record.get("provenance") or {}
+    origins = {"record": origin_text(prov["record"])} if prov.get("record") else {}
+    origins.update({f: origin_text(o) for f, o in (prov.get("fields") or {}).items()})
+    if record.get("values"):
+        out["values"], shared = compact_values(record["values"], prov.get("codes"))
+        if shared:
+            origins["codes"] = shared
+    out["origins"] = origins
+    view = {"release": release}
     if table is not None:
         view["table"] = table
     applied = ctx["index"].corrected.get(key)
@@ -212,7 +290,7 @@ def view_record(release, table, record, ctx):
                      and a["target"].get("table") in (None, table)})
     if topics:
         view["topics"] = topics
-    return {**record, "view": view}
+    return {**out, "view": view}
 
 
 def split(items, render, budget_tokens):
@@ -274,6 +352,7 @@ def build(root, out=None):
             "kind": kind,
             "title": title,
             "basis": basis,
+            "full_records": full_records(repo, result),
             "completeness": result.label,
             "filter": filt,
             "releases": result.releases,
@@ -312,6 +391,15 @@ def build(root, out=None):
     return manifest
 
 
+def full_records(repo, result):
+    """The metadata files that hold the full records of a result's variables."""
+    paths = set()
+    for rel, tab, _ in result.matches:
+        base = f"metadata/releases/{rel}"
+        paths.add(f"{base}/{tab}/variables.jsonl" if tab else f"{base}/variables.jsonl")
+    return sorted(paths)
+
+
 def is_current(root):
     """True if agent/ was generated by this library version from the current inputs."""
     path = Path(root) / "agent" / "manifest.json"
@@ -333,7 +421,7 @@ def txt_header(meta, part, header):
     for note in meta["notes"]:
         lines.append(f"# note: {note}")
     lines += [
-        "# columns: name | waves; forms | scale signature | label | question text (or [notes]), truncated",
+        "# columns: name | waves; forms | scale signature | label | question text (else [description], else [notes]), truncated",
         "# name* = a field was corrected; the JSONL form says which, with the original",
         f"# generated by pdt {header['pdt_version']} from inputs sha256:{header['inputs_sha256'][:16]}; "
         "do not edit",
@@ -384,10 +472,16 @@ def render_index(repo, index, shards, header, waves):
     out.append(
         "Every shard is the result of a filter over the records, and its header says which "
         "filter and what completeness label it supports. Each shard comes in two forms with the "
-        "same variables: `.txt`, one line per variable, for scanning; and `.jsonl`, the full "
+        "same variables: `.txt`, one line per variable, for scanning; and `.jsonl`, the "
         "records with corrections applied, for details. The first JSONL line is the shard's "
         "header (`{\"shard\": ...}`); every later line is a variable. A shard too big to read "
         f"at once (about {MAX_TOKENS:,} tokens) is split into parts.\n")
+    out.append("The JSONL records are compact: `availability` maps each form (or `all`) to runs "
+               "of waves, `origins` gives where each field came from as `kind:source` or "
+               "`rule:name@version`, and `origins.codes` is the origin the codes share (a code "
+               "lists its own when they differ). Per-wave counts and the notes on origins are "
+               "left out. The full records in `metadata/` are canonical; each shard header's "
+               "`full_records` names the files.\n")
     out.append("Line form: `name | waves; forms | scale signature | label | question text`. "
                "A run like `1972-1978` means every wave of the release in that span; a gap "
                "between runs (`1972-1985,1987-2024`) means the variable wasn't available in "
@@ -454,7 +548,8 @@ A `complete` result is complete with respect to the records in scope: if the rep
 part of a release, say so, using the scope in the shard header. Subject shards are complete
 with respect to the publisher's own subject list, which may miss items a reader would
 consider on-topic; say so when it matters. If a subject shard and a group shard give the
-same variables, prefer the one with the better label and cite it.
+same variables, report the stronger label (`complete`, then `complete_by_rule`, then
+`approximate`) and cite that shard.
 
 ## Searching with code
 

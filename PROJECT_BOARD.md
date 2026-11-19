@@ -405,6 +405,11 @@ Search results label themselves `complete`, `complete_by_rule` or `approximate`,
 - **Redundant shards:** in the GSS slice, `subject-abortion` and `battery-abdefect` have the same members, labeled `complete` and `complete_by_rule`. SKILL.md says to cite the one with the better label.
 - **`cli.py` is shared:** Tasks 15 and 16 will add subcommands too, so whoever goes next should check for conflicts there.
 
+**After the Task 25 answers (a995a31):**
+- **Compact JSONL** (§7). `availability` maps each form, or `all`, to runs of waves, and `n` is dropped. `origins` gives each field's origin as a short string, and `origins.codes` holds the origin the codes share; a code without its own origin falls back to `provenance.codes`. Each shard header's `full_records` names the canonical files in `metadata/`. The GSS cost fell from about 1,200 to about 480 tokens per variable (all 50: 61k to 24k; Abortion: 8.4k to 3.3k).
+- **Line form** uses question text, else `[description]`, else `[notes]`.
+- **SKILL.md** now uses §7's wording: when two filters return the same set, report the stronger label.
+
 ## Task 15 — Human-readable site: `docs/`
 
 **Status:** `TODO` — ready for a second thread
