@@ -1,0 +1,29 @@
+# Every file this repo depends on (STANDARD.md §2.2): data files, codebooks,
+# questionnaires, release notes, errata and terms pages, upstream packages.
+# Schema: PublicDataToolkit/schema/sources.schema.json. Edited by hand.
+#
+# Once a file is fetched, fill fetched_on, bytes and sha256 (pdt check C6).
+# An upstream package also needs `version` (a tag or commit), and documentation
+# says which releases it `documents`.
+sources:
+  - id: {{ source_id }}
+    title: {{ (release_label ~ ', ' ~ (source_kind | replace('_', ' '))) | tojson }}
+    kind: {{ source_kind }}
+    format: {{ source_format }}
+{%- if source_url %}
+    url: {{ source_url | tojson }}
+{%- endif %}
+    path: data/raw/CHANGE-ME
+    releases: [{{ release_id | tojson }}]
+{%- if source_kind != 'data' %}
+    documents: [{{ release_id | tojson }}]
+{%- endif %}
+    redistribution: unknown
+{%- if source_url %}
+    acquisition: automated
+{%- else %}
+    acquisition: manual
+    manual_steps: >
+      Say exactly how to get this file by hand: the page, the link to click,
+      any login, and where to save it.
+{%- endif %}

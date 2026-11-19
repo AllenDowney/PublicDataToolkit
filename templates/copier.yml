@@ -1,0 +1,92 @@
+# Copier template for a PublicDataToolkit dataset repo (STANDARD.md §2, §2.4).
+#   copier copy ../PublicDataToolkit/templates ../pdt-<dataset-id>
+# It runs no tasks or migrations, so it needs no --trust. See templates/README.md.
+
+_subdirectory: template
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+_min_copier_version: "9.0.0"
+
+dataset_id:
+  type: str
+  help: "Dataset id (STANDARD.md §1): lowercase letters, digits and hyphens, starting with the name people use, e.g. gss, anes-cdf, nsfg. The repo is pdt-<id>."
+  validator: >-
+    {% if not (dataset_id | regex_search('^[a-z0-9][a-z0-9-]*$')) %}lowercase letters, digits and hyphens, starting with a letter or digit{% endif %}
+
+title:
+  type: str
+  help: "The dataset's full name, e.g. National Survey of Family Growth"
+
+description:
+  type: str
+  help: "One or two sentences: what the dataset is"
+  default: ""
+
+publisher_name:
+  type: str
+  help: "The publisher, e.g. National Center for Health Statistics (NCHS), CDC"
+
+publisher_url:
+  type: str
+  help: "The publisher's home page (a full URL)"
+
+dataset_url:
+  type: str
+  help: "The dataset's page at the publisher (a full URL)"
+
+citation:
+  type: str
+  help: "How the publisher asks to be cited (copy it from their site)"
+  default: ""
+
+terms_url:
+  type: str
+  help: "The terms of use page (a full URL). The template records every term as `unknown`; a person decides them (STANDARD.md §8)."
+
+wave_label:
+  type: str
+  help: "What a wave is called in this dataset (year, cycle, data year)"
+  default: year
+
+form_label:
+  type: str
+  help: "What a form is called (ballot, questionnaire form), or leave empty if the dataset has none"
+  default: ""
+
+release_id:
+  type: str
+  help: "The first release's id (STANDARD.md §2.1): the publisher's own name for it, lowercased, e.g. 7224r3a, 2022-2023, 2024; else its date as YYYYMMDD"
+  validator: >-
+    {% if not (release_id | regex_search('^[A-Za-z0-9][A-Za-z0-9._-]*$')) %}letters, digits, '.', '_' or '-', starting with a letter or digit{% endif %}
+
+release_label:
+  type: str
+  help: "The release's label, e.g. NSFG 2022-2023 (cycle 12) public-use files"
+
+source_kind:
+  type: str
+  help: "The release's first source: what kind of file is it?"
+  choices: [codebook, data, upstream_package, questionnaire, release_notes, other]
+  default: codebook
+
+source_id:
+  type: str
+  help: "An id for that source in sources.yaml, e.g. nsfg-female-codebook"
+  default: "{{ dataset_id }}-{{ source_kind | replace('_', '-') }}"
+  validator: >-
+    {% if not (source_id | regex_search('^[A-Za-z0-9][A-Za-z0-9._-]*$')) %}letters, digits, '.', '_' or '-', starting with a letter or digit{% endif %}
+
+source_format:
+  type: str
+  help: "Its format: pdf, html, stata, sas, csv, rda, ..."
+  default: pdf
+
+source_url:
+  type: str
+  help: "Where to get it (a full URL), or leave empty if it must be downloaded by hand"
+  default: ""
+
+standard_version:
+  type: str
+  help: "The version of the standard this repo meets"
+  default: "0.1"

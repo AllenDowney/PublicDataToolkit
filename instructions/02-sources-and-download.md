@@ -6,9 +6,22 @@
 
 ## Do
 
-1. **Make the repo** next to this one, with the layout in §2. Until `templates/` exists, copy the Makefile, `.gitignore` (which must ignore `data/`) and the README and CLAUDE.md skeletons from an existing repo. The Makefile targets are the same everywhere: `build`, `views`, `check`, and later `download`.
-2. **Write `dataset.yaml`:** the id, publisher, the terms the person decided (§8), `dimensions`, and the releases with their tables, keys and references. Example: [`pdt-fars/dataset.yaml`](../../pdt-fars/dataset.yaml) has four tables and two conditional references.
-3. **Write `sources.yaml`:** one entry for every data file, codebook, questionnaire, release-notes PDF, errata page, terms page and upstream package. Each one gets:
+1. **Make the repo** next to this one from the template ([`templates/`](../templates/README.md)):
+
+   ```bash
+   copier copy /path/to/PublicDataToolkit/templates pdt-<dataset-id>
+   ```
+
+   That gives:
+   - `dataset.yaml` and `sources.yaml` skeletons, with every term `unknown`;
+   - the Makefile targets (`build`, `views`, `check`);
+   - README and CLAUDE.md skeletons;
+   - `EXTENSIONS.md` and `.gitignore`;
+   - a `build/` stub that writes `build/report.md`.
+
+   `pdt check` on the new repo fails only C6, until the first source is fetched (below). Don't commit `metadata/` until a person has decided the terms, because C9 fails while records are tracked and `terms.metadata` is `unknown`.
+2. **Fill in `dataset.yaml`:** the id, publisher, the terms the person decided (§8), `dimensions`, and the releases with their tables, keys and references. Example: [`pdt-fars/dataset.yaml`](../../pdt-fars/dataset.yaml) has four tables and two conditional references.
+3. **Fill in `sources.yaml`:** one entry for every data file, codebook, questionnaire, release-notes PDF, errata page, terms page and upstream package. Each one gets:
    - `kind`, `format`, `path` (under `data/raw/`), `releases`;
    - `redistribution` (per file; never looser than the dataset's terms);
    - `acquisition`: `automated` with a `url`, or `manual` with `manual_steps` that a stranger could follow;

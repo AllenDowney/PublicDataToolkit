@@ -1,0 +1,40 @@
+# The dataset, its terms and its releases (STANDARD.md §2.1, §8).
+# Schema: PublicDataToolkit/schema/dataset.schema.json. Edited by hand.
+standard_version: "{{ standard_version }}"
+id: {{ dataset_id }}
+title: {{ title | tojson }}
+publisher:
+  name: {{ publisher_name | tojson }}
+  url: {{ publisher_url | tojson }}
+url: {{ dataset_url | tojson }}
+{%- if description %}
+description: {{ description | tojson }}
+{%- endif %}
+{%- if citation %}
+citation: {{ citation | tojson }}
+{%- endif %}
+# Terms are decided by a person, never by an agent or this template (STANDARD.md §8).
+# Quote what the terms pages say in `summary`, then have a person set each field
+# to ship or build-only and fill reviewed_by and reviewed_on. `unknown` blocks
+# shipping anything that depends on it.
+terms:
+  url: {{ terms_url | tojson }}
+  summary: Not yet reviewed.
+  data: unknown
+  documentation: unknown
+  metadata: unknown
+  llm_processing: unknown
+dimensions:
+  wave:
+    label: {{ wave_label | tojson }}
+{%- if form_label %}
+  form:
+    label: {{ form_label | tojson }}
+{%- endif %}
+releases:
+  - id: {{ release_id | tojson }}
+    label: {{ release_label | tojson }}
+    status: current
+    sources: [{{ source_id }}]
+    # A release with several data files lists `tables`, each with an id, label,
+    # sources, key and references (STANDARD.md §2.1). Examples: pdt-nsfg, pdt-fars.
