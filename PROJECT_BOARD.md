@@ -154,7 +154,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 38 — Code lists as tables, and retired codes
 
-`DOING (orange)`. A design, not code: [`planning/code_lists_design.md`](planning/code_lists_design.md). Details: [`planning/tasks/task-38.md`](planning/tasks/task-38.md).
+`DONE (orange)`. A design, accepted: [`planning/code_lists_design.md`](planning/code_lists_design.md); implemented in Task 41. Details: [`planning/tasks/task-38.md`](planning/tasks/task-38.md).
 
 ### Task 39 — Library changes from the YRBSS findings
 
@@ -162,6 +162,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 ### Task 40 — `pdt diff` pairs by links first
 
 `DOING (red)`. When a release renumbers its variables (YRBSS: 2021 q26 "Considered suicide" is 2023 q27), `pdt diff` pairs by existing links first and by name for the rest, and flags names that match while the links say otherwise. Details: [`planning/tasks/task-40.md`](planning/tasks/task-40.md).
+
+### Task 41 — Shared code lists
+
+`DOING (orange)`. Task 38's design: `metadata/code_lists.jsonl`, `retired` and `waves` on codes, in the standard, the library, pdt-chicago-crimes and (if blue is free) the GSS. Details: [`planning/tasks/task-41.md`](planning/tasks/task-41.md).
 
 
 
