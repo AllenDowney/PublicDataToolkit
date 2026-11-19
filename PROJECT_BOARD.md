@@ -165,7 +165,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 41 — Shared code lists
 
-`DOING (orange)`. Task 38's design: `metadata/code_lists.jsonl`, `retired` and `waves` on codes, in the standard, the library, pdt-chicago-crimes and (if blue is free) the GSS. Details: [`planning/tasks/task-41.md`](planning/tasks/task-41.md).
+`DONE (orange)`. Shared code lists (`metadata/code_lists.jsonl`, §4.5) and retired codes in the standard, the library and pdt-chicago-crimes (IUCR, 434 codes, 10 retired); the GSS lists follow when blue frees pdt-gss. Details: [`planning/tasks/task-41.md`](planning/tasks/task-41.md).
 ### Task 42 — A cross-dataset catalog
 
 `DONE (red)`. `pdt catalog` (in `~/pdt-catalog`: 6 datasets, 7,485 variables; CPS and Chicago left out for `terms.metadata: unknown`) and `pdt search --catalog`; tested on sadness, marital status and age at first marriage. Details: [`planning/tasks/task-42.md`](planning/tasks/task-42.md).
