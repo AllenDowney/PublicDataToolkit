@@ -9,6 +9,8 @@ columns asked for, since the files are often much wider than a repo's records.
     read_csv_zip(path, member, columns)    a CSV inside a zip; empty cells stay null
     read_stata_dictionary(dat, dct, columns)   fixed-width text described by a Stata .dct;
                                            a blank numeric field is Stata's missing -> Code(".")
+    read_sas_input(dat, input_sas, columns)    fixed-width text laid out by a SAS input program;
+                                           `$` columns stay text (blanks too), numeric "." or blank -> Code(".")
 """
 
 import io
@@ -114,5 +116,57 @@ def read_stata_dictionary(dat, dct, columns, encoding="latin-1"):
             out[name] = pd.Series(cells, dtype=object)
         else:
             out[name] = pd.Series([Code(".") if not c.strip() else _number(c.strip()) for c in cells],
+                                  dtype=object)
+    return pd.DataFrame(out)
+
+
+SAS_INPUT_LINE = re.compile(r"^\s*(\w+)\s+(\$)?\s*(\d+)\s*-\s*(\d+)\s*$", re.MULTILINE)
+SAS_LABEL_LINE = re.compile(r'^\s*(\w+)\s*=\s*"([^"]*)"\s*$', re.MULTILINE)
+
+
+def _sas_statement(text, keyword):
+    """The body of the statement that starts with `keyword` alone on a line, up to its ';'."""
+    m = re.search(rf"^\s*{keyword}\s*$(.*?);", text, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+    return m.group(1) if m else ""
+
+
+def parse_sas_input(path):
+    """{name: (start (0-based), end (exclusive), is_text, label or None)} from a SAS input program.
+
+    Reads the column ranges of its `input` statement (`q26 $ 281-281`, `weight 125-134`)
+    and the labels of its `label` statement, as CDC's YRBSS and BRFSS programs write them.
+    """
+    text = open(path, encoding="latin-1").read()
+    labels = dict(SAS_LABEL_LINE.findall(_sas_statement(text, "label")))
+    out = {}
+    for name, dollar, first, last in SAS_INPUT_LINE.findall(_sas_statement(text, "input")):
+        out[name] = (int(first) - 1, int(last), bool(dollar), labels.get(name))
+    if not out:
+        raise ValueError(f"{path}: no column ranges in an input statement")
+    return out
+
+
+def read_sas_input(dat, input_sas, columns, encoding="latin-1"):
+    """Fixed-width text laid out by a SAS input program, as a raw frame.
+
+    Names match exactly, as in the program. A character (`$`) column keeps its text
+    exactly, blanks included: CDC's formats label " " as "Missing", so " " is a code the
+    records list. A numeric column holds int or float; SAS reads "." and a blank field
+    as its missing value, and both become Code("."), as in read_sas.
+    """
+    layout = parse_sas_input(input_sas)
+    missing = [c for c in columns if c not in layout]
+    if missing:
+        raise KeyError(f"{input_sas}: no column(s) {missing}")
+    specs = [layout[c] for c in columns]
+    frame = pd.read_fwf(dat, colspecs=[(start, end) for start, end, _, _ in specs], names=list(columns),
+                        dtype=str, header=None, encoding=encoding, keep_default_na=False, delimiter="\n")
+    out = {}
+    for name, (_, _, is_text, _) in zip(columns, specs):
+        cells = frame[name].tolist()
+        if is_text:
+            out[name] = pd.Series(cells, dtype=object)
+        else:
+            out[name] = pd.Series([Code(".") if c.strip() in ("", ".") else _number(c.strip()) for c in cells],
                                   dtype=object)
     return pd.DataFrame(out)
