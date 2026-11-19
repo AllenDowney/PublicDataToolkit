@@ -539,7 +539,7 @@ Findings that need a decision or a change to STANDARD.md and the schemas:
 **Decided (2026-11-19):**
 - **Publisher subject lists are groups,** of kind `subject` (STANDARD.md §5.1). Proposed by the views thread (Task 14), with Allen's approval of the direction. The main thread chose groups over "complete-capable annotations", so the rule stays simple: annotations never support completeness, and publisher groups can. `pdt-gss` now emits gssrdoc's subjects as `subject` groups instead of annotations.
 - **Headers for generated JSONL** (§7): the first line is a `{"shard": {...}}` object, and `agent/manifest.json` holds the input hashes. This was the views thread's convention.
-- **The rest, decided 2026-11-19.** Allen chose the first three; the main thread decided the others. All are in STANDARD.md, the schemas, `pdt check` (72 library tests) and the dataset repos.
+- **The rest, decided 2026-11-19.** Allen chose the first three; the main thread decided the others. All are in STANDARD.md, the schemas, `pdt check` (68 library tests) and the dataset repos.
   - **Missing types:** new `unknown`, for administrative and coded data such as FARS's "Reported as Unknown", and `unspecified`, for codes marked missing without a reason, such as GSS `.z`. The FARS and GSS rules went to version 0.2.
   - **Corrections the publisher prints** go in the field, with the superseded text in `notes`: NSFG `MFLASTP`'s universe.
   - **Conditional references:** a reference may have `when: {column, in}`. FARS declares person → vehicle when `PER_TYP` is 1, 2 or 9; that holds for all 78,880 such rows.
