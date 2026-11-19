@@ -42,7 +42,7 @@
       ]
     },
     "missing_type": {
-      "description": "Why a value is missing. One code can carry several types, e.g. GSS NA(m) \"dk, na, iap\". unknown: the source records the value as unknown (administrative and coded data, e.g. a police report). unspecified: the source marks the code missing but gives no reason (GSS .z \"see codebook\"). See STANDARD.md §4.2.",
+      "description": "Why a value is missing. One code can carry several types, e.g. GSS NA(m) \"dk, na, iap\". unknown: the source records the value as unknown (administrative and coded data, e.g. a police report). unspecified: the source marks the code missing but gives no reason (GSS .z \"see codebook\"). See STANDARD.md \u00a74.2.",
       "enum": [
         "dk",
         "refused",
@@ -58,7 +58,7 @@
       ]
     },
     "origin_kind": {
-      "description": "Where a fact came from. See STANDARD.md §3.",
+      "description": "Where a fact came from. See STANDARD.md \u00a73.",
       "enum": [
         "publisher",
         "upstream_package",
@@ -101,7 +101,7 @@
           "$ref": "#/$defs/date"
         },
         "author": {
-          "description": "Who made a hand edit or reviewed a model draft.",
+          "description": "Who made a hand judgment, or reviewed a model draft: a person, or an agent and its task (\"Claude (PublicDataToolkit Task 35)\"). Never a person who didn't make or check it.",
           "type": "string"
         },
         "reviewed": {

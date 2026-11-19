@@ -153,7 +153,7 @@ Each variable record has `provenance.record`, the origin of the record as a whol
 | `upstream_package` | read from a third-party package that redistributes the publisher's documentation (gssrdoc) | `source` |
 | `data_file` | read from the data file's own metadata: Stata or SPSS labels, extended missing values | `source` |
 | `rule` | computed by a named rule from other fields | `rule`; `rule_version` |
-| `hand` | entered by a person | `author`, `date` |
+| `hand` | a judgment entered through a hand-written build input, by a person or an agent. `author` names who made it: a person, or the agent and its task ("Claude (PublicDataToolkit Task 35)"), never a person who didn't make or check it | `author`, `date` |
 | `model` | drafted by an LLM | `model`, `date`, `reviewed`; `prompt_version` when there is one |
 
 ## 4. Variable records
@@ -214,7 +214,7 @@ Codes are stored as they appear in the data file: numbers as numbers, and Stata 
 1. The publisher marks them, as the ANES codebook's "Missing" section and NORC's "RESERVED CODES" do. `origin: publisher`.
 2. The data file marks them, as Stata extended missing values do. `origin: data_file`.
 3. A rule over labels, used only when neither of the above exists. `origin: rule`, with the rule's name.
-4. A person adds one the others missed, such as an out-of-universe code. `origin: hand`.
+4. A person or an agent adds one the others missed, such as an out-of-universe code. `origin: hand`, with the author named.
 
 **When the sources don't say,** the code is `unresolved`: a code in the data with no label, or a label like "see codebook" that the codebook doesn't explain. Don't guess a type to get past the check. A wrong classification is worse than an open one, because recoding code would silently trust it. `pdt check` reports unresolved codes and doesn't fail on them. Unresolved isn't a kind of missing: the library never recodes an unresolved code by missing type, warns when a variable it recodes has any, and handles them only when the caller asks explicitly.
 
