@@ -16,6 +16,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 9:** Remove private information before publishing.
 - **Task 10:** Respond to review 1 of the proposal. [`planning/review_1.md`](planning/review_1.md)
 - **Task 12:** Tables in a release: in the standard, the schemas and `pdt check`, and used for the NSFG (female, male, pregnancy).
+- **Task 14:** Agent views: `agent/` in all four dataset repos, `pdt views` and `pdt search` with completeness labels.
 
 **Doing**
 - **Task 1:** The plan. [`planning/plan.md`](planning/plan.md); remaining decisions in plan §10.
@@ -29,7 +30,6 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 6:** Talk to Hadley Wickham about data-dict. [`planning/data_dict.md`](planning/data_dict.md)
 - **Task 11:** Data releases, download scripts and extract builders. The common data format is accepted and implemented (`lib/pdt/data.py`); the rest is in Tasks 18 and 19.
 - **Task 13:** FARS slice. The parser for the manual needs work.
-- **Task 14:** Agent views: `agent/` index and shards. `DOING (views)`
 
 **To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
 - **Task 15:** Human-readable site: `docs/`.
@@ -378,7 +378,7 @@ The comparison of the manual's labels with the data's labels already works, and 
 
 ## Task 14 — Agent views: `agent/` index and shards
 
-**Status:** `DOING (views)`
+**Status:** `DONE` (views thread, 2026-11-19; not pushed)
 
 Build the LLM-facing view from STANDARD.md §7 in a new library module. It generates, for a dataset repo:
 - `agent/index.md`;
