@@ -48,7 +48,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 11 — Data releases, download script and extract builder
 
-`DOING`. Data releases and extracts. The common data format is done ([`planning/missing_codes_design.md`](planning/missing_codes_design.md)); the rest is Tasks 18 and 19. Details: [`planning/tasks/task-11.md`](planning/tasks/task-11.md).
+`DONE`. Data releases and extracts: the common data format ([`planning/missing_codes_design.md`](planning/missing_codes_design.md)), `pdt download` and `pdt package` (Task 18), and `pdt.extract` (Task 19). Details: [`planning/tasks/task-11.md`](planning/tasks/task-11.md).
 
 ### Task 12 — Tables: several files in one release
 
