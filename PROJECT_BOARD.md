@@ -4,22 +4,60 @@ Numbered tasks for tracking work. Each task has a permanent number; add new task
 
 **Status labels:** `TODO` | `DOING` | `DONE`
 
-### Current focus (2026-11-19)
+### Current focus (2026-11-19, evening)
 
-Started at the snake_case hackathon, November 19–20, 2026. Background is in [`planning/context.md`](planning/context.md).
+Started at the snake_case hackathon, November 19–20, 2026. Background is in [`planning/context.md`](planning/context.md). Four dataset repos exist locally, next to this one; none has a remote yet: `pdt-gss`, `pdt-anes-cdf`, `pdt-nsfg` and `pdt-fars`.
 
-- **Task 1:** Write the plan — `DOING`. Draft in [`planning/plan.md`](planning/plan.md). Decided: one repo per dataset, JSONL as the source of truth with data-dict exported, and a GSS + ANES + MTF spike. Remaining decisions are in plan §10.
-- **Task 2:** Recover the earlier planning session — `DONE`. Found as CultureWar Task 186 and copied to [`planning/`](planning/).
-- **Task 3:** Inventory the GSS and ANES work in CultureWar — `DONE`. [`planning/inventory.md`](planning/inventory.md).
-- **Task 4:** Publish the repo on GitHub — `DONE`. https://github.com/AllenDowney/PublicDataToolkit
-- **Task 5:** snake_case spike: STANDARD.md, schema, and GSS, ANES and MTF slices — `DOING`. Steps 1–3 done: the standard and schemas, a 45-variable GSS slice (`pdt-gss`) and a 32-variable ANES CDF slice (`pdt-anes-cdf`), both local, with terms recorded. The check now lives in the shared library (`lib/pdt`, `pdt check`). Preliminary NSFG slice (`pdt-nsfg`, local), MTF research, and a first look at a portal dataset: see [`planning/next_datasets.md`](planning/next_datasets.md), which ends with questions for Allen.
-- **Task 6:** Talk to Hadley Wickham about data-dict — `DOING`. Note to share: [`planning/data_dict.md`](planning/data_dict.md).
-- **Task 7:** Withdrawn.
-- **Task 9:** Remove private information so the repo can be public — `DONE`.
-- **Task 10:** Respond to review 1 of the proposal — `DONE`. [`planning/review_1.md`](planning/review_1.md).
-- **Task 11:** Data releases, download script and extract builder for dataset repos — `DOING`. The common data format is accepted after review 2 and implemented in `lib/pdt/data.py`.
-- **Task 12:** Tables: let one release hold several files (NSFG female/male/pregnancy; FARS crash/vehicle/person) — `DOING`, decided 2026-11-19.
-- **Task 8:** Versions, layout and names for dataset repos — `DONE`. Decided; see [`planning/versions_layout_names.md`](planning/versions_layout_names.md). Applied to STANDARD.md.
+**Done**
+- **Task 2:** Recover the earlier planning session. [`planning/`](planning/)
+- **Task 3:** Inventory the GSS and ANES work in CultureWar. [`planning/inventory.md`](planning/inventory.md)
+- **Task 4:** Publish this repo on GitHub. https://github.com/AllenDowney/PublicDataToolkit (local `main` is ahead; push after Allen checks)
+- **Task 8:** Versions, layout and names for dataset repos. [`planning/versions_layout_names.md`](planning/versions_layout_names.md)
+- **Task 9:** Remove private information before publishing.
+- **Task 10:** Respond to review 1 of the proposal. [`planning/review_1.md`](planning/review_1.md)
+- **Task 12:** Tables in a release: in the standard, the schemas and `pdt check`, and used for the NSFG (female, male, pregnancy).
+
+**Doing**
+- **Task 1:** The plan. [`planning/plan.md`](planning/plan.md); remaining decisions in plan §10.
+- **Task 5:** The snake_case spike.
+  - GSS: 50 variables (`pdt-gss`).
+  - ANES CDF: 37 variables (`pdt-anes-cdf`).
+  - NSFG: 52 variables in three tables (`pdt-nsfg`).
+  - FARS: started (`pdt-fars`); see Task 13.
+  - MTF: waiting for ICPSR ([`planning/icpsr_email.md`](planning/icpsr_email.md)).
+  - Religion is the cross-survey topic.
+- **Task 6:** Talk to Hadley Wickham about data-dict. [`planning/data_dict.md`](planning/data_dict.md)
+- **Task 11:** Data releases, download scripts and extract builders. The common data format is accepted and implemented (`lib/pdt/data.py`); the rest is in Tasks 18 and 19.
+- **Task 13:** FARS slice. The parser for the manual needs work.
+
+**To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
+- **Task 14:** Agent views: `agent/` index and shards.
+- **Task 15:** Human-readable site: `docs/`.
+- **Task 16:** Export data-dict YAML and validate it with data-dict.
+- **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
+- **Task 18:** `download.py` and the data-release workflow.
+- **Task 19:** `extract.py`, the extract builder.
+- **Task 20:** ANES codebook errors: verify and record as corrections.
+- **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc.
+- **Task 22:** NSFG question text and earlier cycles.
+- **Task 23:** Answer keys and scoring for the topic and structural queries.
+- **Task 24:** Agent instructions and skills.
+- **Task 25:** Standard changes from the findings so far. Main thread only.
+
+**Withdrawn:** Task 7.
+
+### Working in parallel
+
+Two or more Claude threads can work at once if they don't edit the same files. Rules:
+
+- **One thread per task, and one task per thread at a time.** Claim a task by setting its status to `DOING (thread name)` in its section and in the list above. Don't start a task another thread has claimed.
+- **File ownership.** Each task lists the files it may change. Stay inside them. Read anything.
+- **The main thread owns** `STANDARD.md`, `schema/`, `PROPOSAL.md` and `planning/plan.md`. Another thread that needs a change there writes the proposal in its own task section, and the main thread makes it.
+- **The board.** Each thread edits only its own task sections and their lines in the list above. Record findings there.
+- **`lib/`:** a thread may add new modules and tests. Only one thread at a time changes an existing module: `check.py` is Task 17's while it's `DOING`, and `data.py` is Task 19's.
+- **Commits:** commit locally, in small commits, with the task number in the message. Run `pytest` in this repo before committing here. **Don't push** anything; Allen checks before anything goes public.
+- **Environment:** the `CultureWar` conda env has everything except R, DuckDB and Polars, which are in `pdt-xlang`. Use the scratchpad for temporary files, never `/tmp` directly.
+- **Web:** if a site returns 403, try a headless browser (Playwright, in the CultureWar env). Stop at a bot check and ask Allen.
 
 ---
 
@@ -283,7 +321,7 @@ None of this exists yet for `pdt-gss` or `pdt-anes-cdf`.
 
 ## Task 12 — Tables: several files in one release
 
-**Status:** `DOING` — Allen decided on 2026-11-19 to add a table level
+**Status:** `DONE` (2026-11-19). Allen decided to add a table level; it's built, and first used for the NSFG
 
 The standard identifies a variable by (release, name). An NSFG release has three files (female respondents, male respondents, pregnancies) that share names such as `MARSTAT`. A portal dataset's coded columns refer to other tables (Chicago crimes `iucr` → the IUCR code list). Both need a table level, which data-dict has (`tables`, `relationships`).
 
@@ -304,3 +342,171 @@ Likely shape: `metadata/releases/<release>/<table>/variables.jsonl`, a `table` f
     - The pregnancy data has a column `AGER` with no entry in the pregnancy codebook.
     - The male codebook carries NCHS's own correction in a margin box ("Corrected universe for MFLASTP"), and the universe field says only "see box to the right". The parser now keeps margin text and records it in the variable's notes, labeled.
     - Some pregnancy names are lowercase in the data (`agepreg`) but uppercase in the codebook.
+
+## Task 13 — FARS slice
+
+**Status:** `DOING` (main thread)
+
+The non-survey case Allen chose. Allen downloaded the 2024 national CSV and SAS files, the auxiliary files, the Analytical User's Manual 1975–2024 (823 pages), and NHTSA's Q&A on the auxiliary files. They're in `~/pdt-fars/data/raw/`; the manual's text is `data/interim/manual.txt`.
+
+**What FARS tests:**
+- **Tables:** 33 data files, keyed by `ST_CASE`, `VEH_NO` and `PER_NO`.
+- **History across years:** the manual gives each element's codes as a matrix of year ranges. For example, `LGT_COND` code 9 is "Unknown" until 2017 and "Reported as Unknown" from 2018.
+- **No questions:** it's a census, coded from police reports.
+- **A second source for labels:** the CSV pairs most coded columns with a label column, e.g. `LGT_CONDNAME`.
+
+**Progress (2026-11-19):** `build/build_slice.py` parses 432 elements and builds 32 variables in three tables (`accident`, `vehicle`, `person`). **The parser isn't right yet**:
+- labels run on into the next element's title;
+- code tables that continue onto the next page lose their codes, so the report's 220 "unresolved" codes, such as `STATE` 1–22, are artifacts;
+- `WEATHER` finds no 2024 column.
+
+The comparison of the manual's labels with the data's labels already works, and shows only small differences: dashes, case, "(Since 2011)". Next: fix the parser, `dataset.yaml` (tables, keys, references) and `sources.yaml`, then `pdt check`.
+
+**Terms:** NHTSA's manual has a disclaimer, no license, and "available to the public"; it's a US government work. Recommendation: everything `ship`. **Allen to confirm.**
+
+**Files:** `~/pdt-fars/` only.
+
+## Task 14 — Agent views: `agent/` index and shards
+
+**Status:** `TODO` — ready for a second thread
+
+Build the LLM-facing view from STANDARD.md §7 in a new library module. It generates, for a dataset repo:
+- `agent/index.md`;
+- shards by group, by table and by scale signature, each under about 20k tokens, in two forms: JSONL, and one line per variable for reading;
+- corrections applied and marked.
+
+Search results label themselves `complete`, `complete_by_rule` or `approximate`, by the rules in §7. Spike step 5 needs this.
+
+**Files:** new `lib/pdt/views.py` (or `lib/pdt/agent.py`), `lib/tests/test_views.py`, and `agent/` in the dataset repos (generated). A `make views` target in each dataset repo's Makefile.
+
+**Done when:** the four dataset repos have `agent/`, the tests pass, and an agent given only `agent/` can find every GSS abortion item and say the answer is `complete`.
+
+## Task 15 — Human-readable site: `docs/`
+
+**Status:** `TODO` — ready for a second thread
+
+A static site per dataset repo, from STANDARD.md §7: a page per variable, per group and per release, with codes, missing types, availability, corrections and provenance. MkDocs is the suggested generator. The site goes in `docs/`, so GitHub Pages can serve it.
+
+**Files:** new `lib/pdt/site.py` and its tests; `docs/` in the dataset repos (generated).
+
+**Done when:** `make views` writes a browsable site for `pdt-gss` that a person can use to look up `abany` and see its wording, codes, years and ballots.
+
+## Task 16 — Export data-dict YAML
+
+**Status:** `TODO` — ready for a second thread
+
+Export one `data-dict.yaml` per release (per table, for releases with tables), following the mapping in [`planning/data_dict.md`](planning/data_dict.md) §2, and validate it with data-dict's own CLI (`uvx data-dict validate-spec`). Record what the export loses, as evidence for the conversation with Hadley (Task 6).
+
+**Files:** new `lib/pdt/export.py` and its tests; `export/data-dict/` in the dataset repos (generated); notes in this task's section.
+
+## Task 17 — Data checks C3–C5 in `pdt check`
+
+**Status:** `TODO` — ready for a second thread
+
+Move the data checks out of each repo's build and into `pdt check`, reading the common-format parquet files:
+- **C3 coverage:** every data column has a record, and every record a column.
+- **C4 codes:** every code in the data is documented.
+- **C5 availability:** waves and forms match the data, using the dimension columns in `dataset.yaml`.
+
+They're skipped, with a notice, when the parquet files are absent.
+
+**Files:** `lib/pdt/check.py` (owned by this task while `DOING`) and its tests. Each dataset repo needs a step that writes its parquet files with `pdt.data`; coordinate with Task 18.
+
+## Task 18 — `download.py` and the data release
+
+**Status:** `TODO` — ready for a second thread
+
+Part of Task 11. A standard `scripts/download.py` for dataset repos:
+- it reads `sources.yaml`;
+- fetches automated sources, and explains the manual ones;
+- checks the SHA-256 sums;
+- has a `--check` mode;
+- refuses to run until the user accepts the publisher's terms, as MarriageNSFG's script does.
+
+Also a build step that writes the common-format parquet files for a data release. Start with `pdt-nsfg`, where every source can be downloaded. **Don't create GitHub releases**; Allen does that when the repos are published.
+
+**Files:** new code in `lib/pdt/` (e.g. `download.py`), `scripts/` and `Makefile` in the dataset repos. Later, `templates/` for Copier (Task 8).
+
+## Task 19 — `extract.py`, the extract builder
+
+**Status:** `TODO` — ready for a second thread
+
+Part of Task 11. `scripts/extract.py` in a dataset repo: the user names the variables, waves and how to treat each missing type, and gets an extract, with no analysis choices built in. It uses `pdt.data.recode`. Test it by rebuilding a CultureWar GSS extract column and comparing.
+
+**Files:** `lib/pdt/data.py` (owned by this task while `DOING`), new `lib/pdt/extract.py`, tests, `scripts/` in the dataset repos.
+
+## Task 20 — ANES codebook errors
+
+**Status:** `TODO` — ready for a second thread
+
+The ANES build found likely errors (Task 5, step 3):
+- VCF0878 is coded 1/2 in 2016 rather than 1/5, and 2016 is missing from its Sources;
+- VCF0704's Sources omit 2016;
+- some Sources omit 1954 or 2012;
+- there are undocumented codes: `-1` (VCF0806, VCF9236), `-8` and `-4`.
+
+Check each one against the PDF codebook (`~/pdt-anes-cdf/data/raw/`) and ANES's "Data Alerts" (a person may need to open the page). Record the confirmed ones in `metadata/corrections.jsonl` with evidence, and draft a report to anes-project@umich.edu for Allen to send.
+
+**Files:** `~/pdt-anes-cdf/` only; the draft goes in this task's section or a new `planning/` file.
+
+## Task 21 — GSS follow-ups
+
+**Status:** `TODO` — ready for a second thread
+
+- **The 39 missing variables:** release 7224r3a has 6,943 variables, and gssrdoc 6,904. Find the 39 and decide how to document them, perhaps from the NORC PDF codebook.
+- **Pin gssrdoc,** or decide to build from NORC sources (plan §10 item 3; ask Allen).
+- **Links between releases:** parse the "What's New" and Release Variables PDFs (in CultureWar's `data/raw/`) to build `links.jsonl` between 7224r3 and 7224r3a.
+
+**Files:** `~/pdt-gss/` only.
+
+## Task 22 — NSFG question text and earlier cycles
+
+**Status:** `TODO` — ready for a second thread
+
+- **Question text:** the codebooks give item references ("AD-7b") but no wording. Find the CAPI questionnaire documents on the CDC site, and add `questions` to records by item reference.
+- **Earlier cycles:** add 2017–2019 as a second release (data and download code in MarriageNSFG; codebooks from CDC), and link items across cycles.
+
+**Files:** `~/pdt-nsfg/` only.
+
+## Task 23 — Answer keys for the topic and structural queries
+
+**Status:** `TODO` — ready for a second thread
+
+Spike step 5. Before any search tool exists, build by hand:
+- the **religion answer key** across the GSS, ANES and NSFG slices, and the full files where practical: every variable about religious affiliation, attendance, importance or belief;
+- one **structural query** with its exact answer, e.g. every GSS item on ballot A in 1988 within the slice.
+
+Then a scoring script for recall, precision and tokens read. Write the protocol before running any agent, as the earlier plan's §7.5 says. CultureWar's `notebooks/inventories/` are a starting point.
+
+**Files:** new `eval/` in this repo.
+
+## Task 24 — Agent instructions and skills
+
+**Status:** `TODO` — ready for a second thread
+
+Write `instructions/` (the eight-step procedure in plan §5) and the first skills in plan §6, using what the four slices taught. Examples:
+- probe a PDF before parsing it;
+- watch for page-break headers and margin boxes;
+- check every source against the data;
+- save the terms pages when a site blocks scripts.
+
+Each step should say what to check before moving on.
+
+**Files:** new `instructions/` and `skills/` in this repo.
+
+## Task 25 — Standard changes from the findings
+
+**Status:** `TODO` — main thread only
+
+Findings that need a decision or a change to STANDARD.md and the schemas:
+- **A definition field:** FARS and data-dict both have one; FARS definitions are in `notes` for now.
+- **Variable type** (raw, recode, computed, imputation flag), now the NSFG extension `nsfg.variable_type`.
+- **Publisher corrections printed in the documentation,** such as NSFG's margin box.
+- **Missing types for non-surveys:** "Unknown" in a police report isn't "don't know".
+- **"Missing, reason unknown":** GSS `.z`.
+- **Rules for release ids.**
+- **The size of per-code provenance.**
+- **Systemic source artifacts fixed by a named rule:** gssrdoc's doubled apostrophes.
+
+**Files:** `STANDARD.md`, `schema/`, and the `lib/` code that enforces them.
+
