@@ -54,7 +54,7 @@ Read their build scripts in `build/` and their `build/report.md` before writing 
 |---|---|
 | `pdt check` C3–C5 (coverage, codes, availability against the data) | Not in `pdt check` yet. Each build runs them and writes the results in `build/report.md` |
 | C12, keys and references against the data | In the standard, not yet in `pdt check` (Task 17). The FARS build verifies every key and reference and lists the results in its report; the NSFG pregnancy → female reference was checked against the data by hand. Script it, as FARS does |
-| `scripts/download.py`, the data release | Not written yet (Task 18). Record manual steps in `sources.yaml` |
+| `scripts/download.py`, the data release | Working (Task 18): `pdt download`, wrapped by `scripts/download.py` and `make download`; `pdt.release` writes the common-format files. The template includes `download.py`; `make data` needs a reader for each dataset |
 | `scripts/extract.py` | Not written yet (Task 19) |
 | `templates/` and Copier | Working for `copier copy` ([`templates/`](../templates/README.md)). `copier update` doesn't work yet, because the template isn't at the root of the toolkit's git repo (Task 28) |
 | `pdt views`, `pdt search`, `pdt check` | Working. Run from the dataset repo with `PYTHONPATH=../PublicDataToolkit/lib python -m pdt <command> .` |

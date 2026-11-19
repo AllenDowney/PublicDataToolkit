@@ -14,7 +14,7 @@
 
    That gives:
    - `dataset.yaml` and `sources.yaml` skeletons, with every term `unknown`;
-   - the Makefile targets (`build`, `views`, `check`);
+   - the Makefile targets (`download`, `build`, `views`, `check`) and `scripts/download.py`;
    - README and CLAUDE.md skeletons;
    - `EXTENSIONS.md` and `.gitignore`;
    - a `build/` stub that writes `build/report.md`.
@@ -27,7 +27,7 @@
    - `acquisition`: `automated` with a `url`, or `manual` with `manual_steps` that a stranger could follow;
    - once fetched: `fetched_on`, `bytes`, `sha256`;
    - for an upstream package: `version`, the tag or commit it's pinned to (§2.2).
-4. **Fetch what can be fetched** into `data/raw/` and never edit it. Intermediate files (pdftotext output, a JSON conversion) go in `data/interim/`. Until `scripts/download.py` exists (Task 18), a Makefile rule that fetches by URL and checks the SHA-256 is enough. pdt-gss's `make gssrdoc` fetches gssrdoc's `.rda` at a pinned commit and checks it with `sha256sum -c`.
+4. **Fetch what can be fetched** into `data/raw/` and never edit it. Intermediate files (pdftotext output, a JSON conversion) go in `data/interim/`. `make download ARGS=--accept-terms` fetches every automated source in `sources.yaml` and verifies its SHA-256; `ARGS=--check` reports what's present without the network, and manual sources print their steps. It refuses to fetch without `--accept-terms`, so read the terms first. A source that needs a conversion step (pdt-gss's gssrdoc `.rda` to JSON) can keep its own Makefile rule.
 5. **Save errata and update pages** as sources too. They're evidence for corrections in step 6. pdt-anes-cdf keeps ANES's "CDF Updates & Errata" page in `data/raw/errata/`.
 
 ## Traps from the four builds

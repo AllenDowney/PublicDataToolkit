@@ -13,7 +13,7 @@
    - the publisher's files, unchanged, with SHA-256 sums;
    - the same data in the common format (§8), written with `pdt.data`. The build proves the conversion is lossless by rebuilding every cell. Every file tried so far round-trips exactly: the full GSS (6,943 variables), the full ANES CDF, all three NSFG files, and the FARS tables in the slice ([`missing_codes_design.md`](../planning/missing_codes_design.md) §9, board Tasks 12 and 13).
 
-   Until the release workflow exists (Task 18), stop at writing the files.
+   `pdt.release` (Task 18) writes the common-format files to `data/processed/` and checks the round trip; pdt-nsfg's `make data` shows how. Publishing the GitHub release waits for a person (below).
 5. **Record findings on the project board,** in the task's section: what the build found, what ended up in extensions and why, and what's still open.
 
 ## Check before moving on

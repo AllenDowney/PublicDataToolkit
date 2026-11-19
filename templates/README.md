@@ -2,7 +2,7 @@
 
 A [Copier](https://copier.readthedocs.io/) template for starting a dataset repo (STANDARD.md §2, §2.4). It holds what the four existing repos share:
 - `dataset.yaml` and `sources.yaml` skeletons that pass the schemas, with every term `unknown`;
-- the Makefile targets `build`, `views` and `check`;
+- the Makefile targets `download`, `build`, `views` and `check`, with `scripts/download.py` (a wrapper for `pdt.download`, Task 18);
 - README and CLAUDE.md skeletons, with the README sections of §2.3;
 - `EXTENSIONS.md` and `.gitignore`;
 - a `build/` stub: `build_records.py`, with the C3–C5 checks and the report, and `slice.yaml`.
@@ -24,7 +24,7 @@ It asks for the dataset id, title, publisher, terms URL, first release and first
 1. **A person decides the terms.** Until then, commit nothing under `metadata/`: C9 fails when records are tracked while `terms.metadata` is `unknown`.
 2. **Write the parser.** `build/build_records.py` raises `NotImplementedError` in `parse_documentation()` and `read_data()` until you do ([`skills/`](../skills/)).
 3. **Add tables** to `dataset.yaml` by hand if a release has several files (§2.1; see pdt-nsfg and pdt-fars).
-4. **Add `download` to the Makefile** when `scripts/download.py` exists (Task 18).
+4. **Add `make data`** (the common-format release) when the terms allow it. It needs a reader for the publisher's data format; see pdt-nsfg's `scripts/build_data.py`.
 
 ## Updating a repo from a newer template
 

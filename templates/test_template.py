@@ -77,3 +77,10 @@ def test_source_id_follows_kind_and_url_sets_acquisition(tmp_path):
     assert src["id"] == "testdata-data"
     assert src["acquisition"] == "automated" and src["url"] == "https://example.org/f.dta"
     assert "documents" not in src                              # a data file documents nothing
+
+
+def test_download_check_runs_without_network(tmp_path):
+    repo = render(tmp_path / "pdt-testdata")
+    result = run([sys.executable, "scripts/download.py", "--check"], repo)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "testdata-codebook" in result.stdout

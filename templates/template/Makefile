@@ -2,7 +2,11 @@ PYTHON ?= python
 # A PublicDataToolkit checkout. Or `pip install -e $(PDT)` and run `pdt check`.
 PDT ?= ../PublicDataToolkit
 
-.PHONY: build views check
+.PHONY: download build views check
+
+## Fetch the sources into data/raw. Read the publisher's terms first, then: make download ARGS=--accept-terms
+download:
+	PYTHONPATH=$(PDT)/lib $(PYTHON) scripts/download.py $(ARGS)
 
 ## Build metadata records from data/raw (build/build_records.py writes build/report.md)
 build:
