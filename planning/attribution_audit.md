@@ -88,7 +88,12 @@ After each change: rebuild, `make views`, `pdt check`.
 | Repo | Status |
 |---|---|
 | pdt-chicago-crimes | **done**, `f60f6fe`: `Claude (PublicDataToolkit Task 33)`; rebuilt; 0 failures |
-| pdt-fars, pdt-anes-cdf, pdt-nsfg | sent to yellow, who holds them for Task 43 |
+| pdt-fars | **done** by yellow, `d03412e`: `Claude (PublicDataToolkit Tasks 5 and 13)` |
+| pdt-anes-cdf | **done** by yellow, `65f3463`: `Claude (PublicDataToolkit Task 5)`; VCF0009z's availability `Claude (PublicDataToolkit Task 17)`; " for Allen Downey" dropped from the corrections |
+| pdt-nsfg | **done** by yellow, `cff7abd`: 2022-2023 `Claude (PublicDataToolkit Task 5)`; 2017-2019 `Claude (PublicDataToolkit Task 22)` |
+| the template | **done**, `8ec956a`: `build/slice.yaml` starts with `author:` empty, the stub's build stops until it's filled, and instructions 03 and 04 say so |
 | pdt-gss | sent to blue, for after Task 26 |
 | pdt-brfss | sent to green, before its first commit |
-| pdt-cps-asec, pdt-yrbss | already name Claude; dropping " for Allen Downey" is optional (sent to yellow and purple) |
+| pdt-cps-asec, pdt-yrbss | already name Claude; yellow drops " for Allen Downey" in CPS after the coordinator's terms edit; optional for YRBSS (purple) |
+
+Re-run of the inventory after these fixes: hand facts naming "Allen Downey" alone remain only in pdt-gss (101, with blue) and pdt-brfss (157, with green).

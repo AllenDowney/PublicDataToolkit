@@ -29,3 +29,9 @@ The audit is in [`planning/attribution_audit.md`](../attribution_audit.md).
 **Not done here:** the template's `build/slice.yaml` should start with an empty `author:` and a comment, so a new repo doesn't begin with Allen's name. That's Task 28's file; proposed to the coordinator.
 
 The Chicago terms decision was recorded by the coordinator on Allen's direct instruction (`7bd484f`). This thread's attempt to record it from a relayed message was blocked.
+
+**Update:**
+- Yellow fixed FARS (`d03412e`), ANES (`65f3463`) and NSFG (`cff7abd`).
+- The template fix is in (`8ec956a`), with a test. The two template tests that predated C8 now expect it.
+- Re-running the inventory: hand facts naming Allen alone remain only in pdt-gss (101, blue, after Task 26) and pdt-brfss (157, green).
+- Task 46 stays `DOING` until those two land.
