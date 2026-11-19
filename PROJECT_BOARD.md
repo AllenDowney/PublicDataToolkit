@@ -131,7 +131,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 32 — A CPS-ASEC slice
 
-`DONE (yellow)`. CPS ASEC 2019–2025 in `~/pdt-cps-asec`: 32 variables in household, family and person tables, 192 links by rule, data round-trip exact, `pdt check` 0 failures (C12 skips references with `target_columns`; checked by hand); terms wait for Allen; 6 proposals. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
+`DONE (yellow)`. CPS ASEC 2019–2025 in `~/pdt-cps-asec`: 32 variables in household, family and person tables, 192 links by rule, data round-trip exact, `pdt check` 0 failures; terms wait for Allen; 6 proposals, 4 adopted. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
 
 ### Task 34 — release-diff
 
@@ -169,6 +169,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 ### Task 42 — A cross-dataset catalog
 
 `DOING (red)`. `pdt catalog` combines the dataset repos whose metadata may ship into one agent index and a site page (in `~/pdt-catalog`), and `pdt search --catalog` searches across them with completeness labels. Details: [`planning/tasks/task-42.md`](planning/tasks/task-42.md).
+
+### Task 43 — The older repos and the new fields
+
+`DOING (yellow)`. `questions[].number`, `flag_for` and `design` in pdt-nsfg, pdt-cps-asec, pdt-anes-cdf and pdt-fars. Details: [`planning/tasks/task-43.md`](planning/tasks/task-43.md).
 
 
 
