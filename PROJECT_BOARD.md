@@ -21,6 +21,7 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 - **Task 16:** data-dict export: `export/data-dict/` in all four dataset repos, valid under data-dict 0.0.3, with counted losses.
 
 **Doing**
+- **Task 18:** `download.py` and the data release. `DOING (views + site)`
 - **Task 1:** The plan. [`planning/plan.md`](planning/plan.md); remaining decisions in plan §10.
 - **Task 5:** The snake_case spike.
   - GSS: 50 variables (`pdt-gss`).
@@ -35,7 +36,6 @@ Started at the snake_case hackathon, November 19–20, 2026. Background is in [`
 **To do, ready for a second thread** (see [Working in parallel](#working-in-parallel))
 - **Task 13:** FARS, continued: the PARKWORK table, history across years, a second release. `DOING (fars)`
 - **Task 17:** Data checks C3–C5 in `pdt check`, using the common format.
-- **Task 18:** `download.py` and the data-release workflow.
 - **Task 19:** `extract.py`, the extract builder.
 - **Task 20:** ANES codebook errors: verify and record as corrections. `DONE (anes-errata)`; report sent.
 - **Task 21:** GSS follow-ups: the 39 variables missing from gssrdoc, release notes, pinning gssrdoc. `DONE` (gssrdoc 0.9 pinned; 7224r3 added; r3→r3a links)
@@ -558,7 +558,7 @@ They're skipped, with a notice, when the parquet files are absent.
 
 ## Task 18 — `download.py` and the data release
 
-**Status:** `TODO` — ready for a second thread
+**Status:** `DOING (views + site)`
 
 Part of Task 11. A standard `scripts/download.py` for dataset repos:
 - it reads `sources.yaml`;
