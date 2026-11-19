@@ -52,7 +52,11 @@ def test_fresh_repo_fails_only_on_the_unfetched_source(tmp_path):
     assert run([sys.executable, "build/build_records.py"], repo).returncode == 0
     out = pdt_check(repo).stdout
     failures = [line for line in out.splitlines() if line.startswith("FAIL")]
-    assert failures == ["FAIL   C6: source testdata-codebook has no sha256 or fetched_on"], out
+    # C8 (Task 31): a fresh repo has no generated views yet.
+    assert failures == ["FAIL   C6: source testdata-codebook has no sha256 or fetched_on",
+                        "FAIL   C8: agent/ hasn't been generated; run `make views`",
+                        "FAIL   C8: docs/ hasn't been generated; run `make views`",
+                        "FAIL   C8: export/data-dict/ hasn't been generated; run `make views`"], out
     dataset = yaml.safe_load((repo / "dataset.yaml").read_text())
     assert dataset["title"] == "Test Data: A Survey"          # quoted, despite the colon
     assert {dataset["terms"][k] for k in ("data", "documentation", "metadata")} == {"unknown"}
@@ -69,6 +73,7 @@ def test_repo_passes_once_source_is_fetched_and_terms_decided(tmp_path):
     dataset["terms"].update(data="ship", documentation="ship", metadata="ship",
                             llm_processing="allowed", reviewed_by="Test", reviewed_on="2026-11-19")
     (repo / "dataset.yaml").write_text(yaml.safe_dump(dataset, sort_keys=False))
+    assert run([sys.executable, "-m", "pdt", "views", "."], repo).returncode == 0     # C8
     result = pdt_check(repo)
     assert result.returncode == 0, result.stdout
 
@@ -89,3 +94,24 @@ def test_download_check_runs_without_network(tmp_path):
     # pdt.download's business, not the template's.
     assert result.returncode in (0, 1) and "Traceback" not in result.stderr, result.stderr
     assert "testdata-codebook" in result.stdout
+
+
+def test_hand_facts_need_a_real_author(tmp_path):
+    """slice.yaml starts with author empty (Task 46: one copied author named Allen on 599 facts
+    agents made); the build stops before writing a hand fact without one."""
+    import importlib.util
+    repo = render(tmp_path / "pdt-testdata")
+    spec = yaml.safe_load((repo / "build" / "slice.yaml").read_text())
+    assert spec["author"] is None and spec["date"] is None
+    assert "Claude (PublicDataToolkit Task 35)" in (repo / "build" / "slice.yaml").read_text()
+    assert run([sys.executable, "build/build_records.py"], repo).returncode == 0   # no hand facts yet
+    module = importlib.util.spec_from_file_location("build_records", repo / "build" / "build_records.py")
+    build = importlib.util.module_from_spec(module)
+    module.loader.exec_module(build)
+    with pytest.raises(SystemExit, match="fill in `author`"):
+        build.hand_origin(spec)
+    filled = dict(spec, author="Claude (PublicDataToolkit Task 99)", date="2026-11-19")
+    assert build.hand_origin(filled) == {"origin": "hand", "author": "Claude (PublicDataToolkit Task 99)",
+                                         "date": "2026-11-19"}
+    record = build.build_variable("q1", {"measure": "ordinal"}, {}, "2024", filled)
+    assert record["provenance"]["fields"]["measure"]["author"] == "Claude (PublicDataToolkit Task 99)"

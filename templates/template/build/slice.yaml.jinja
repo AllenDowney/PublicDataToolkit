@@ -1,6 +1,13 @@
 # The variables to build, and facts the sources don't give (origin: hand).
 # Edited by hand; read by build/build_records.py.
 release: {{ release_id | tojson }}
+# Who makes the hand-entered judgments in this file (STANDARD.md §3, origin: hand):
+# a person, or the agent and its task, e.g. "Claude (PublicDataToolkit Task 35)".
+# Never a person who didn't make or check them. If several people or agents add
+# entries, name each, and say in a comment which entries are whose. The build
+# stops while author is empty and a hand fact is written.
+author:
+date:
 # Start with 30-50 variables that include the hard cases: a battery, an item
 # asked on only some forms, several wordings, several kinds of missing codes,
 # and anything the publisher has corrected (instructions/03-parse-documentation.md).

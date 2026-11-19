@@ -57,7 +57,16 @@ def read_data(names):
 
 # ---------------------------------------------------------------- build
 
-def build_variable(name, spec, entry, release):
+def hand_origin(slice_spec):
+    """The origin of a hand-entered fact: build/slice.yaml's author and date (STANDARD.md §3).
+    The author is whoever made the judgment, a person or an agent and its task."""
+    if not slice_spec.get("author") or not slice_spec.get("date"):
+        raise SystemExit("build/slice.yaml: fill in `author` (who made its judgments: a person, or "
+                         "\"Claude (PublicDataToolkit Task N)\") and `date` before writing hand facts")
+    return {"origin": "hand", "author": str(slice_spec["author"]), "date": str(slice_spec["date"])}
+
+
+def build_variable(name, spec, entry, release, slice_spec):
     """One record (STANDARD.md §4). Every field not from the record's source gets its origin."""
     record = {"dataset": DATASET, "release": release, "name": name}
     # record["label"] = ...; record["questions"] = [...]; record["values"] = [...]
@@ -66,7 +75,7 @@ def build_variable(name, spec, entry, release):
         record["measure"] = spec["measure"]
     record["provenance"] = {
         "record": {"origin": "publisher", "source": "TODO"},
-        "fields": {"measure": {"origin": "hand", "author": "TODO", "date": "TODO"}} if spec.get("measure") else {},
+        "fields": {"measure": hand_origin(slice_spec)} if spec.get("measure") else {},
     }
     return record
 
@@ -109,7 +118,7 @@ def main():
                    f"- In the documentation but not the data: {missing or 'none'}", ""]
         to_look_at = []
         for name in names:
-            rec = build_variable(name, spec["variables"][name] or {}, docs[name], release)
+            rec = build_variable(name, spec["variables"][name] or {}, docs[name], release, spec)
             for code, n in check_codes(rec, codes.get(name, {})):
                 to_look_at.append(f"- `{name}` code {code}: occurs {n} times, not documented")
             extra, absent = check_availability(rec, counts.get(name, {}))

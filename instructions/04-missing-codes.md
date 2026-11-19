@@ -11,7 +11,7 @@ Decide which codes are missing in this order (§4.2), and record the origin of e
 1. **The publisher marks them.** The ANES codebook has a "Missing" section, and NORC has reserved codes. `origin: publisher`. Keep the publisher's split even when a label looks wrong: ANES VCF0803 code 9, "DK; haven't thought much about it," is listed under Valid, so it's valid.
 2. **The data file marks them.** Stata extended missing values (`.d`, `.i`, `.y`) are missing by construction. `origin: data_file`. The *type* then comes from the label, by a named rule (`gss_extended_missing_types`).
 3. **A rule over labels,** only when neither of the above exists. The NSFG codebook lists "Refused 8", "Don't know 9" and "Inapplicable ." as ordinary rows, so the rule `nsfg_missing_from_labels` types them. FARS is similar (`fars_missing_from_labels`).
-4. **A person** adds what the others miss. `origin: hand`.
+4. **A person or an agent** adds what the others miss. `origin: hand`, with the real author named (STANDARD.md §3).
 
 When many codes share an origin, set it once in `provenance.codes` (§4.2). That made the GSS records 13% smaller.
 
