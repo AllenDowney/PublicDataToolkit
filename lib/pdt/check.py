@@ -44,6 +44,7 @@ class Repo:
     groups: list
     links: list
     corrections: list
+    histories: list
     annotations: list
     derived: list
 
@@ -68,6 +69,7 @@ class Repo:
             groups=read_jsonl(meta / "groups.jsonl"),
             links=read_jsonl(meta / "links.jsonl"),
             corrections=read_jsonl(meta / "corrections.jsonl"),
+            histories=read_jsonl(meta / "histories.jsonl"),
             annotations=[a for p in sorted((meta / "annotations").glob("*.jsonl")) for a in read_jsonl(p)],
             derived=[d for p in sorted((meta / "derived").glob("*.jsonl")) for d in read_jsonl(p)],
         )
@@ -131,6 +133,7 @@ def check_schemas(repo, result):
              ("groups.jsonl", "group.schema.json", repo.groups),
              ("links.jsonl", "link.schema.json", repo.links),
              ("corrections.jsonl", "correction.schema.json", repo.corrections),
+             ("histories.jsonl", "history.schema.json", repo.histories),
              ("annotations", "annotation.schema.json", repo.annotations),
              ("derived", "derived.schema.json", repo.derived)]
     files += [(f"releases/{rel}" + (f"/{tab}" if tab else ""), "variable.schema.json", recs)
@@ -141,6 +144,16 @@ def check_schemas(repo, result):
                 where = "/".join(map(str, e.absolute_path)) or "(record)"
                 name = record.get("name") or record.get("id") or i
                 result.fail("C1", f"{label} {name}: {where}: {e.message[:200]}")
+    # Rules for histories the schema can't express: unique ids, one code per period.
+    ids = [h.get("id") for h in repo.histories]
+    for dupe in sorted({i for i in ids if ids.count(i) > 1}):
+        result.fail("C1", f"histories.jsonl: duplicate id {dupe}")
+    for h in repo.histories:
+        n = len(h.get("periods", []))
+        for a in h.get("attributes", []):
+            if len(a.get("codes", [])) != n:
+                result.fail("C1", f"histories.jsonl {h.get('id')}: attribute {a.get('label')!r} has "
+                                  f"{len(a.get('codes', []))} codes for {n} periods")
     # A rule the schema can't express: every missing or unresolved code has an origin,
     # its own or the record's provenance.codes default.
     for rel, ts in repo.tables.items():

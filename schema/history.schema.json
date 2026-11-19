@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AllenDowney/PublicDataToolkit/schema/history.schema.json",
+  "title": "Code history",
+  "description": "How one variable's codes changed across waves, as the publisher documents it in multi-year documentation (e.g. FARS's code matrices by year range). One per line in metadata/histories.jsonl. Optional; provisional (STANDARD.md §5.4, §10).",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique in the file: <table>/<name>, or <name> when the dataset has no tables.",
+      "type": "string",
+      "minLength": 1
+    },
+    "table": { "$ref": "common.schema.json#/$defs/id" },
+    "name": {
+      "description": "The variable's current name (as in the latest release that has it).",
+      "$ref": "common.schema.json#/$defs/name"
+    },
+    "element": {
+      "description": "The publisher's id for the documentation entry, e.g. FARS element C25. Histories that share an element come from one entry with several names.",
+      "type": "string"
+    },
+    "label": { "description": "The entry's title, verbatim.", "type": "string" },
+    "names": {
+      "description": "The names the variable had, with the waves each applies to (e.g. HARM_EV, then PHARM_EV).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "$ref": "common.schema.json#/$defs/name" },
+          "waves": { "$ref": "#/$defs/span" }
+        },
+        "required": ["name", "waves"],
+        "additionalProperties": false
+      }
+    },
+    "periods": {
+      "description": "The publisher's periods, in order, in the units of dataset.yaml's wave dimension. An open-ended last period has no `to`.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/span" }
+    },
+    "attributes": {
+      "description": "One per row of the publisher's matrix: a label, verbatim, and its code in each period (null where the publisher shows none). pdt check requires one code per period.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string" },
+          "codes": {
+            "type": "array",
+            "items": { "anyOf": [{ "$ref": "common.schema.json#/$defs/code" }, { "type": "null" }] }
+          }
+        },
+        "required": ["label", "codes"],
+        "additionalProperties": false
+      }
+    },
+    "origin": {
+      "description": "Where the matrix comes from: the publisher's documentation, with its location (page).",
+      "$ref": "common.schema.json#/$defs/origin"
+    },
+    "note": { "type": "string" }
+  },
+  "required": ["id", "name", "names", "periods", "attributes", "origin"],
+  "additionalProperties": false,
+  "$defs": {
+    "span": {
+      "type": "object",
+      "properties": {
+        "from": { "$ref": "common.schema.json#/$defs/wave" },
+        "to": { "$ref": "common.schema.json#/$defs/wave" }
+      },
+      "required": ["from"],
+      "additionalProperties": false
+    }
+  }
+}

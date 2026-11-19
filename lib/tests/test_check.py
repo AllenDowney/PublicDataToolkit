@@ -252,3 +252,31 @@ def test_conditional_reference(tmp_path):
     rel["tables"][2]["references"] = [{"columns": ["CASEID"], "table": "female", "when": {"column": "NOPE", "in": [1]}}]
     assert any("condition column NOPE" in f for f in run(make_tabled_repo(tmp_path, dataset=dict(TABLED_DATASET, releases=[rel]))).failures)
 
+
+# ------------------------------------------------------------- histories
+
+HISTORY = {"id": "q1", "name": "q1", "names": [{"name": "q1", "waves": {"from": 1975}}],
+           "periods": [{"from": 1975, "to": 2017}, {"from": 2018}],
+           "attributes": [{"label": "Unknown", "codes": [9, None]},
+                          {"label": "Reported as Unknown", "codes": [None, 9]}],
+           "origin": {"origin": "publisher", "source": "cb", "location": "p. 78"}}
+
+
+def test_history_valid(tmp_path):
+    root = make_repo(tmp_path)
+    write_jsonl(root / "metadata" / "histories.jsonl", [HISTORY])
+    assert run(root).ok
+
+
+def test_history_codes_must_match_periods(tmp_path):
+    root = make_repo(tmp_path)
+    bad = dict(HISTORY, attributes=[{"label": "Unknown", "codes": [9]}])
+    write_jsonl(root / "metadata" / "histories.jsonl", [bad, HISTORY])
+    assert any("1 codes for 2 periods" in f for f in failed(run(root), "C1"))
+
+
+def test_history_ids_unique(tmp_path):
+    root = make_repo(tmp_path)
+    write_jsonl(root / "metadata" / "histories.jsonl", [HISTORY, HISTORY])
+    assert any("duplicate id" in f for f in failed(run(root), "C1"))
+
