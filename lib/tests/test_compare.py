@@ -13,8 +13,13 @@ from pdt.compare import compare_text, is_change, norm, strip_refs
     ("IC-9 How important is religion", "IC-7 How important is religion", "reference_only"),
     ("R's age at interview", "R's age at interview (FC A-2b)", "reference_only"),
     ("JB-4 Attendance", "JB-3 attendance", "reference_only"),
+    ("R's age at interview", "R's age at interview (Computed in FC A-2b)", "reference_only"),
+    ("Current religious affiliation (RECODE)", "Current religious affiliation", "reference_only"),
+    ("Formal (legal) marital status  (RECODE)", "Formal (legal) marital status relative to opposite-sex spouses",
+     "changed"),
     ("Whether R was ever married", "Ever married to an opposite-sex spouse (computed in FC A-17)", "changed"),
     ("15 years", "15", "changed"),
+    ("since covid-19", "since covid-20", "changed"),
     (None, "", "same"),
 ])
 def test_compare_text(a, b, how):

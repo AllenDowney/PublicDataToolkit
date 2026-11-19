@@ -129,3 +129,27 @@ def test_merge_candidate(tmp_path):
     t = diff.diff(Repo.load(root), "r1", "r2")["tables"][0]
     assert t["merge_split_candidates"] == [{"kind": "merge", "from": "strvbiasy", "to": "strvbias",
                                             "score": t["merge_split_candidates"][0]["score"]}]
+
+
+def test_codes_in_range_and_without_cases(tmp_path):
+    dataset = dict(DATASET, releases=[
+        {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
+        {"id": "r2", "label": "R2", "status": "current", "sources": ["cb"]}])
+    age_a = rec("r1", "age", "Age", [V(15, "15", n=100)])
+    age_a["valid_range"] = {"min": 15, "max": 50}
+    age_b = rec("r2", "age", "Age", [V(15, "15", n=90), V(49, "49", n=80)])
+    order_a = rec("r1", "order", "Order", [V(1, "1", n=3000), V(2, "2", n=2000)])
+    order_b = rec("r2", "order", "Order", [V(1, "1", n=2500), V(2, "2", n=1500), V(3, "3", n=1)])
+    stat_a = rec("r1", "stat", "Status", [V(1, "Married", n=1000), V(6, "Never married", n=2800)])
+    stat_b = rec("r2", "stat", "Status", [V(1, "Married", n=1100)])
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "variables.jsonl", [age_a, order_a, stat_a])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl", [age_b, order_b, stat_b])
+    plain = entries(diff.diff(Repo.load(root), "r1", "r2"))
+    assert plain["age"]["relations"] == ["same_item"]                          # 49 is in r1's valid range
+    assert plain["age"]["changes"]["codes"]["in_other_range"][0]["code"] == 49
+    assert plain["order"]["relations"] == ["codes_changed"]
+    assert plain["order"]["changes"]["codes"]["added"] == [{"code": 3, "label": "3", "kind": "valid", "n": 1}]
+    omitted = entries(diff.diff(Repo.load(root), "r1", "r2", omitted_codes_have_no_cases=True))
+    assert omitted["order"]["relations"] == ["same_item"]                      # 1 case: zero in r1 is chance
+    assert omitted["stat"]["relations"] == ["codes_changed"]                   # 2,800 cases can't vanish by chance

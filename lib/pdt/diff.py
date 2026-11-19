@@ -27,6 +27,17 @@ With --proposals DIR it also writes, for review:
   (WEATHER's Unknown, 9 to 99) is one row, and a code whose meaning changes (LGT_COND 9,
   Unknown to Reported as Unknown) is two.
 
+Codes on one side only are explained, when the records allow, instead of counted as
+changes: a code inside the other release's valid_range (NSFG 2017-2019 prints AGE_R
+49 and 50 as a range row, "49-50") is `in_other_range`. With --omitted-codes-have-no-cases,
+for documentation that lists only codes that occur (the NSFG's codebooks), a code on one
+side only is `no_cases_in_other` when its absence is plausible as chance: it has a count
+`n`, and n scaled to the other release's total for the variable is under EXPECTED_MAX.
+PREGORDR 15 (1 case) passes; MARSTAT 6 "Never been married" (2,820 cases in 2017-2019,
+gone from 2022-2023's coding) doesn't, so a recoding still reads as codes changed.
+Added and dropped codes show their `n` (cases, as the codebook prints them) when the
+records have it.
+
 It reads the source records as published (corrections are listed, not applied) and
 never writes into metadata/.
 """
@@ -44,6 +55,7 @@ from .compare import compare_text, norm
 RULE = "release_diff"
 RULE_VERSION = "0.1"
 RENAME_THRESHOLD = 0.6
+EXPECTED_MAX = 5      # P(0 cases | Poisson mean 5) is under 1%
 
 
 def question(rec):
@@ -57,17 +69,45 @@ def code_key(code):
     return ("n", float(code))
 
 
-def code_changes(a, b):
+def in_range(code, record):
+    vr = record.get("valid_range") or {}
+    lo, hi = vr.get("min"), vr.get("max")
+    return (not isinstance(code, str) and isinstance(lo, (int, float)) and isinstance(hi, (int, float))
+            and lo <= code <= hi)
+
+
+def code_entry(v):
+    out = {"code": v["code"], "label": v.get("label"), "kind": v.get("kind")}
+    if "n" in v:
+        out["n"] = v["n"]
+    return out
+
+
+def code_changes(a, b, omitted_codes_have_no_cases=False):
     """Differences between two value lists, as a dict of lists."""
     va = {code_key(v["code"]): v for v in a.get("values") or []}
     vb = {code_key(v["code"]): v for v in b.get("values") or []}
-    out = {"added": [], "dropped": [], "relabeled": [], "relabeled_text_only": [], "kind_changed": []}
+    out = {"added": [], "dropped": [], "in_other_range": [], "no_cases_in_other": [],
+           "relabeled": [], "relabeled_text_only": [], "kind_changed": []}
+    totals = [sum(v.get("n") or 0 for v in r.get("values") or []) for r in (a, b)]
+
+    def plausibly_absent(v, side):
+        """Its count, scaled to the other release, is small enough that zero cases there is chance."""
+        if "n" not in v or not all(totals):
+            return False
+        mine, other = (totals[1], totals[0]) if side == "added" else (totals[0], totals[1])
+        return v["n"] * other / mine < EXPECTED_MAX
     for k in sorted(set(va) | set(vb), key=lambda k: (k[0], k[1])):
         x, y = va.get(k), vb.get(k)
-        if x is None:
-            out["added"].append({"code": y["code"], "label": y.get("label"), "kind": y.get("kind")})
-        elif y is None:
-            out["dropped"].append({"code": x["code"], "label": x.get("label"), "kind": x.get("kind")})
+        if x is None or y is None:
+            v, other, side = (y, a, "added") if x is None else (x, b, "dropped")
+            entry = code_entry(v)
+            if in_range(v["code"], other):
+                out["in_other_range"].append({**entry, "side": side})
+            elif omitted_codes_have_no_cases and plausibly_absent(v, side):
+                out["no_cases_in_other"].append({**entry, "side": side})
+            else:
+                out[side].append(entry)
         else:
             how = compare_text(x.get("label"), y.get("label"))
             if how != "same":
@@ -81,7 +121,7 @@ def code_changes(a, b):
     return {k: v for k, v in out.items() if v}
 
 
-def compare_pair(a, b):
+def compare_pair(a, b, omitted_codes_have_no_cases=False):
     """Every difference between two records of the same variable."""
     out = {}
     for field, getter in (("label", lambda r: r.get("label")), ("question", question),
@@ -90,7 +130,7 @@ def compare_pair(a, b):
         how = compare_text(getter(a), getter(b))
         if how != "same":
             out[field] = {"how": how, "from": getter(a), "to": getter(b)}
-    codes = code_changes(a, b)
+    codes = code_changes(a, b, omitted_codes_have_no_cases)
     if codes:
         out["codes"] = codes
     if a.get("measure") != b.get("measure"):
@@ -168,7 +208,7 @@ def waves_span(records):
     return {"from": waves[0], "to": waves[-1]} if waves else None
 
 
-def diff(repo, rel_a, rel_b, table=None):
+def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
     """The full comparison, as a dict that serializes to JSON."""
     for rel in (rel_a, rel_b):
         if rel not in repo.tables:
@@ -178,7 +218,8 @@ def diff(repo, rel_a, rel_b, table=None):
         tables = [table]
     result = {"dataset": repo.dataset.get("id"), "from": rel_a, "to": rel_b, "tables": [],
               "corrections": [c["id"] for c in repo.corrections],
-              "rule": RULE, "rule_version": RULE_VERSION, "pdt_version": __version__}
+              "rule": RULE, "rule_version": RULE_VERSION, "pdt_version": __version__,
+              "omitted_codes_have_no_cases": omitted_codes_have_no_cases}
     for tab in tables:
         ra = {r["name"]: r for r in repo.tables[rel_a].get(tab, [])}
         rb = {r["name"]: r for r in repo.tables[rel_b].get(tab, [])}
@@ -194,7 +235,7 @@ def diff(repo, rel_a, rel_b, table=None):
         only_b = [rb[n] for n in rb if n not in paired_b]
         both = []
         for na, nb in pairs:
-            changes = compare_pair(ra[na], rb[nb])
+            changes = compare_pair(ra[na], rb[nb], omitted_codes_have_no_cases)
             entry = {"from": na, "to": nb, "relations": relations(changes), "changes": changes}
             if na != nb:
                 entry["name_case_changed"] = True
@@ -309,9 +350,14 @@ def summary(result):
             for field, v in e["changes"].items():
                 if field == "codes":
                     for kind, items in v.items():
-                        shown = "; ".join(
-                            f"{i['code']} {i.get('label') or ''}".strip() if kind in ("added", "dropped")
-                            else f"{i['code']} {i['from']!r} -> {i['to']!r}" for i in items[:6])
+                        def show(i):
+                            if "from" in i:
+                                return f"{i['code']} {i['from']!r} -> {i['to']!r}"
+                            text = f"{i['code']} {i.get('label') or ''}".strip()
+                            if "n" in i:
+                                text += f" (n={i['n']})"
+                            return text + (f" [{i['side']}]" if "side" in i else "")
+                        shown = "; ".join(show(i) for i in items[:6])
                         more = f" (+{len(items) - 6})" if len(items) > 6 else ""
                         lines.append(f"      codes {kind}: {shown}{more}")
                 elif field == "measure":
@@ -338,11 +384,13 @@ def main(argv=None):
     parser.add_argument("release_b")
     parser.add_argument("--table", help="only this table")
     parser.add_argument("--json", action="store_true", help="print the full comparison as JSON")
+    parser.add_argument("--omitted-codes-have-no-cases", action="store_true",
+                        help="the documentation lists only codes that occur (as the NSFG codebooks do)")
     parser.add_argument("--proposals", metavar="DIR",
                         help="write proposed links.jsonl and histories.jsonl here, for review")
     args = parser.parse_args(argv)
     repo = Repo.load(args.path)
-    result = diff(repo, args.release_a, args.release_b, args.table)
+    result = diff(repo, args.release_a, args.release_b, args.table, args.omitted_codes_have_no_cases)
     print(json.dumps(result, indent=1, ensure_ascii=False) if args.json else summary(result))
     if args.proposals:
         n_links, n_hist = write_proposals(repo, result, args.proposals)

@@ -7,7 +7,9 @@
   2017-2019 codebook writes "NEVER MARRIED" where 2022-2023 writes "Never married".
 - `reference_only`: equal once questionnaire item references are removed as well:
   "IC-9 How important..." vs "IC-7 How important...", "R's age at interview" vs
-  "R's age at interview (FC A-2b)". Item numbers move with the questionnaire's layout.
+  "R's age at interview (FC A-2b)" or "(Computed in FC A-2b)". Item numbers move with
+  the questionnaire's layout. A parenthesized variable-type marker, "(RECODE)" as the
+  NSFG's 2017-2019 labels have it, is removed too: the record's variable_type holds it.
 
 Neither is a change of meaning. Rules that write links (`same_item` vs `labels_changed`)
 and `pdt diff` use these classes, so they agree on what counts as a change.
@@ -16,7 +18,9 @@ and `pdt diff` use these classes, so they agree on what counts as a change.
 import re
 
 DASHES = re.compile(r"[‐-―−]")
-ITEM_REF = re.compile(r"\(?\b(?:[A-Z]{1,3} )?[A-Z]{1,3}-\d+[a-z]?\b\)?")
+ITEM_REF = re.compile(r"\((?i:computed in )?(?:[A-Z]{1,3} )?[A-Z]{1,3}-\d+[a-z]?\)"
+                      r"|\b(?:[A-Z]{1,3} )?[A-Z]{1,3}-\d+[a-z]?\b"
+                      r"|\((?i:recode|computed|raw)\)")
 
 
 def norm(text):
