@@ -23,7 +23,7 @@ from urllib.parse import quote
 from . import __version__
 from .check import Repo
 from .search import Index
-from .views import inputs_hash, origin_text, release_order, sort_key, wave_list, wave_summary, when_text
+from .views import inputs_hash, natural, origin_text, release_order, sort_key, wave_list, wave_summary, when_text
 
 DIRECTORY = "docs"
 
@@ -237,6 +237,13 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                 body.append(f"<p>{esc(' '.join(t['description'].split()))}</p>")
         if r.get("sources"):
             body.append(dl([("Sources", ", ".join(f"<code>{esc(s)}</code>" for s in r["sources"]))]))
+        if r.get("revisions"):
+            body.append("<h2>Revisions</h2><p>The publisher reissued this release's files without "
+                        "a new release.</p>" + table(
+                            ["Date", "What changed", "Source"],
+                            [[esc(v["date"]), esc(" ".join(v["description"].split())),
+                              f"<code>{esc(v['source'])}</code>" if v.get("source") else ""]
+                             for v in r["revisions"]]))
         rows = []
         for rec in recs:
             key = (r["id"], tab, rec["name"])
@@ -530,9 +537,15 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         rows = []
         for k, fields in changed:
             for i, f in enumerate(fields):
-                rows.append([name(new, k) if i == 0 else "", esc(f), show(a[k], f), show(b[k], f)])
+                first = name(new, k) if i == 0 else ""
+                if f == "values":
+                    diff = code_diff(a[k].get("values") or [], b[k].get("values") or [])
+                    rows.append([first, "codes", '<ul class="diff">' + "".join(
+                        f"<li>{d}</li>" for d in diff) + "</ul>"])
+                else:
+                    rows.append([first, esc(f), f"{show(a[k], f)}<br>→ {show(b[k], f)}"])
         body.append(f"<h2>Changed ({len(changed)})</h2>" + table(
-            ["Variable", "Field", esc(old), esc(new)], rows))
+            ["Variable", "Field", f"{esc(old)} → {esc(new)}"], rows))
         self.page(here, f"Changes from {old} to {new}", "\n".join(body))
 
     def search_index(self):
@@ -545,6 +558,39 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
 
 
 # ---------------------------------------------------------------- helpers
+
+def code_diff(old, new):
+    """Code-by-code differences between two value lists, as HTML list items."""
+    def key(v):
+        return (isinstance(v["code"], str), str(v["code"]))
+    a, b = {key(v): v for v in old}, {key(v): v for v in new}
+    out = []
+    for k in sorted(set(a) | set(b), key=lambda k: (k[0], natural_code(k[1]))):
+        x, y = a.get(k), b.get(k)
+        code = f"<code>{esc(k[1])}</code>"
+        if x is None:
+            out.append(f"added {code} {esc(y.get('label'))} <span class=\"origin\">{esc(y.get('kind'))}</span>")
+        elif y is None:
+            out.append(f"removed {code} {esc(x.get('label'))}")
+        else:
+            parts = []
+            if x.get("label") != y.get("label"):
+                parts.append(f"{esc(x.get('label'))} → {esc(y.get('label'))}")
+            if x.get("kind") != y.get("kind") or x.get("missing_types") != y.get("missing_types"):
+                kx = x.get("kind", "") + (f" ({', '.join(x['missing_types'])})" if x.get("missing_types") else "")
+                ky = y.get("kind", "") + (f" ({', '.join(y['missing_types'])})" if y.get("missing_types") else "")
+                parts.append(f"{esc(kx)} → {esc(ky)}")
+            if parts:
+                out.append(f"{code} " + "; ".join(parts))
+    return out or ["order or other code fields changed"]
+
+
+def natural_code(text):
+    try:
+        return (0, float(text), "")
+    except ValueError:
+        return (1, 0.0, text)
+
 
 def availability_line(rec, all_waves, form_label="form"):
     """The agent view's wave summary, with the dataset's word for a form and room to wrap."""
@@ -652,6 +698,7 @@ table.numeric td + td, table.numeric th + th { text-align: right; font-variant-n
 code { font-size: 90%; }
 .origin { color: var(--muted); font-size: 13px; }
 .gap { white-space: nowrap; }
+ul.diff { margin: 0; padding-left: 18px; }
 blockquote { margin: 4px 0 8px; padding: 4px 10px; border-left: 3px solid var(--line);
   color: var(--muted); white-space: pre-wrap; }
 .corrected { background: var(--warn-bg); color: var(--warn-fg); font-size: 12px; padding: 1px 6px;

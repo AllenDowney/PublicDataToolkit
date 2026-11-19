@@ -99,7 +99,7 @@ def test_two_releases_links_and_changes(tmp_path):
     changes = read(root, "changes/r1--r2.html")
     assert "Added (1)" in changes and "q3" in changes
     assert "Removed (1)" in changes and "q2" in changes
-    assert "Changed (1)" in changes and "<td>Question one</td><td>Question one, revised</td>" in changes
+    assert "Changed (1)" in changes and "Question one<br>→ Question one, revised" in changes
     assert "changes/r1--r2.html" in read(root, "index.html")
 
 
@@ -159,3 +159,23 @@ def test_code_history_table(repo_dir):
     assert "<td>Reported as Unknown</td><td>—</td><td>—</td><td><code>9</code></td>" in page
     assert "Q1OLD (1975–1979)" in page
     assert "Code history" not in read(repo_dir, "variables/r1/q2.html")
+
+
+def test_release_revisions(tmp_path):
+    dataset = dict(DATASET, releases=[dict(DATASET["releases"][0], revisions=[
+        {"date": "2019-10-30", "description": "acc_aux file is updated.", "source": "cb"}])])
+    root = make_repo(tmp_path, dataset=dataset)
+    site.build(root)
+    page = read(root, "releases/r1.html")
+    assert "Revisions" in page and "<td>2019-10-30</td><td>acc_aux file is updated.</td>" in page
+
+
+def test_code_diff():
+    old = [{"code": 1, "label": "Yes", "kind": "valid"}, {"code": 9, "label": "Unknown", "kind": "missing",
+            "missing_types": ["unknown"]}, {"code": 3, "label": "Gone", "kind": "valid"}]
+    new = [{"code": 1, "label": "Yes", "kind": "valid"}, {"code": 9, "label": "Reported as Unknown",
+            "kind": "missing", "missing_types": ["unknown"]}, {"code": 7, "label": "New", "kind": "valid"}]
+    assert site.code_diff(old, new) == [
+        "removed <code>3</code> Gone",
+        'added <code>7</code> New <span class="origin">valid</span>',
+        "<code>9</code> Unknown → Reported as Unknown"]

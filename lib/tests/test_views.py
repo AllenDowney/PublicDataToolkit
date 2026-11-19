@@ -324,3 +324,10 @@ def test_release_order_and_scoped_shards(tmp_path):
     assert group["count"] == 2 and "current release (new)" in group["basis"]
     tables = [s for s in manifest["shards"] if s["kind"] == "table"]
     assert [s["filter"] for s in tables] == [{"release": "new"}, {"release": "old"}]
+
+
+def test_release_order_natural():
+    rel = lambda i, s="current": {"id": i, "label": i, "status": s, "sources": ["cb"]}
+    assert views.release_order({"releases": [rel("2024"), rel("2017")]}) == ["2017", "2024"]
+    assert views.release_order({"releases": [rel("r10"), rel("r2")]}) == ["r2", "r10"]
+    assert views.release_order({"releases": [rel("7224r3a"), rel("7224r3", "superseded")]}) == ["7224r3", "7224r3a"]

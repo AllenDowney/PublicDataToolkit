@@ -61,11 +61,16 @@ def tokens(text):
 STATUS_ORDER = {"withdrawn": 0, "superseded": 1, "current": 2}
 
 
+def natural(text):
+    """A sort key that orders digit runs as numbers: 2017 < 2024, 7224r3 < 7224r3a, r2 < r10."""
+    return [(0, int(p), "") if p.isdigit() else (1, 0, p) for p in re.split(r"(\d+)", str(text)) if p]
+
+
 def release_order(dataset):
-    """Release ids oldest first: withdrawn and superseded before current; file order within a status."""
+    """Release ids oldest first: withdrawn and superseded before current, then by id in natural order."""
     releases = dataset.get("releases", [])
-    ranked = sorted(enumerate(releases), key=lambda ir: (STATUS_ORDER.get(ir[1].get("status"), 3), ir[0]))
-    return [r["id"] for _, r in ranked]
+    ranked = sorted(releases, key=lambda r: (STATUS_ORDER.get(r.get("status"), 3), natural(r["id"])))
+    return [r["id"] for r in ranked]
 
 
 def default_scope(dataset):
