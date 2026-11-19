@@ -6,6 +6,7 @@ A filter is a dict; every key given must match (AND):
     table            a table id (scope)
     name             a variable name, case-insensitive
     group            a group id: members of that group
+    subject          a subject group's label, case-insensitive (groups of kind subject)
     topic            a topic annotation value, case-insensitive
     derived          {property: value}, e.g. {"scale_signature": "yes_no"}
     field            {"pointer": "/measure", "equals": "categorical"}
@@ -18,17 +19,15 @@ doesn't choose it:
     complete_by_rule  also derived properties or rule-made groups (rule versions listed)
     approximate       text search, annotations, or model-made facts
 
-Provisional: a topic annotation whose origin is `publisher` or `upstream_package`
-(GSS subjects from gssrdoc, for instance) is treated as a publisher-defined set of
-variables, so a topic filter that uses only such tags is `complete`. STANDARD.md §7
-doesn't say this yet; the proposal is in PROJECT_BOARD.md, Task 14.
+A publisher's subject lists are groups of kind `subject` (STANDARD.md §5.1), so a
+subject filter is `complete` with respect to the publisher's list and the records in
+scope. Topic annotations are never more than `approximate`.
 """
 
 from dataclasses import dataclass, field
 
 LABELS = ["complete", "complete_by_rule", "approximate"]
 SOURCE_ORIGINS = {"publisher", "upstream_package", "data_file", "hand"}
-PUBLISHER_TOPIC_ORIGINS = {"publisher", "upstream_package"}
 
 
 def worst(*labels):
@@ -167,7 +166,8 @@ class Result:
 
 def search(index, filt):
     """Apply a filter to an Index and return a labeled Result."""
-    unknown = set(filt) - {"release", "table", "name", "group", "topic", "derived", "field", "text"}
+    unknown = set(filt) - {"release", "table", "name", "group", "subject", "topic", "derived",
+                         "field", "text"}
     if unknown:
         raise ValueError(f"unknown filter keys: {sorted(unknown)}")
 
@@ -185,10 +185,17 @@ def search(index, filt):
         want = filt["name"].lower()
         preds.append(lambda r, t, rec: rec["name"].lower() == want)
 
-    if "group" in filt:
-        group = index.groups.get(filt["group"])
+    for key in ("group", "subject"):
+        if key not in filt:
+            continue
+        if key == "group":
+            group = index.groups.get(filt["group"])
+        else:
+            want = filt["subject"].lower()
+            group = next((g for g in index.groups.values() if g["kind"] == "subject"
+                          and (g.get("label") or g["id"]).lower() == want), None)
         if group is None:
-            raise ValueError(f"no group {filt['group']!r}")
+            raise ValueError(f"no {key} {filt[key]!r}")
         origin = group["origin"]
         kind = origin["origin"]
         if kind in SOURCE_ORIGINS:
@@ -205,15 +212,8 @@ def search(index, filt):
     if "topic" in filt:
         want = filt["topic"].lower()
         tags = [a for a in index.topics if a["value"].lower() == want]
-        kinds = {a["origin"]["origin"] for a in tags}
-        if tags and kinds <= PUBLISHER_TOPIC_ORIGINS:
-            labels.append("complete")
-            notes.append("topic tags from the publisher's subject list; complete with respect "
-                         "to that list (provisional rule, PROJECT_BOARD.md Task 14)")
-        else:
-            labels.append("approximate")
-            if tags:
-                notes.append(f"topic tags with origins {sorted(kinds)} are annotations")
+        labels.append("approximate")
+        notes.append("topic tags are annotations; a publisher's subjects are `subject` groups")
         preds.append(lambda r, t, rec, tags=tags: any(
             target_matches(a["target"], r, t, rec["name"]) for a in tags))
 

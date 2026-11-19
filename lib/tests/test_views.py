@@ -9,12 +9,13 @@ from pdt import views
 from pdt.check import Repo
 from pdt.cli import main
 from pdt.search import Index, search
-from test_check import DATASET, VARIABLES, make_repo, write_jsonl
+from test_check import DATASET, GROUPS, VARIABLES, make_repo, write_jsonl
 
 UPSTREAM = {"origin": "upstream_package", "source": "cb"}
+SUBJECT = {"id": "subject-opinion", "kind": "subject", "label": "Opinion", "ordered": False,
+           "members": [{"name": "q1"}, {"name": "q2"}], "origin": UPSTREAM}
 TOPICS = [
-    {"target": {"variable": "q1"}, "kind": "topic", "value": "Opinion", "origin": UPSTREAM},
-    {"target": {"variable": "q2"}, "kind": "topic", "value": "Opinion", "origin": UPSTREAM},
+    {"target": {"variable": "q1"}, "kind": "topic", "value": "Views", "origin": UPSTREAM},
     {"target": {"variable": "q2"}, "kind": "topic", "value": "Mood",
      "origin": {"origin": "model", "model": "m", "date": "2026-11-19", "reviewed": False}},
 ]
@@ -24,7 +25,7 @@ DERIVED = [{"target": {"variable": "q1"}, "property": "scale_signature", "value"
 
 @pytest.fixture
 def repo_dir(tmp_path):
-    root = make_repo(tmp_path)
+    root = make_repo(tmp_path, groups=GROUPS + [SUBJECT])
     write_jsonl(root / "metadata" / "annotations" / "topics.jsonl", TOPICS)
     write_jsonl(root / "metadata" / "derived" / "scale_signature.jsonl", DERIVED)
     return root
@@ -43,12 +44,14 @@ def names(result):
     ({"release": "r1"}, "complete", ["q1", "q2"]),
     ({"name": "Q1"}, "complete", ["q1"]),
     ({"group": "battery-q1"}, "complete_by_rule", ["q1", "q2"]),
-    ({"topic": "opinion"}, "complete", ["q1", "q2"]),
+    ({"subject": "opinion"}, "complete", ["q1", "q2"]),
+    ({"group": "subject-opinion"}, "complete", ["q1", "q2"]),
+    ({"topic": "views"}, "approximate", ["q1"]),
     ({"topic": "Mood"}, "approximate", ["q2"]),
     ({"derived": {"scale_signature": "yes_no"}}, "complete_by_rule", ["q1"]),
     ({"field": {"pointer": "/label", "equals": "Question two"}}, "complete", ["q2"]),
     ({"text": "agree"}, "approximate", ["q1"]),
-    ({"topic": "Opinion", "text": "this"}, "approximate", ["q2"]),
+    ({"subject": "Opinion", "text": "this"}, "approximate", ["q2"]),
 ])
 def test_search_labels(repo_dir, filt, label, expected):
     result = search(index_of(repo_dir), filt)
@@ -74,7 +77,9 @@ def test_field_made_by_rule_is_complete_by_rule(tmp_path):
 
 def test_unknown_filter_key(repo_dir):
     with pytest.raises(ValueError):
-        search(index_of(repo_dir), {"subject": "x"})
+        search(index_of(repo_dir), {"topics": "x"})
+    with pytest.raises(ValueError):
+        search(index_of(repo_dir), {"subject": "no such subject"})
 
 
 def test_search_sees_corrected_text(repo_dir):
@@ -181,7 +186,7 @@ def test_wave_summary_all():
 
 def test_cli(repo_dir, capsys):
     assert main(["views", str(repo_dir)]) == 0
-    assert main(["search", str(repo_dir), "--filter", '{"topic": "Opinion"}']) == 0
+    assert main(["search", str(repo_dir), "--filter", '{"subject": "Opinion"}']) == 0
     out = capsys.readouterr().out
     result = json.loads(out[out.index("{"):])
     assert result["completeness"] == "complete" and result["count"] == 2
@@ -192,6 +197,6 @@ GSS = Path(__file__).resolve().parents[3] / "pdt-gss"
 
 @pytest.mark.skipif(not (GSS / "dataset.yaml").exists(), reason="pdt-gss not checked out")
 def test_gss_abortion_items_are_complete():
-    result = search(index_of(GSS), {"topic": "Abortion"})
+    result = search(index_of(GSS), {"subject": "Abortion"})
     assert result.label == "complete"
     assert set(names(result)) >= {"abany", "abdefect", "abnomore", "abhlth", "abpoor", "abrape", "absingle"}
