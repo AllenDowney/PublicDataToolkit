@@ -249,6 +249,31 @@
                         "items": {
                           "type": "string"
                         }
+                      },
+                      "when": {
+                        "description": "Rows the reference applies to, e.g. {\"column\": \"PER_TYP\", \"in\": [1, 2, 9]}: only occupants of vehicles in transport refer to the vehicle table. A table can list several references from the same columns with different conditions.",
+                        "type": "object",
+                        "properties": {
+                          "column": {
+                            "type": "string"
+                          },
+                          "in": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                              "type": [
+                                "integer",
+                                "number",
+                                "string"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "column",
+                          "in"
+                        ],
+                        "additionalProperties": false
                       }
                     },
                     "required": [

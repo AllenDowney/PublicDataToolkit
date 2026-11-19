@@ -42,7 +42,7 @@
       ]
     },
     "missing_type": {
-      "description": "Why a value is missing. One code can carry several types, e.g. GSS NA(m) \"dk, na, iap\". See STANDARD.md §4.",
+      "description": "Why a value is missing. One code can carry several types, e.g. GSS NA(m) \"dk, na, iap\". unknown: the source records the value as unknown (administrative and coded data, e.g. a police report). unspecified: the source marks the code missing but gives no reason (GSS .z \"see codebook\"). See STANDARD.md §4.2.",
       "enum": [
         "dk",
         "refused",
@@ -52,6 +52,8 @@
         "not_asked",
         "not_available",
         "uncodeable",
+        "unknown",
+        "unspecified",
         "other"
       ]
     },

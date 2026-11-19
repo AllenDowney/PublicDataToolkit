@@ -22,6 +22,10 @@
       "description": "The publisher's short label or description, verbatim.",
       "type": "string"
     },
+    "description": {
+      "description": "The publisher's definition or description of the variable, verbatim. For data without questions (administrative, census) this is the main text.",
+      "type": "string"
+    },
     "questions": {
       "description": "Question text, verbatim. Usually one entry. Several entries when the wording differs by wave, form or mode (e.g. ANES VCF0803); each then says where it applies.",
       "type": "array",
@@ -51,6 +55,19 @@
         "weight",
         "text",
         "date"
+      ]
+    },
+    "variable_type": {
+      "description": "How the variable was produced, when the publisher says. response: a direct answer or observation. recode: recoded from one other variable. computed: derived from several. imputation_flag: flags imputed values. weight and design: survey weights and design variables. administrative: paradata or records added by the publisher.",
+      "enum": [
+        "response",
+        "recode",
+        "computed",
+        "imputation_flag",
+        "weight",
+        "design",
+        "administrative",
+        "other"
       ]
     },
     "values": {
@@ -151,12 +168,18 @@
               "universe",
               "availability",
               "notes",
-              "source_location"
+              "source_location",
+              "description",
+              "variable_type"
             ]
           },
           "additionalProperties": {
             "$ref": "common.schema.json#/$defs/origin"
           }
+        },
+        "codes": {
+          "description": "The default origin for this record's missing and unresolved codes. A code without its own origin takes this one; pdt check requires one or the other.",
+          "$ref": "common.schema.json#/$defs/origin"
         }
       },
       "required": [
@@ -251,7 +274,7 @@
           }
         },
         "origin": {
-          "description": "Where the kind and missing types came from. Required for missing and unresolved codes.",
+          "description": "Where the kind and missing types came from. Missing and unresolved codes need an origin, their own or the record's provenance.codes (checked by pdt check).",
           "$ref": "common.schema.json#/$defs/origin"
         }
       },
@@ -271,8 +294,7 @@
           },
           "then": {
             "required": [
-              "missing_types",
-              "origin"
+              "missing_types"
             ]
           },
           "else": {
@@ -281,20 +303,6 @@
                 "missing_types"
               ]
             }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "kind": {
-                "const": "unresolved"
-              }
-            }
-          },
-          "then": {
-            "required": [
-              "origin"
-            ]
           }
         }
       ]

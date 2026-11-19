@@ -141,6 +141,17 @@ def check_schemas(repo, result):
                 where = "/".join(map(str, e.absolute_path)) or "(record)"
                 name = record.get("name") or record.get("id") or i
                 result.fail("C1", f"{label} {name}: {where}: {e.message[:200]}")
+    # A rule the schema can't express: every missing or unresolved code has an origin,
+    # its own or the record's provenance.codes default.
+    for rel, ts in repo.tables.items():
+        for tab, recs in ts.items():
+            for r in recs:
+                default = r.get("provenance", {}).get("codes")
+                for v in r.get("values", []):
+                    if v.get("kind") in ("missing", "unresolved") and "origin" not in v and default is None:
+                        where = rel + (f"/{tab}" if tab else "")
+                        result.fail("C1", f"{where} {r['name']}: code {v['code']} is {v['kind']} but has no origin "
+                                          "and the record has no provenance.codes default")
 
 
 def check_ref(repo, result, what, name, release=None, table=None):
@@ -219,6 +230,9 @@ def check_references(repo, result):
                 if names_here and col not in names_here:
                     result.fail("C2", f"table {r['id']}/{t['id']}: key column {col} has no record")
             for ref in t.get("references", []):
+                when = ref.get("when", {}).get("column")
+                if when and names_here and when not in names_here:
+                    result.fail("C2", f"table {r['id']}/{t['id']}: reference condition column {when} has no record")
                 same = ref.get("dataset", repo.dataset.get("id")) == repo.dataset.get("id") and \
                     ref.get("release", r["id"]) == r["id"]
                 if same and ref["table"] not in table_ids:

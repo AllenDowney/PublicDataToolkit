@@ -218,3 +218,37 @@ def test_tables_correction_with_table(tmp_path):
     assert run(make_tabled_repo(tmp_path, corrections=[good])).ok
     stale = dict(good, original="Married now?")
     assert failed(run(make_tabled_repo(tmp_path, corrections=[stale])), "C7")
+
+
+# ------------------------------------------------------- Task 25 rules
+
+def test_missing_code_needs_an_origin(tmp_path):
+    bare = [{"code": 9, "label": "DK", "kind": "missing", "missing_types": ["dk"]}]
+    bad = edited(VARIABLES, 1, values=bare)
+    assert failed(run(make_repo(tmp_path, variables=bad)), "C1")
+    with_default = edited(VARIABLES, 1, values=bare, provenance={"record": PUBLISHER, "codes": PUBLISHER})
+    assert run(make_repo(tmp_path, variables=with_default)).ok
+
+
+def test_unresolved_code_needs_an_origin(tmp_path):
+    bad = edited(VARIABLES, 1, values=[{"code": -7, "kind": "unresolved"}])
+    assert failed(run(make_repo(tmp_path, variables=bad)), "C1")
+
+
+def test_new_fields_and_missing_types(tmp_path):
+    good = edited(VARIABLES, 1, description="What it measures.", variable_type="recode",
+                  values=[{"code": 99, "label": "Reported as Unknown", "kind": "missing", "missing_types": ["unknown"],
+                           "origin": PUBLISHER},
+                          {"code": ".z", "label": "see codebook", "kind": "missing", "missing_types": ["unspecified"],
+                           "origin": PUBLISHER}])
+    assert run(make_repo(tmp_path, variables=good)).ok
+
+
+def test_conditional_reference(tmp_path):
+    rel = dict(TABLED_DATASET["releases"][0])
+    rel["tables"] = [dict(t) for t in rel["tables"]]
+    rel["tables"][2]["references"] = [{"columns": ["CASEID"], "table": "female", "when": {"column": "PREGORDR", "in": [1]}}]
+    assert run(make_tabled_repo(tmp_path, dataset=dict(TABLED_DATASET, releases=[rel]))).ok
+    rel["tables"][2]["references"] = [{"columns": ["CASEID"], "table": "female", "when": {"column": "NOPE", "in": [1]}}]
+    assert any("condition column NOPE" in f for f in run(make_tabled_repo(tmp_path, dataset=dict(TABLED_DATASET, releases=[rel]))).failures)
+

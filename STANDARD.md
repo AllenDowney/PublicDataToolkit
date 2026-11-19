@@ -70,11 +70,13 @@ Hand edits to source records are not allowed because the next build would silent
 
 Names the dataset and its publisher, records the terms (§8), and lists the releases the repo covers. Each release has an `id`, which is also its directory under `metadata/releases/`, and the list of source files its records were built from.
 
+**Release ids** use the publisher's own name for the release, written lowercase, with no spaces: `7224r3a` for the GSS (from NORC's file name), `20260205` for the ANES (its version date), `2022-2023` for the NSFG (its cycle), `2024` for FARS (its data year). When the publisher has no name for a release, use its date, `YYYYMMDD`.
+
 **Tables.** Some releases have several files: the NSFG has female respondents, male respondents and pregnancies, and FARS has crashes, vehicles and persons. A release like that lists its `tables`. Each table has:
 - an `id`, which is also its directory under the release;
 - a label, and the source files it comes from;
 - the `key` columns that identify a row;
-- `references` to other tables, like foreign keys: a pregnancy's `CASEID` refers to the female respondent table.
+- `references` to other tables, like foreign keys: a pregnancy's `CASEID` refers to the female respondent table. A reference that holds only for some rows names them with `when`: a FARS person's (`ST_CASE`, `VEH_NO`) refers to the vehicle table only `when` `PER_TYP` is an occupant of a vehicle in transport. Columns can have several references, with different conditions and targets.
 
 Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A release with one file lists no tables and keeps its records in `metadata/releases/<release>/variables.jsonl`. A reference can also point to a table in another dataset, such as a code list published separately.
 
@@ -119,7 +121,7 @@ Every repo has the same Makefile targets, so the same commands work everywhere: 
 
 1. **Describe the data; don't analyze it.** Question wording, codes and missing codes belong in the records. "Count agree and strongly agree as 1" does not.
 2. **Keep the publisher's identity.** Names are stored exactly as published, case included. A link between two variables records continuity the publisher asserts (the same GSS name across releases, an MTF crosswalk, a cumulative-file variable built from single-year items), never equivalence we infer.
-3. **Copy text verbatim.** Question text, labels and notes are copied exactly, typos included. A parser may remove layout artifacts: line breaks introduced by page width, hyphenation at line ends, running headers. Anything else that looks wrong is a correction (§5.3), not an edit.
+3. **Copy text verbatim.** Question text, labels and notes are copied exactly, typos included. A parser may remove layout artifacts: line breaks introduced by page width, hyphenation at line ends, running headers. It may also fix an artifact that affects a source throughout, such as gssrdoc's doubled apostrophes, by a named, versioned rule recorded in the field's provenance. Anything that affects one variable is a correction (§5.3), not an edit.
 4. **Leave a field empty rather than guess.** Not every source provides every field, and not every dataset fills every field.
 5. **Store structure as structure.** Lists are lists and objects are objects. Strings like `"[1] yes / [2] no"` or `"1972, 1973, ..."` appear only in generated views.
 6. **Keep source, correction and derivation apart.** Source records hold what the publisher says. Corrections live in `corrections.jsonl`. Derived properties and annotations live in their own files. The library combines them when it builds the views, and the views label which is which.
@@ -149,7 +151,9 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 |---|---|
 | `dataset`, `release`, `name` | Required. Together with `table`, when the release has tables, they identify the record |
 | `label` | The publisher's short label |
+| `description` | The publisher's definition or description, verbatim. For data without questions, such as FARS, this is the main text |
 | `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text` |
+| `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other` |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
 | `values` | Every documented code, valid and missing, in the publisher's order (§4.2) |
@@ -164,7 +168,9 @@ Required fields are few on purpose (rule 4). `pdt check` reports how many record
 
 ### 4.2 Values and missing codes
 
-Each code has `code`, `label`, and `kind`, which is `valid`, `missing` or `unresolved`. A missing code also has `missing_types` and `origin`. An unresolved code has `origin`, whose `note` says what was checked.
+Each code has `code`, `label`, and `kind`, which is `valid`, `missing` or `unresolved`. A missing code also has `missing_types`. Missing and unresolved codes need an `origin`: their own, or the record's default, `provenance.codes`, when many codes share one. For an unresolved code, the origin's `note` says what was checked.
+
+**Labels for one release.** When a release's documentation covers many years, as FARS's 1975–2024 manual does, a label can carry history ("Unknown/Reported as Unknown (Since 2018)"). The record uses the label specific to its release when a source gives one, such as the data file's own label ("Reported as Unknown"), with that source as the values' origin.
 
 Codes are stored as they appear in the data file: numbers as numbers, and Stata extended missing values as strings such as `".d"`.
 
@@ -180,6 +186,8 @@ Codes are stored as they appear in the data file: numbers as numbers, and Stata 
 | `not_asked` | Not asked of this respondent's wave, form or interview | GSS `.y` "not available in this year"; ANES "no Post IW" |
 | `not_available` | Asked, but not released in this file | GSS `.x` "not available in this release" |
 | `uncodeable` | Answered, but couldn't be coded or imputed | GSS `.u`, `.p` |
+| `unknown` | The source records the value as unknown. For administrative and coded data, where no respondent was asked | FARS "Unknown", "Reported as Unknown" |
+| `unspecified` | The source marks the code missing but gives no reason | GSS `.z` "see codebook" |
 | `other` | Anything else; say what in the label | |
 
 **Which codes are missing, in order of preference:**
@@ -273,7 +281,9 @@ Every link names a `source`: a crosswalk, release notes, or a documented naming 
 - `upstream`: whether it has been reported, with a link;
 - the author and date.
 
-Source records keep the original. The library applies corrections when it builds the views, and every view shows that a value was corrected. If the original no longer appears in the record, `pdt check` fails (§9, C7): usually upstream has fixed it, and the correction should be retired.
+**Corrections the publisher prints** in its own documentation, such as the NSFG's margin box "Corrected universe for MFLASTP", aren't errata of ours. They're what the publisher says. The record holds the corrected value, with the publisher as its origin and the box as its location, and keeps the superseded text in `notes`.
+
+Source records keep the original of *our* corrections. The library applies corrections when it builds the views, and every view shows that a value was corrected. If the original no longer appears in the record, `pdt check` fails (§9, C7): usually upstream has fixed it, and the correction should be retired.
 
 ## 6. Derived properties and annotations
 
@@ -300,7 +310,7 @@ All three forms are generated by the shared library from the records above, with
 **For LLMs, `agent/`:**
 
 - `index.md`: what the dataset is, how the shards are organized, and a table of shards with variable counts and approximate token sizes;
-- shards by group, by release and by scale signature, plus annotation-based shards that are labeled as such; each shard small enough to read in full (about 20,000 tokens at most);
+- shards by group, by release and by scale signature, plus annotation-based shards that are labeled as such; each shard small enough to read in full (about 20,000 tokens at most). The JSONL form of a shard may be compact: availability as runs of years by form, and one origin per record when its codes share one. The full records in `metadata/` stay canonical, and the shard's header points to them;
 - each shard in two forms: JSONL, and one line per variable for reading (`name | waves | scale signature | label | question text, truncated`);
 - a skill file telling an agent how to use these, and that every search result must say whether it is `complete`, `complete_by_rule` or `approximate` (below).
 
@@ -311,6 +321,8 @@ All three forms are generated by the shared library from the records above, with
 | `complete` | every record in scope that matches the filter, with nothing else | only fields whose origin is `publisher`, `upstream_package`, `data_file` or `hand`, and groups with those origins |
 | `complete_by_rule` | the same, but the filter also uses derived properties or rule-made groups | the above, plus derived properties and `origin: rule` groups, each with its rule version |
 | `approximate` | anything else: text search, annotations, or a result an agent assembled itself | anything |
+
+When two filters return the same set, as a publisher's subject and a rule-made battery can, report the stronger label: `complete`, then `complete_by_rule`, then `approximate`.
 
 Every result carries what's needed to rerun it: the release or releases in scope, the number of records in scope, the filter as data, and the rule versions used. A `complete` result is correct if rerunning the filter on the same records returns the same set. That can be tested, and the test suite does so. A `complete` label is only as good as the fields it filters on. "Every item on ballot A in 1985" is complete with respect to the recorded availability, which `pdt check` compares with the data (C5).
 
@@ -383,11 +395,10 @@ The spike should try to break these:
 - **One `Group` type** for sections, batteries, modules and forms. A section organizes a document, a battery is questionnaire structure, a module is about administration, and a form is about who got which questions. They may need different fields.
 - **`Link` relations as a flat list.** Identity (`same_item`), change (`renamed`, `wording_changed`) and derivation (`derived_from`) are different kinds of statement. A list lets a pair carry several, but it may not be enough.
 - **Availability as (wave, form, sample, mode, phase).** Tested on GSS ballots and ANES pre/post so far. MTF forms are the next test; an open-portal dataset, which has snapshots rather than waves, is the one after.
-- **Missing types.** The nine types come from GSS and ANES labels, plus `unresolved` as a kind for codes nobody can classify yet. MTF and NSFG may need more, or `other` may turn out to be common.
+- **Missing types.** Eleven types, from the GSS, ANES, NSFG and FARS. `unknown` was added for administrative data and `unspecified` for codes marked missing without a reason. MTF may need more.
 - **Provenance per field rather than per value.** Values and missing codes have their own origin; other fields share one per field. Per-value provenance for question text may turn out to be needed when wordings come from different documents.
 - **Versioned schema paths.** At 1.0, schemas move to `schema/v1/` and their `$id`s include the version, so older versions stay available to `pdt check`.
 - **The common data format** (§8) was adopted after review, but no release has used it yet. MTF and NSFG will test it further.
 - **Tables** (§2.1) were added for the NSFG and FARS and are tested only on toy data so far. Whether `references` are enough to describe code-list tables, such as FARS's or a city portal's, is untested.
-- **Release ids.** The GSS uses `7224r3a` (from NORC's file name) and the ANES uses `20260205` (its release date). There is no rule yet for choosing.
 
 Record what breaks, and why, on the [project board](PROJECT_BOARD.md) under Task 5.

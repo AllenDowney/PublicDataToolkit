@@ -43,32 +43,15 @@ def records(path):
             yield f"{path.name}:{i}", json.loads(line)
 
 
-# Records that must fail, one per rule the schema is meant to enforce.
+# Records that must fail, one per rule the schema is meant to enforce. (A missing or unresolved
+# code without an origin is caught by pdt check, which can see the record's default; see lib/tests.)
 MUST_FAIL = [
-    (
-        "missing code without origin",
-        "variable.schema.json",
-        {
-            "dataset": "x", "release": "r1", "name": "v",
-            "values": [{"code": 9, "label": "DK", "kind": "missing", "missing_types": ["dk"]}],
-            "provenance": {"record": {"origin": "publisher", "source": "cb"}},
-        },
-    ),
     (
         "valid code with missing types",
         "variable.schema.json",
         {
             "dataset": "x", "release": "r1", "name": "v",
             "values": [{"code": 1, "kind": "valid", "missing_types": ["dk"]}],
-            "provenance": {"record": {"origin": "publisher", "source": "cb"}},
-        },
-    ),
-    (
-        "unresolved code without origin",
-        "variable.schema.json",
-        {
-            "dataset": "x", "release": "r1", "name": "v",
-            "values": [{"code": -7, "kind": "unresolved"}],
             "provenance": {"record": {"origin": "publisher", "source": "cb"}},
         },
     ),
