@@ -156,6 +156,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (orange)`. A design, not code: [`planning/code_lists_design.md`](planning/code_lists_design.md). Details: [`planning/tasks/task-38.md`](planning/tasks/task-38.md).
 
+### Task 39 — Library changes from the YRBSS findings
+
+`DOING (purple)`. Library changes from Task 29: `valid_labels` without labels, `read_sas_input`, a warning on name reuse across releases, `not_asked` from availability, and `design` in pdt-yrbss. Details: [`planning/tasks/task-39.md`](planning/tasks/task-39.md).
+
 
 
 ## Working in parallel
