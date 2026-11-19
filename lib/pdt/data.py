@@ -49,6 +49,10 @@ class UnresolvedCodes(UserWarning):
     """A variable has codes whose meaning the documentation doesn't give, or isn't documented."""
 
 
+class InferredClassification(UserWarning):
+    """Codes were classified (as missing, and by type) only because of an `inferred` correction (STANDARD.md §5.3)."""
+
+
 # ------------------------------------------------------------------ codes
 
 
@@ -276,7 +280,7 @@ def _same(a, b):
     return a == b or (isinstance(a, float) and isinstance(b, float) and math.isnan(a) and math.isnan(b))
 
 
-def recode(table, record, unresolved=None, **by_type):
+def recode(table, record, unresolved=None, inferred=None, **by_type):
     """Values with missing codes replaced by type, e.g. recode(t, rec, dk="DK", refused="DK").
 
     A code is replaced only when every one of its missing types is given, with
@@ -287,6 +291,11 @@ def recode(table, record, unresolved=None, **by_type):
     Unresolved codes, and codes the record doesn't list, are never replaced by
     type: pass unresolved= to handle them; otherwise they stay null and a
     warning says how many there are.
+
+    inferred: {code text: [correction ids]} for codes whose kind and types come
+    from an `inferred` correction (record should be the corrected record). When
+    any of them occur, an InferredClassification warning says how many cells,
+    which corrections, and what was done with them (STANDARD.md §5.3).
     """
     name = record["name"]
     values = [None if is_null(v) else v for v in table[name].tolist()]
@@ -321,4 +330,13 @@ def recode(table, record, unresolved=None, **by_type):
             cells.append(unresolved)
         else:
             cells.append(None)
+    for text, ids in sorted((inferred or {}).items()):
+        n = sum(1 for c in codes if c == text)
+        if not n or text not in documented:
+            continue
+        v = documented[text]
+        what = (f"replaced with {replacement[text]!r}" if text in replacement
+                else f"left null as {', '.join(v.get('missing_types', [])) or v['kind']}")
+        warnings.warn(f"{name}: code {text} ({n} values) is {v['kind']} only because of inferred correction(s) "
+                      f"{', '.join(ids)}; {what}", InferredClassification)
     return pd.Series(cells, index=table.index, dtype=object)
