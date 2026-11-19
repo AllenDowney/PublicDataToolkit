@@ -172,8 +172,7 @@ def test_tables_and_waves(tmp_path):
                 [dict(VARIABLES[0], availability=[{"wave": 2006}])])
     views.build(root)
     a = (root / "agent" / "shards" / "table" / "r1-a.txt").read_text()
-    assert "a.q1 | 2000-2004,2008-2010; forms X | yes_no" not in a   # no derived here
-    assert "a.q1 | 2000-2004,2008-2010; forms X | - |" in a
+    assert "a.q1 | all 2000-2004,2008; form X 2010 (not 2006) | - |" in a
     b = (root / "agent" / "shards" / "table" / "r1-b.txt").read_text()
     assert "b.q1 | 2006 |" in b
 
@@ -242,3 +241,13 @@ def test_jsonl_records_are_compact(repo_dir):
     assert "provenance" not in q1
     assert q1["origins"] == {"record": "publisher:cb", "codes": "publisher:cb"}
     assert all("origin" not in v for v in q1["values"])
+
+
+def test_wave_summary_names_gaps_and_forms():
+    waves = [1985, 1986, 1987, 1988, 1989]
+    rec = {"availability": [{"wave": 1985}, {"wave": 1987}, {"wave": 1988, "form": "A"},
+                            {"wave": 1988, "form": "C"}, {"wave": 1989, "form": "A"},
+                            {"wave": 1989, "form": "C"}]}
+    assert views.wave_summary(rec, waves) == "all 1985,1987; form A,C 1988-1989 (not 1986)"
+    rec = {"availability": [{"wave": w} for w in (1985, 1987)]}
+    assert views.wave_summary(rec, waves) == "1985,1987 (not 1986)"
