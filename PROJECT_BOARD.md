@@ -108,7 +108,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 26 — The full GSS release
 
-`DOING (gss)`. The full GSS release: all 6,943 variables. Details: [`planning/tasks/task-26.md`](planning/tasks/task-26.md).
+`DONE (blue)`. All of 7224r3 and 7224r3a in pdt-gss (6,942 + 6,943 records, 6,974 links), plus agent/ and export/. Details: [`planning/tasks/task-26.md`](planning/tasks/task-26.md).
 
 ### Task 27 — Shared derived rules in the library
 
