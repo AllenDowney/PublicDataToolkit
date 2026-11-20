@@ -102,3 +102,39 @@ From the spike's success criterion (plan §13): the structural queries are answe
 ## Changes after the first run
 
 - **2026-11-19, after runs 1-2: expected labels of the structural keys.** The first runs showed that `pdt search` couldn't select on availability (finding 2 in [`RESULTS.md`](RESULTS.md)). The views thread added an `available` filter (df13f6f), so the expected labels changed from `approximate` to `complete` (`gss_ballot_a_1988`) and `complete_by_rule` (`anes_therm_1978`). The items didn't change. Runs 1-2 keep the scores they had, against `approximate`, in their `score.json`; runs 3-4 are scored against the new labels. An agent that picks by reading and says `approximate` is still following the rules, so the scores report the label it gave as well as whether it matches.
+
+## Task 51: the full GSS release (written before any Task 51 run)
+
+**Scope.** Each run uses copies of the repos made with `git archive HEAD`: pdt-gss `cf22b43` (all 6,943 variables of `7224r3a`, plus `7224r3`), pdt-anes-cdf `4027ba5` and pdt-nsfg `2f794be` (still slices), and, for the catalog question, every repo in red's catalog (pdt-catalog `2522621`; pdt-brfss has no git, so it's copied from its working tree). `setup_run.py --repos DIR` points a run at the copies and records the commits in `config.json`. That way, work in progress in a repo can't leak into a run.
+
+**Questions.** Two are reruns, word for word, against the full GSS:
+- `religion_full`: the `religion` question;
+- `gss_ballot_a_1988_full`: the ballot question.
+
+Two are new:
+
+| Id | Kind | Question |
+|---|---|---|
+| `gss_spending_2024` | structural | In the GSS, list every variable asked in 2024 that asks whether we're spending too much, too little or about the right amount on something. |
+| `catalog_sadness` | topic, across datasets | Which datasets ask about sadness or hopelessness, and in which years? List every variable, in any dataset in the catalog, that asks whether or how often the respondent felt sad, depressed, down or hopeless, with the years it was asked. |
+
+`anes_therm_1978` isn't rerun: the ANES CDF repo is unchanged apart from two variables that aren't thermometers.
+
+**Keys.** All four are built by [`keys/build_task51.py`](keys/build_task51.py) from the same copies.
+
+| Key | How it's built | Hits | Neutral | Expected label |
+|---|---|---|---|---|
+| `religion_full` | GSS part: [`keys/full/gss_religion.yaml`](keys/full/gss_religion.yaml), rebuilt from the 0.9 records. One new candidate among the 40 names gssrdoc 0.8.2 lacked, `reltrad16`, is added as a hit. ANES and NSFG parts: as in `religion` | 256 | 327 | `approximate` |
+| `gss_ballot_a_1988_full` | Same rule as before. The year, id, ballot and the design variables in `dataset.yaml` are neutral | 635 | 7 | `complete` |
+| `gss_spending_2024` | Scale signature `spending_3` and availability in 2024 | 27 | 0 | `complete_by_rule` |
+| `catalog_sadness` | Candidates by keyword; decisions by hand by Claude (PublicDataToolkit Task 51), listed in the script. Items match on (dataset, name), ignoring tables | 11 | 33 | `approximate` |
+
+**Scoring.**
+- Names are scored within the current release, `7224r3a`. An answer names variables, not releases, so a variable that is also in `7224r3` counts once.
+- For `catalog_sadness`, `score.py` also reports `waves_exact`: the share of hits found whose reported years equal the key's.
+
+**Unchanged.** Sonnet, two fresh agents per question, the 40,000-token budget, and the `read` and `search` commands.
+
+**Expected difficulty.**
+- The ballot question's line form alone is over 30,000 tokens, so an agent has to rely on `search`.
+- The catalog's own `index.md` uses "sad" and "depress" as its search example. That makes the catalog question easier than a cold one, as with the SKILL.md caveat in RESULTS.md.

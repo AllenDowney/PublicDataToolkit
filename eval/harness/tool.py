@@ -3,6 +3,7 @@
 Usage (through the shims setup_run.py writes):
     read PATH [FIRST LAST]       a file under the sandbox, or lines FIRST..LAST; a directory is listed
     search DATASET FILTER_JSON   pdt search on that dataset's repo
+    search catalog FILTER_JSON   pdt search --catalog across the repos (catalog questions)
 
 Configuration comes from the run's config.json, named by $EVAL_CONFIG:
     sandbox  directory holding <dataset>/agent/
@@ -73,6 +74,12 @@ def do_read(cfg, args):
 
 
 def do_search(cfg, args):
+    if len(args) == 2 and args[0] == "catalog" and cfg.get("catalog"):
+        env = dict(os.environ, PYTHONPATH=cfg["pdt_lib"])
+        proc = subprocess.run([cfg["python"], "-m", "pdt", "search", "--catalog", cfg["catalog"],
+                               "--filter", args[1]], capture_output=True, text=True, env=env)
+        text = proc.stdout if proc.returncode == 0 else "error: " + proc.stderr.strip().splitlines()[-1]
+        return emit(cfg, "search", args, text)
     if len(args) != 2 or args[0] not in cfg["repos"]:
         return emit(cfg, "search", args,
                     f"usage: search DATASET FILTER_JSON; datasets: {', '.join(cfg['repos'])}")

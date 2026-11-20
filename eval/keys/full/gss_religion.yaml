@@ -4,11 +4,11 @@ expected_label: approximate
 scope:
   gss:
     release: 7224r3a
-    variables: 6904
-    source: gssrdoc_full.json in ../pdt-gss/data/raw
+    variables: 6943
+    source: 'pdt-gss cf22b43: metadata/releases/7224r3a, groups.jsonl'
 built_by: eval/keys/full/build_gss_religion.py; hand decisions in its HIT and NEUTRAL lists
 candidates: 762
-publisher_subject_religion: 404
+publisher_subject_religion: 405
 items:
 - dataset: gss
   table: null
@@ -2823,6 +2823,11 @@ items:
 - dataset: gss
   table: null
   name: reltrad
+  status: hit
+  why: affiliation and identity
+- dataset: gss
+  table: null
+  name: reltrad16
   status: hit
   why: affiliation and identity
 - dataset: gss

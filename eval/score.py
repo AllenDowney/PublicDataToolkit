@@ -15,9 +15,13 @@ import yaml
 EVAL = Path(__file__).resolve().parent
 
 
-def key_of(item):
-    table = item.get("table")
+def key_of(item, use_table=True):
+    table = item.get("table") if use_table else None
     return (item["dataset"].lower(), (table or "").lower() or None, item["name"].lower())
+
+
+def waves_of(item):
+    return {str(w) for w in item.get("waves") or []}
 
 
 def load_key(question):
@@ -52,10 +56,20 @@ def score_run(run):
         if (run / "log.jsonl").exists() else []
     answer_path = run / "answer.json"
     answer = json.loads(answer_path.read_text()) if answer_path.exists() else {"items": []}
-    reported = {key_of(i) for i in answer.get("items", [])}
+    # A key with match_on [dataset, name] ignores tables (the catalog question, Task 51).
+    use_table = key.get("match_on") != ["dataset", "name"]
+    key_items = [{**i, "table": i.get("table") if use_table else None} for i in key["items"]]
+    reported = {key_of(i, use_table) for i in answer.get("items", [])}
 
     result = {"run": cfg["run_id"], "question": cfg["question"], "answered": answer_path.exists()}
-    result.update(score_items(key["items"], reported))
+    result.update(score_items(key_items, reported))
+    if any("waves" in i for i in key["items"]):
+        # For each hit found, whether the years reported equal the key's years.
+        got = {key_of(i, use_table): waves_of(i) for i in answer.get("items", [])}
+        found = [i for i in key_items if i["status"] == "hit" and key_of(i) in got]
+        exact = [i for i in found if got[key_of(i)] == waves_of(i)]
+        result["waves_exact"] = ratio(len(exact), len(found))
+        result["waves_wrong"] = sorted(i["name"] for i in found if i not in exact)
     if len(reported) != len(answer.get("items", [])):
         result["duplicates"] = len(answer["items"]) - len(reported)
 
@@ -76,7 +90,7 @@ def score_run(run):
     if len(datasets) > 1:
         result["by_dataset"] = {}
         for ds in datasets:
-            sub = score_items([i for i in key["items"] if i["dataset"] == ds],
+            sub = score_items([i for i in key_items if i["dataset"] == ds],
                               {k for k in reported if k[0] == ds})
             result["by_dataset"][ds] = {k: sub[k] for k in ("recall", "precision", "found", "key_hits")}
     (run / "score.json").write_text(json.dumps(result, indent=1) + "\n")

@@ -1,6 +1,10 @@
-"""Build the religion answer key for the full GSS cumulative file (7224r3a), from gssrdoc.
+"""Build the religion answer key for the full GSS cumulative file (7224r3a).
 
-Usage: python eval/keys/full/build_gss_religion.py [PDT_GSS]
+Usage: python eval/keys/full/build_gss_religion.py [PDT_GSS [COMMIT]] [--undecided]
+
+Reads pdt-gss's committed records for release 7224r3a (gssrdoc 0.9 text, Task 26) and its
+subject groups, at COMMIT (default HEAD), so a key names the exact records it was built from.
+Until Task 51 it read gssrdoc 0.8.2 (gssrdoc_full.json), which documents Release 2.
 
 Method:
 1. Candidates: every gssrdoc variable with the publisher subject Religion, Jews or Prayer In
@@ -15,6 +19,7 @@ The key can miss an on-topic variable that no candidate rule caught; the README 
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -37,13 +42,17 @@ def words(s):
     return s.split()
 
 
+# Decisions: the first reader (Task 23) made these from gssrdoc 0.8.2. When the key moved to
+# the 0.9 records (Task 51), the only new candidate among the 40 names 0.8.2 lacked was
+# reltrad16 (religious tradition at age 16), added as a hit by Claude (PublicDataToolkit Task 51).
+#
 # The respondent's own affiliation or identity (now or when young), attendance or
 # participation, practice, the importance of religion to them, and religious belief or experience.
 HIT = {
     "affiliation and identity": words("""
         relig denom other othjew jew jewaj fund reliten relitena relitenv relitennv
         relig16 denom16 oth16 othjew16 jew16 jew16aj fund16 religkid denkid norelgsp norelgsp16
-        relig_next denom_next jew_next other_next fund_next reltrad denom_7222 denom16_7322
+        relig_next denom_next jew_next other_next fund_next reltrad reltrad16 denom_7222 denom16_7322
         switched switch1 switch2 switch3 switnum switage1 switage2 switwhy1 switwhy2
         religid relid1 relid2 relid3 relidbst cathid charisma evangclx evangcly
         relidesc relidwe relidins relpersn sprtprsn relsprt feelrel"""),
@@ -124,18 +133,37 @@ NEUTRAL = {
 }
 
 
-def load(path):
-    rows = json.load(open(path))
-    return [r[0] if isinstance(r, list) else r for r in rows]
+def git_show(repo, commit, path):
+    return subprocess.run(["git", "-C", str(repo), "show", f"{commit}:{path}"],
+                          capture_output=True, text=True, check=True).stdout
 
 
-def facets(rec, field):
-    return {v for row in json.loads(rec[field] or "[]") for v in row.values()}
+def load(repo, commit):
+    """7224r3a records as {variable, description, question, subjects, modules}."""
+    subjects = {}
+    for line in git_show(repo, commit, "metadata/groups.jsonl").splitlines():
+        g = json.loads(line)
+        if g["kind"] == "subject":
+            for m in g["members"]:
+                subjects.setdefault(m["name"], set()).add(g["label"])
+    out = []
+    for line in git_show(repo, commit, "metadata/releases/7224r3a/variables.jsonl").splitlines():
+        r = json.loads(line)
+        out.append({"variable": r["name"], "description": r.get("label") or r.get("description"),
+                    "question": " ".join(q["text"] for q in r.get("questions", [])),
+                    "subjects": subjects.get(r["name"], set()),
+                    "modules": set(r.get("extensions", {}).get("gss", {}).get("modules", []))})
+    return out
 
 
 def main():
-    repo = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE.parents[3] / "pdt-gss"
-    recs = load(repo / "data/raw/gssrdoc_full.json")
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    undecided = "--undecided" in sys.argv
+    repo = Path(args[0]) if args else HERE.parents[3] / "pdt-gss"
+    commit = subprocess.run(["git", "-C", str(repo), "rev-parse", "--short",
+                             args[1] if len(args) > 1 else "HEAD"],
+                            capture_output=True, text=True, check=True).stdout.strip()
+    recs = load(repo, commit)
     hit = {n: c for c, ns in HIT.items() for n in ns}
     neutral = {n: c for c, ns in NEUTRAL.items() for n in ns}
     assert not set(hit) & set(neutral), set(hit) & set(neutral)
@@ -145,8 +173,8 @@ def main():
     items, n_candidates, religion_subject = [], 0, 0
     for r in recs:
         name = r["variable"]
-        subjects = facets(r, "subject_df_json")
-        candidate = (subjects & SUBJECTS or facets(r, "module_df_json") & MODULES
+        subjects = r["subjects"]
+        candidate = (subjects & SUBJECTS or r["modules"] & MODULES
                      or KEYWORDS.search(f"{r['description'] or ''} {r['question'] or ''}"))
         n_candidates += bool(candidate)
         religion_subject += "Religion" in subjects
@@ -159,11 +187,15 @@ def main():
         elif "Religion" in subjects:
             items.append({"dataset": "gss", "table": None, "name": name, "status": "neutral",
                           "why": "publisher subject Religion, not judged on-topic"})
+        elif candidate and undecided:
+            # Candidates left out; review these when the records change (--undecided).
+            print("OUT?", name, "|", r["description"], "|", sorted(subjects), "|",
+                  (r["question"] or "")[:160])
     key = {
         "question": "religion",
         "expected_label": "approximate",
         "scope": {"gss": {"release": "7224r3a", "variables": len(recs),
-                          "source": "gssrdoc_full.json in ../pdt-gss/data/raw"}},
+                          "source": f"pdt-gss {commit}: metadata/releases/7224r3a, groups.jsonl"}},
         "built_by": "eval/keys/full/build_gss_religion.py; hand decisions in its HIT and NEUTRAL lists",
         "candidates": n_candidates,
         "publisher_subject_religion": religion_subject,
