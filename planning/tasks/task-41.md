@@ -50,3 +50,11 @@ Implements [Task 38's design](../code_lists_design.md), accepted as written (opt
 **`pdt check` on all repos:** 0 failures for pdt-anes-cdf, pdt-chicago-crimes, pdt-cps-asec, pdt-fars, pdt-nsfg and pdt-yrbss. pdt-gss fails only C8, while blue's Task 26 build is uncommitted. pdt-brfss, Task 30's repo with no commits yet, fails on its links' missing `source` and its views, which isn't related to code lists.
 
 **Follow-up: the GSS lists.** Blue is holding pdt-gss for Task 26 and will say when it's free. Then: 13 lists of 100 or more valid codes (Census 2010 and 1980 occupations and industries, ISCO-08 and others), each shared by 3–6 variables. Each record names its list and keeps its own missing codes. Labels differ in whitespace between near-duplicates (`kdocc10`), so only identical lists are shared.
+
+## Stopped here (orange, 2026-11-19)
+
+- **The GSS code lists:** the build change is committed in pdt-gss (`f597f2f`), with rule `gss_shared_code_lists` 0.1.
+  - It stores lists of 100 or more valid codes, shared exactly by 2 or more variables.
+  - A dry run on the current records: 12 lists, 98 folded records, rebuilt exactly; 40.5 MB of records becomes 38.2 MB.
+- **Not done:** the full `make build` (7–10 minutes) was stopped at the coordinator's request, before it wrote anything, so the GSS records, views and data are unchanged.
+- **Next:** in pdt-gss, `make build`, `make views`, `make data`, then `pdt check`. Commit metadata/, build/report.md, agent/ and export/.

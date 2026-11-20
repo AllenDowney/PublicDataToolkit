@@ -37,3 +37,7 @@ The Chicago terms decision was recorded by the coordinator on Allen's direct ins
 - Task 46 stays `DOING` until those two land.
 - GSS fixed by blue (`bd67680`), and verified: 99 facts name Claude (Task 5); `partyid`'s measure is Allen's. Only pdt-brfss (green) remains.
 - Task 27's last step is done too: blue's GSS build uses `pdt.derived.scale_signatures` (1,341 signatures at 0.2, including `gunlaw` and `cappun` as favor_oppose).
+
+## Stopped here (orange, 2026-11-19)
+
+Every repo is fixed except pdt-brfss: green holds it and has the exact change (`author: Claude (PublicDataToolkit Task 30)`), which isn't confirmed yet. CPS's optional suffix change waits on yellow. The audit (`planning/attribution_audit.md`) is current. Task 46 can close when BRFSS is fixed.
