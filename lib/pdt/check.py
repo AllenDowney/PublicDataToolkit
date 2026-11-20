@@ -767,6 +767,86 @@ def check_availability(name, frame, records, wave_column, result, data_waves=Non
                                 f"availability: {listed(undeclared)}")
 
 
+def has_counts(record):
+    """Whether a record carries counts to compare with the data: values[].n or availability[].n."""
+    return any("n" in v for v in record.get("values", [])) or any("n" in a for a in record.get("availability", []))
+
+
+def code_counts(frame, record):
+    """{code text: rows} for a record's codes in the data: valid codes from the value column,
+    the others (missing, unresolved) from the code column, as data.split puts them."""
+    from .common_format import CODE_SUFFIX, code_text, is_number
+    counts = {}
+    if record["name"] in frame:
+        for value, n in frame[record["name"]].dropna().value_counts().items():
+            key = code_text(value) if is_number(value) else str(value)
+            counts[key] = counts.get(key, 0) + int(n)
+    col = record["name"] + CODE_SUFFIX
+    if col in frame:
+        for code, n in frame[col].dropna().value_counts().items():
+            counts[str(code)] = counts.get(str(code), 0) + int(n)
+    return counts
+
+
+QUALIFIERS = {"form", "sample", "mode", "phase", "geography"}   # availability entries for part of a wave
+
+
+def check_counts(name, frame, records, wave_column, result, data_waves=None, data_rows=None):
+    """C5 counts (warns): the counts a record carries against the data. values[].n is the
+    publisher's count of cases with that code in the release; availability[].n is the number of
+    non-missing responses in that wave.
+
+    A file that holds only some rows (data_rows) can't be compared with either. One that holds
+    only some waves (data_waves) can't be compared with values[].n, which counts the whole
+    release, but its kept waves are compared with availability[].n. An availability entry for
+    part of a wave (a form, sample, mode, phase or geography) isn't compared: the file doesn't say
+    which rows each covers.
+    """
+    from .common_format import code_text
+    counted = [r for r in records if has_counts(r) and r["name"] in frame]
+    if not counted:
+        return
+    if data_rows:
+        result.skip("C5", f"{name}: counts not run, because the file holds only some rows "
+                          f"({data_rows['column']} in data_rows)")
+        return
+    if data_waves is not None:
+        result.skip("C5", f"{name}: code counts (values[].n) not run, because the file holds only some waves "
+                          f"(data_waves); availability counts are compared for those waves")
+    waves = None
+    if wave_column in frame:
+        waves = frame[wave_column].map(lambda w: None if w is None or w != w else code_text(w))
+    qualified = 0
+    for r in counted:
+        if data_waves is None and any("n" in v for v in r.get("values", [])):
+            got = code_counts(frame, r)
+            off = [f"{code_text(v['code'])} ({v.get('label', '')}): codebook {v['n']:,}, data "
+                   f"{got.get(code_text(v['code']), 0):,}"
+                   for v in r["values"] if "n" in v and got.get(code_text(v["code"]), 0) != v["n"]]
+            if off:
+                result.report("C5", f"warning: {name}/{r['name']}: code counts differ from the data: {listed(off)}")
+        avail = [a for a in r.get("availability", []) if "n" in a and not (QUALIFIERS & set(a))]
+        qualified += sum("n" in a and bool(QUALIFIERS & set(a)) for a in r.get("availability", []))
+        if not avail:
+            continue
+        has = frame[r["name"]].notna()
+        if waves is not None:
+            in_data = waves[has].value_counts()
+            got = {str(w): int(n) for w, n in in_data.items()}
+        else:
+            declared = {str(a["wave"]) for a in r.get("availability", [])}
+            if len(declared) != 1:
+                continue        # several waves and no wave column: C5 already says it's skipped
+            got = {next(iter(declared)): int(has.sum())}
+        off = [f"{a['wave']}: availability {a['n']:,}, data {got.get(str(a['wave']), 0):,}" for a in avail
+               if (data_waves is None or str(a["wave"]) in data_waves) and got.get(str(a["wave"]), 0) != a["n"]]
+        if off:
+            result.report("C5", f"warning: {name}/{r['name']}: non-missing counts differ from the data: {listed(off)}")
+    if qualified:
+        result.skip("C5", f"{name}: {qualified:,} availability counts by {'/'.join(sorted(QUALIFIERS))} not run, "
+                          "because the data file doesn't say which rows each qualifier covers")
+
+
 def check_keys_in_data(release, tables, frames, result):
     """C12: each table's key is unique and non-blank; each reference finds its target, for the
     rows its `when` selects."""
@@ -851,6 +931,8 @@ def check_data(repo, result):
                for t in r.get("tables") or []):
         result.skip("C12", "not run, because no table declares a key or references")
     frames = load_data(repo, result)
+    if frames and not any(has_counts(r) for _, records in frames.values() for r in records):
+        result.skip("C5", "counts not run, because there are no codebook counts (values[].n, availability[].n)")
     wave_column = ((repo.dataset.get("dimensions") or {}).get("wave") or {}).get("column")
     for (release, table), (frame, records) in frames.items():
         name = release + (f"/{table}" if table else "")
@@ -861,6 +943,7 @@ def check_data(repo, result):
         if rows:
             check_rows(name, frame, rows, result)
         check_availability(name, frame, records, wave_column, result, data_waves(repo, release, table), rows)
+        check_counts(name, frame, records, wave_column, result, data_waves(repo, release, table), rows)
     for r in repo.dataset.get("releases", []):
         check_keys_in_data(r["id"], r.get("tables") or [], frames, result)
 

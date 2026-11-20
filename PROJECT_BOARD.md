@@ -300,3 +300,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 70 — `pdt check` says which checks didn't run, and why
 
 `DONE (purple)`. Each check, or part of one, that doesn't run is listed as "not run, because ..." (`Result.not_run`, printed by `pdt check`), not left silently absent: C5, C7, C8, C9, C10 and C12 when they don't apply, plus the data checks' existing skips. From DAAF's data-ingest agent ([`planning/daaf.md`](planning/daaf.md), step 3); the documented-frequency check is left for later. Details: [`planning/tasks/task-70.md`](planning/tasks/task-70.md).
+
+### Task 71 — `pdt check` compares codebook counts with the data
+
+`DONE (blue)`. C5 now also compares each code's `n` in `values`, and each wave's `n` in `availability`, with the data, at warn level. It honors `data_rows` and `data_waves`; counts it can't compare are listed as not run (Task 70). Run across 11 repos with data, with Task 58's round-trip gate bypassed in scratch: all match except one NLSY97 count off by 2. Details: [`planning/tasks/task-71.md`](planning/tasks/task-71.md).

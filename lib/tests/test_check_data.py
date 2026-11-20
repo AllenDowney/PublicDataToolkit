@@ -99,7 +99,8 @@ def test_valid_data_passes(tmp_path):
     assert result.ok, result.failures
     assert not reports(result, "C3-C5") and not reports(result, "C4") and not reports(result, "C12")
     # person has no wave column and two waves: C5 can't tell which rows are which.
-    assert reports(result, "C5") == ["C5: r1/person: skipped, no wave column (YEAR) and several waves declared"]
+    assert [m for m in reports(result, "C5") if "counts not run" not in m] == [
+        "C5: r1/person: skipped, no wave column (YEAR) and several waves declared"]
 
 
 def test_skipped_without_data_files(tmp_path):
@@ -163,7 +164,7 @@ def test_c5_one_wave_per_file_without_wave_column(tmp_path):
     one = [{"wave": 2020}]
     root = make_data_repo(tmp_path, crash_recs=[dict(r, availability=one) for r in crash_records()],
                           crash=CRASH.assign(YEAR=2020), person_avail=one)
-    assert not reports(run(root), "C5")
+    assert [m for m in reports(run(root), "C5") if "counts not run" not in m] == []
     # A wave declared but empty is still caught without the column.
     root = make_data_repo(tmp_path / "b", crash_recs=[dict(r, availability=one) for r in crash_records()],
                           crash=CRASH.assign(YEAR=2020), person_avail=one,
