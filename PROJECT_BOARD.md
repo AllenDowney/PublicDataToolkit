@@ -283,3 +283,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 `DOING (red)`. Hadley offered to review a PR for data-dict#9. Clone tidyverse/data-dict locally, read its spec, validator and tests, and plan the PR(s) for integer enums with labels and typed missing codes, plus how our exporter would use them. Plan only; nothing forked, pushed or opened. Details: [`planning/tasks/task-66.md`](planning/tasks/task-66.md).
 
+
+### Task 67 — Library and pdt-brfss use the Task 30 standard changes
+
+`DOING (green)`. Several valid ranges, a `geography` dimension, histories by rule, `values[].note` and `series` annotations in the library (check, diff, site, export, derived, availability filters) with tests, then in pdt-brfss; a label lint in `pdt check`; `pdt.readers.read_sas_xport` from pdt-brfss's reader. Details: [`planning/tasks/task-67.md`](planning/tasks/task-67.md).
