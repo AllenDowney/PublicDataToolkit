@@ -98,3 +98,18 @@ def test_no_answer_reasons(panel):
         panel.answers("SMOKED", 1)
     with pytest.raises(ValueError):
         pick(out, "whatever")
+
+
+def test_month_zero_from_the_panel_block(tmp_path):
+    ds = copy.deepcopy(DATASET)
+    ds["releases"][0]["tables"] = [{"id": "py", "label": "person-year", "key": ["ID", "YEAR"]}]
+    ds["panel"] = {"id": "ID", "interview_date": ["MONTH"], "age_at_interview": "AGE", "month_zero": "1979-12"}
+    ds["dimensions"] = {"wave": {"label": "year", "column": "YEAR"}}
+    root = make_repo(tmp_path, dataset=ds, variables=[], groups=[], corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r1" / "py" / "variables.jsonl", RECORDS)
+    keys = sorted(MONTH)
+    frame = pd.DataFrame({"ID": [k[0] for k in keys], "YEAR": [k[1] for k in keys], "MONTH": [MONTH[k] for k in keys],
+                          "AGE": [AGE[k] for k in keys], "SMOKED": [SMOKED[k] for k in keys]})
+    p = Panel(root, data=frame)
+    assert p.month_zero == (1979, 12) and p.year_months(2010) == (361, 372)
+    assert Panel(root, data=frame, month_zero=(1980, 1)).year_months(2010) == (360, 371)

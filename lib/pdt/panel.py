@@ -6,7 +6,7 @@ about the time since the last interview (PublicDataToolkit Task 69). This module
 candidate and says where each came from. It never chooses among them; `pick` does that, by a
 policy the caller names.
 
-    p = Panel("~/pdt-nlsy97", month_zero=(1979, 12))     # NLSY: continuous month 1 = January 1980
+    p = Panel("~/pdt-nlsy97")              # month_zero from panel.month_zero ("1979-12": month 1 = January 1980)
     cands = p.answers("YSAQ-360C", 1001, year=2005)       # every round whose period overlaps 2005
     cands = p.answers("CV_MARSTAT_COLLAPSED", 1001, age=25)
     best = pick(cands, "most_overlap")                    # a named policy, kept with the result
@@ -29,7 +29,8 @@ A candidate's period is in months on the interview_date's scale (inclusive):
     ever                   (None, m)           everything up to the interview
     calendar_year          the 12 months of the year before the wave (the wave must be a year)
     (none stated)          None                the wording gives no period
-Calendar years need `month_zero` (the year and month of month 0 on that scale).
+Calendar years need the month 0 of that scale: dataset.yaml `panel.month_zero` ("YYYY-MM"), or
+the month_zero=(year, month) argument, which overrides it.
 """
 
 from dataclasses import dataclass, field
@@ -93,6 +94,9 @@ class Panel:
         need = {self.spec["id"], self.spec["interview_date"][0], self.wave_column}
         self.table = table or next(t for t, recs in tables.items() if need <= {r["name"] for r in recs})
         self.records = {r["name"]: r for r in tables[self.table]}
+        if month_zero is None and self.spec.get("month_zero"):   # dataset.yaml panel.month_zero, "YYYY-MM"
+            y, m = self.spec["month_zero"].split("-")
+            month_zero = (int(y), int(m))
         self.month_zero = month_zero
         self.path = self.root / PROCESSED / file_name(ds["id"], self.release, self.table)
         self.data = data
@@ -138,7 +142,8 @@ class Panel:
     def year_months(self, year):
         """The months of a calendar year on the interview_date scale."""
         if not self.month_zero:
-            raise ValueError("a calendar year needs month_zero, the (year, month) of month 0 on the interview_date scale")
+            raise ValueError("a calendar year needs month 0 of the interview_date scale: panel.month_zero in "
+                             "dataset.yaml, or month_zero=(year, month)")
         y0, m0 = self.month_zero
         start = (int(year) - y0) * 12 + (1 - m0)
         return start, start + 11
