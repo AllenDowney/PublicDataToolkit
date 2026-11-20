@@ -332,3 +332,6 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 `DOING (red)`. `pdt.data.split`, `rebuild` and `same_cells` handle every cell in Python (the full GSS: about 50 minutes per release). Vectorize them with numpy and pyarrow, with byte-identical output files on ANES, FARS, NSFG, BRFSS and a GSS column batch, the same errors on bad input, and memory no worse. Benchmark before and after. Changes in `data.py`; `release.py` is orange's. Details: [`planning/tasks/task-78.md`](planning/tasks/task-78.md).
 
+### Task 79 — Prepare the data releases (nothing uploaded)
+
+`DOING (blue)`. `make data` and `pdt package` for the published repos that ship data: 14 of 16 are packaged, and their data checks pass. ATUS and NLSY97 are left. A proposed tag scheme, `data-YYYY-MM-DD`, with a `gh release create` command per repo; no release was created. Details: [`planning/tasks/task-79.md`](planning/tasks/task-79.md).
