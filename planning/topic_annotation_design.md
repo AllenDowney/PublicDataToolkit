@@ -146,3 +146,10 @@ The topic definitions are deliberately wider than the keys' hit rules: they incl
 - the date and `reviewed: false`.
 
 The raw responses are kept, outside any repo, for checking.
+
+**Amendment (before the first call).** These details were settled while writing the script, [`eval/harness/annotate_topics.py`](../eval/harness/annotate_topics.py):
+- **Model:** `claude-haiku-5-5`, at effort `low`.
+- **Output:** structured output (`output_config.format`, a JSON schema: a list of `{name, topics}` where each topic is one of `religion` or `mental_health`), instead of free JSON. The answer always parses, and an off-list topic can't occur.
+- **The prompt's last sentence** is now "Give the tags for every variable in the batch, by its name." The rest of `topics-0.1` is as above.
+- **Records:** each batch file keeps the raw answer and its usage. A refused or cut-off batch is kept on record as untagged, not retried silently. Names missing from an answer are counted.
+- **Cap:** the run stops before a call that could pass 2M input tokens, assuming each call is no smaller than the largest so far.
