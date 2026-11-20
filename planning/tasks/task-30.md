@@ -1,6 +1,6 @@
 # Task 30 — A BRFSS slice
 
-**Status:** `DOING (green)`, stopped 2026-11-19 for Allen's travel (see "Stopped here" at the end)
+**Status:** `DONE (green)`, 2026-11-20
 
 Assigned by the coordinator. A slice of the CDC's Behavioral Risk Factor Surveillance System (BRFSS), an annual adult telephone survey run by the states since 1984, in a new repo `~/pdt-brfss` made from the Copier template (`v0.1.0`). It's on Allen's high-priority list from Twenge's *Generations*.
 
@@ -28,10 +28,10 @@ Assigned by the coordinator. A slice of the CDC's Behavioral Risk Factor Surveil
 | Records | 295: 23 concepts × 13 years, less the years a concept doesn't exist. `build/slice.yaml` maps each concept to its name in each year |
 | Sources | 121 in `sources.yaml`, all hashed and fetched with urllib (1.2 GB): data (SAS transport, zipped), codebook, calculated-variables document, variable layout, SAS input program, formats, modules by state, overview and comparability notes for each year; CDC's agency-materials terms and the 2013 Data User Guide |
 | Terms | Decided by Allen (2026-11-19): CDC's "Use of Agency Materials" (public domain, with attribution, a no-endorsement disclaimer, unchanged content, and "available at no charge"). Everything `ship`, `llm_processing: allowed`; the credit and disclaimer are in `terms.notice` and the README |
-| Links | 298: 4 renames CDC states, by rule the same name with identical documentation, and 65 `derived_from` from the calculated variables' codebook notes. `build/links_report.md` lists the rest |
+| Links | 300: 4 renames CDC states, 231 by rule (the same name with identical documentation), and 65 `derived_from` from the calculated variables' codebook notes. `build/links_report.md` lists the rest |
 | Histories | 24, 10 with more than one period, assembled by rule from the yearly codebooks |
 | Data | `make data`: `data/processed/brfss-<year>.parquet`, 13 files, every round trip exact |
-| Check | `pdt check`: 0 failures, including C3–C5 and C12; 0 unresolved codes |
+| Check | `pdt check`: 0 failures, including C3–C5 and C12; 2 unresolved codes (`_RACEGR2` "." in 2011 and 2012, below) |
 
 The build is three scripts: `build/codebook.py` parses the codebooks, `build/build_records.py` writes records and groups, and `build/build_links.py` and `build/build_histories.py` follow. `build/xport.py` reads the data.
 
@@ -45,7 +45,7 @@ The build is three scripts: `build/codebook.py` parses the codebooks, `build/bui
    - `_RACEGR4` back to `_RACEGR3`.
 
    A cross-year catalog (red's) shows them as separate lines.
-3. **Same name, changed documentation.** About 50 same-name pairs differ between consecutive codebooks: a question reworded (ADDEPEV2 2016→2017), a range narrowed (ALCDAY5: 101–199 and 201–299 in 2011, 101–107 and 201–230 from 2016), codes added (refused for SEX from 2016). The rule links only identical documentation, and reports the rest.
+3. **Same name, changed documentation.** 33 same-name pairs differ between consecutive codebooks (12 of them IYEAR, whose codes are the interview years): a question reworded (ADDEPEV2 2016→2017), a range narrowed (ALCDAY5: 101–199 and 201–299 in 2011, 101–107 and 201–230 from 2016), codes added (refused for SEX from 2016). The rule links only identical documentation, and reports the rest.
 4. **Three codebook layouts in 13 years.** PDF 2011–2015, PDF 2016–2021 except 2019, and SAS-generated HTML in 2019, 2022 and 2023 (zipped in 2022–23). Traps, each now handled and named in `build/codebook.py`:
    - running headers that match words in titles: `_LLCPWT`'s title "Final weight: Land-line and cell-phone data" was dropped as a header, and the label became the previous row (found by red's catalog);
    - a header split over two lines in 2021 ("Overall version data" / "weighted with _LLCPWT"), which leaked into labels and turned "Not asked or Missing" into a valid code (also found by red);
@@ -94,16 +94,13 @@ For the library (views + site, or red):
 - Downloads: www.cdc.gov returns 403 to curl's and Chromium's User-Agents but not to urllib's (as red found in Task 18), so `pdt download` works and nothing needs a manual download. Documentation was first fetched through a headless browser; the browser fetch isn't needed now.
 - red: the `_LLCPWT` and 2021 header labels (fixed); the ADDEPEV and SEX chains (unlinked on purpose, explained).
 
-## Stopped here (2026-11-19, green)
+## Finished (2026-11-20, green)
 
-`~/pdt-brfss` is committed (e81369f; no remote), after a final run that includes the 2021 header fix (MENTHLTH's and the other "." codes):
-- `make data`: all 13 years round-trip exactly;
-- views regenerated;
-- `pdt check`: 0 failures, 0 unresolved codes, 0 labels flagged.
+`~/pdt-brfss` at 118f40d (no remote), built under the 6 GB memory cap:
+- `_RACEGR2` "." in 2011 and 2012: the codebook prints `BLANK` with a count (126, 105) and no label or percentages, so it doesn't say what the code is. The parser now reads the count as a count, and the build classifies "." there as `unresolved`, with the codebook as its origin and a note saying what was checked. Every other "." in the 13 years is "Not asked or Missing".
+- `make data`: all 13 years round-trip exactly.
+- Views regenerated with the toolkit at b5cf66b.
+- `pdt check`: 0 failures; 2 unresolved codes (the two above).
+- Checked the two claims in finding 3: "refused for SEX from 2016" holds (code 9 first appears in 2016); the count of same-name pairs with changed documentation is 33, not "about 50".
 
-**Open bug:** `_RACEGR2`'s "." code in 2011 and 2012 is labeled with a count ("126", "105") and typed valid. It's probably a BLANK row with a count and no label in that layout. Every other "." code in all 13 years is missing, with the right types.
-
-**Next steps:**
-1. Fix `_RACEGR2` in `build/codebook.py`, then `make build && make data && make views && make check`.
-2. Check two claims in this file: "about 50" same-name pairs with changed documentation, and "refused for SEX from 2016" (finding 3).
-3. Set the status to DONE, then ask red to review `build/xport.py` for `pdt.readers` and to regenerate views.
+Left for others: red's review of `build/xport.py` for `pdt.readers` (proposal 7), and the proposals above for the coordinator.
