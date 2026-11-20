@@ -1,6 +1,6 @@
 # Task 69 — Panel responses spread across rounds (NLSY)
 
-**Status:** `DONE (yellow)` on 2026-11-20, except the layer, which is designed and waits for the coordinator and Allen. Started 2026-11-20. Created by the coordinator, 2026-11-20, at Allen's request.
+**Status:** `DONE (yellow)` on 2026-11-20, the layer included (built after Allen approved it). Started 2026-11-20. Created by the coordinator, 2026-11-20, at Allen's request.
 
 ## The problem
 
@@ -180,3 +180,21 @@ Tests would use small synthetic panels:
 - two interviews at one age.
 
 They'd check that each candidate's period, overlap and reason are right, and that no policy runs unless asked.
+
+### 2026-11-20: the accepted proposals, and the layer, built
+
+The coordinator accepted all four proposals (standard e0c4e64), and Allen approved the layer.
+
+- **Library:**
+  - `pdt check` C2 (3abcff2): `panel` names variables with records, and `past_months` gives `months`.
+  - `pdt.panel` (0e5a3e5), as designed. `answers(name, person, year=|age=)` returns every candidate with its round, interview month, age, period and `period_kind`, its overlap with the year or distance from the age, `how`, and that round's universe; or `NoAnswer` reasons.
+  - `pick(candidates, policy)` applies `exact`, `nearest`, `most_overlap` or `latest`. It reports disagreeing ties instead of breaking them and keeps the candidates.
+  - Calendar years need `month_zero`, the scale's month 0, which the `panel` block doesn't give yet. NLS's is December 1979; a `panel.month_zero` field would make it automatic (a small proposal).
+  - Tests: `lib/tests/test_panel.py`, a synthetic panel covering a missed round, the switch from since-the-last-interview to twelve months, ages and ties.
+- **pdt-nlsy97** (c74b289):
+  - `questions[].reference_period` on 21 wordings, by rule `nlsy_reference_period` from explicit phrases only. YHEA-100 states no period and gets none.
+  - `panel: {id: PUBID, interview_date: [CV_INTERVIEW_CMONTH], age_at_interview: CV_AGE_INT_DATE, noninterview: RNI}`.
+  - AGENT_NOTES.md has an author line and a `pdt.panel` section, and the README mentions it.
+  - `scripts/panel_check.py` reproduces `measure_spread.py`'s counts with `pdt.panel` exactly (2005, 2010, 2012).
+  - No `derived_from` links: NLS builds MAR_STATUS from the marriage section's dates (Appendix 6), and those questions aren't in the slice.
+- **Not built:** a derived table. When it comes, it's labeled derived, with the rule, policy and version.
