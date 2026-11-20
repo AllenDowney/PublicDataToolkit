@@ -179,7 +179,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 45 — A PISA slice
 
-`DOING (purple)`. The OECD's PISA student questionnaire (2012, 2015, 2018, 2022) in `~/pdt-pisa`: design and replicate weights, demographics, sense of belonging, one plausible-value set, for a few countries. Details: [`planning/tasks/task-45.md`](planning/tasks/task-45.md).
+`DONE (purple)`. PISA 2012–2022 student files in `~/pdt-pisa`: 415 records, replicate weights in `design`, `plausible_values` groups, four countries kept by `data_rows`, 2012–2018 question text from NCES's US versions, ESCS linked as `rescaled`; `pdt check` 0 failures. Library: `read_sav`, LENGTH in `read_sas_input`, `data_rows` in C3/C5. Details: [`planning/tasks/task-45.md`](planning/tasks/task-45.md).
 
 ### Task 46 — Who made the hand facts
 
