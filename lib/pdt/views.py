@@ -37,6 +37,24 @@ KIND_TITLES = {
 }
 
 
+# The modules whose code shapes the generated views. A change to any of them can change agent/,
+# docs/ or export/ while the inputs stay the same, so each manifest records their hash and
+# pdt check (C8) compares it (STANDARD.md §7).
+GENERATOR_MODULES = ("views.py", "site.py", "export.py", "chains.py", "ranges.py", "search.py",
+                     "compare.py", "diff.py")
+
+
+def generator_hash():
+    """SHA-256 over the source of the modules that generate the views (GENERATOR_MODULES)."""
+    here = Path(__file__).resolve().parent
+    h = hashlib.sha256()
+    for name in GENERATOR_MODULES:
+        path = here / name
+        if path.exists():
+            h.update(name.encode() + b"\0" + path.read_bytes() + b"\0")
+    return h.hexdigest()
+
+
 def inputs_hash(root):
     """SHA-256 over dataset.yaml and everything under metadata/."""
     root = Path(root)
@@ -485,7 +503,8 @@ def build(root, out=None, release_shards=RELEASE_SHARDS):
 
     if not per_release:
         shards = lineage_shards(repo, out, header) + shards
-    manifest = {**header, "dataset": repo.dataset.get("id"), "max_tokens": MAX_TOKENS,
+    manifest = {**header, "generator_sha256": generator_hash(), "dataset": repo.dataset.get("id"),
+                "max_tokens": MAX_TOKENS,
                 "shards": shards, "release_shards": release_shards}
     across = write_across_releases(repo, out, header) if len(repo.tables) > 1 else []
     if across:
@@ -620,7 +639,8 @@ def is_current(root):
     if not path.exists():
         return False
     m = json.loads(path.read_text())
-    return m.get("pdt_version") == __version__ and m.get("inputs_sha256") == inputs_hash(root)
+    return (m.get("pdt_version") == __version__ and m.get("inputs_sha256") == inputs_hash(root)
+            and m.get("generator_sha256") == generator_hash())
 
 
 def txt_header(meta, part, header):

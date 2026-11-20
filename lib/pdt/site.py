@@ -24,7 +24,7 @@ from . import __version__
 from .check import Repo
 from .search import Index
 from .ranges import notes as range_notes, range_text, valid_ranges
-from .views import (AVAIL_DIMS, inputs_hash, natural, origin_text, release_order, sort_key, wave_list,
+from .views import (AVAIL_DIMS, generator_hash, inputs_hash, natural, origin_text, release_order, sort_key, wave_list,
                     wave_summary, when_text)
 
 DIRECTORY = "docs"
@@ -202,6 +202,7 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             self.changes_page(old, new)
         self.search_index()
         manifest = {"pdt_version": __version__, "inputs_sha256": self.digest,
+                    "generator_sha256": generator_hash(),
                     "dataset": self.ds.get("id"), "files": sorted(self.files)}
         (self.out / "manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")
         return manifest
@@ -877,7 +878,8 @@ def is_current(root):
     if not path.exists():
         return False
     m = json.loads(path.read_text())
-    return m.get("pdt_version") == __version__ and m.get("inputs_sha256") == inputs_hash(root)
+    return (m.get("pdt_version") == __version__ and m.get("inputs_sha256") == inputs_hash(root)
+            and m.get("generator_sha256") == generator_hash())
 
 
 SEARCH_JS = """

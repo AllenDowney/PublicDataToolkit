@@ -36,7 +36,7 @@ from .check import Repo
 from .common_format import CODE_SUFFIX, PROCESSED, ROW, code_text, file_name
 from .ranges import span, valid_ranges
 from .search import Index
-from .views import inputs_hash, origin_text, sort_key, wave_summary, when_text
+from .views import generator_hash, inputs_hash, origin_text, sort_key, wave_summary, when_text
 
 DIRECTORY = Path("export") / "data-dict"
 SPEC_VERSION = "0.1.0"
@@ -168,6 +168,7 @@ class Exporter:
         (self.out / "LOSSES.md").write_text(self.losses_md())
         files.append("LOSSES.md")
         manifest = {"pdt_version": __version__, "inputs_sha256": self.digest,
+                    "generator_sha256": generator_hash(),
                     "dataset": self.ds.get("id"), "spec": SPEC_VERSION, "files": files,
                     "losses": self.losses.counts}
         (self.out / "manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")
@@ -395,4 +396,5 @@ def is_current(root):
     if not path.exists():
         return False
     m = json.loads(path.read_text())
-    return m.get("pdt_version") == __version__ and m.get("inputs_sha256") == inputs_hash(root)
+    return (m.get("pdt_version") == __version__ and m.get("inputs_sha256") == inputs_hash(root)
+            and m.get("generator_sha256") == generator_hash())

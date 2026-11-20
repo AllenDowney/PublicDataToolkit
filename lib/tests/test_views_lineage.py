@@ -51,3 +51,23 @@ def test_release_order_follows_the_wave_values():
     assert views.release_order(ds) == ["week01", "week02", "cycle01", "cycle02"]
     del ds["dimensions"]
     assert views.release_order(ds) == ["cycle01", "week01", "week02", "cycle02"]      # natural order
+
+
+def test_c8_fails_when_the_generator_changed(tmp_path):
+    """The inputs can be the same while the code that renders them changed: C8 compares the
+    generator hash each manifest records (pdt.views.generator_hash)."""
+    import json
+    from pdt import export as dd, site
+    from pdt.check import run as check
+    root = many_releases(tmp_path)
+    for build in (views.build, site.build, dd.build):
+        build(root)
+    assert not [f for f in check(root).failures if f.startswith("C8")]
+    for path in ("agent/manifest.json", "docs/manifest.json", "export/data-dict/manifest.json"):
+        m = json.loads((root / path).read_text())
+        assert m["generator_sha256"] == views.generator_hash()
+        m["generator_sha256"] = "0" * 64
+        (root / path).write_text(json.dumps(m))
+    stale = [f for f in check(root).failures if f.startswith("C8")]
+    assert len(stale) == 3 and all("other code than this library's views" in f for f in stale)
+    assert not views.is_current(root) and not site.is_current(root) and not dd.is_current(root)
