@@ -31,6 +31,8 @@ def test_key_of_ignores_case_and_keeps_tables():
 
 def test_keys_are_well_formed():
     for path in (EVAL / "keys").rglob("*.yaml"):
+        if path.stem.endswith("_decisions"):
+            continue  # an agent's or reader's decisions, the input to a key (Task 57)
         key = yaml.safe_load(path.read_text())
         assert key["question"] == path.stem or path.stem.endswith("_" + key["question"])
         assert key["expected_label"] in {"complete", "complete_by_rule", "approximate"}
