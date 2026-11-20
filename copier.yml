@@ -3,7 +3,7 @@
 # This file is at the toolkit's root because Copier records the template's version
 # (a git tag) only when copier.yml is at a git repo's root, and `copier update` needs it.
 #
-#   copier copy --vcs-ref v0.1.0 /abs/path/to/PublicDataToolkit pdt-<dataset-id>
+#   copier copy --vcs-ref v0.2.0 /abs/path/to/PublicDataToolkit pdt-<dataset-id>
 #   copier update            # from inside the dataset repo, to the latest tag
 #
 # It runs no tasks or migrations, so it needs no --trust.
@@ -95,7 +95,7 @@ source_url:
 standard_version:
   type: str
   help: "The version of the standard this repo meets"
-  default: "0.1"
+  default: "0.2"
 
 copyright_holder:
   type: str

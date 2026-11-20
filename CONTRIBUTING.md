@@ -54,7 +54,7 @@ pdt check path/to/pdt-dataset
 Start a new dataset repo from the template with [Copier](https://copier.readthedocs.io/), then follow the steps in [`instructions/`](instructions/):
 
 ```
-copier copy --vcs-ref v0.1.0 https://github.com/AllenDowney/PublicDataToolkit pdt-dataset
+copier copy --vcs-ref v0.2.0 https://github.com/AllenDowney/PublicDataToolkit pdt-dataset
 ```
 
 ## Pull requests

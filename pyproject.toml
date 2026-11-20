@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "publicdatatoolkit"
-version = "0.1.0"
+version = "0.2.0"
 description = "Shared library for dataset repositories built to the PublicDataToolkit standard"
 readme = "README.md"
 license = "MIT"

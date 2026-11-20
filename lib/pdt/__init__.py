@@ -3,4 +3,4 @@
 See STANDARD.md in https://github.com/AllenDowney/PublicDataToolkit.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
