@@ -63,3 +63,43 @@ The Census Bureau's Household Pulse Survey (HPS), an online survey of adults run
 3. **`evidence` on links,** like corrections have: a quote and a location as structure, not in `note`. Pulse's publisher-stated links carry the quote in `note` for now.
 4. **Many-release datasets in the views:** for 72 releases, one page per variable per release is a lot. The views could collapse a variable's consecutive `same_item` releases into a run, as red's `pdt.chains` does for the catalog.
 5. **A dataset whose releases differ in format.** Nothing needed. `data_source` with `format` already copes, and `sources.yaml` says why week 55 is SAS.
+
+### Follow-up: the coordinator's decisions on the proposals (2026-11-20; standard `4ddaf02`)
+
+1. **Replicate columns without records** (accepted):
+   - **C3** accepts a column that the effective `design.replicates` names, when `replicates.table` is this table or unset. Toolkit `c16b793`, on yellow's `pdt.design` (`95ec1a5`), with tests in `lib/tests/test_check_replicates.py`.
+   - **Still to do:** `pdt.release` must write those columns without records (after orange's Task 58 commit, at orange's request). Then pdt-pulse drops its 5,760 replicate records and pdt-pisa its 320.
+2. **`range_changed`** (accepted):
+   - pdt-pulse's links use it (rule `hps_same_name_same_dictionary` 0.2): THHLD_NUMPER at week 13, and TBIRTH_YEAR's top code at weeks 22, 41, 53 and cycle 04.
+   - `pdt diff` suggests it for a documented range change and pairs records through it (toolkit `0f5453a`).
+3. **`evidence` on links** (accepted): pdt-pulse's 10 publisher-stated links carry `evidence: [{citation, url, quote}]`, and the quote is out of `note`.
+4. **Collapsing runs in the views** (accepted as library work): the design is below. It waits for the coordinator before code.
+
+### Design: many-release datasets in the views (proposal 4)
+
+**Where Pulse's views come from now:**
+- **Site:** `docs/` has 6,297 files. Of its 6,006 variable pages, 5,904 are replicate weights: one chain each, since nothing links them.
+- **Respondent variables:** 102 pages for about 24 variables. The site already makes one page per chain (`pdt.chains`). But a chain breaks at every link that changes meaning (`codes_changed`, `wording_changed`), so ANXIOUS has six pages (to week 33, to 54, 55, to 63, to cycle 03, the rest).
+- **Agent:** 288 table shards (72 releases × 2 tables × 2 formats) and 144 group shards, all per release.
+
+**Proposal 1 alone removes 5,904 pages and the 144 replicate-weight group shards.** What's left:
+
+1. **One page per variable lineage, with its runs as sections.** A *lineage* is chains joined by any one-to-one link, including those that change meaning: the set `pdt.chains` already keeps as `related`.
+   - The page is named after the latest name.
+   - It has one section per chain, in release order, headed by its span ("week01–week33"), with that run's wording, codes and notes.
+   - Between sections, a line gives the link's relations and evidence ("wording changed at week34; Census: 'reference period … changed from last 7 days to previous two weeks'").
+   - Pulse drops from 102 pages to about 24, and a reader sees a variable's whole history in one place.
+   - Chains with no one-to-one link between them keep separate pages: EGENDER and EGENID_BIRTH aren't linked.
+2. **Change pages only where something changed.** `docs/changes/<old>--<new>.html` is written only for adjacent pairs with at least one link that isn't `same_item`, or with variables added or dropped. The home page lists the other pairs in one line ("no changes: week02–week12, …"). Pulse would have about 25 change pages instead of 71.
+3. **Agent shards across releases when there are many.** When a dataset has more than 12 releases, the per-release table shards give way to one shard per table across releases.
+   - One line per lineage: its runs and their spans, then the current wording ("ANXIOUS | week01–week33 (7 days) → week34–cycle09 (two weeks) | …").
+   - `agent/variables.txt` already does this for the catalog (`pdt.chains`).
+   - The per-release JSONL stays canonical in `metadata/`, and the index says how to read one release.
+   - 12 is a guess. The GSS's 35 waves aren't releases, and no dataset so far has more than 7 releases besides Pulse.
+4. **Release pages** stay, one per release and table. They're the per-file view.
+
+**Files:** `lib/pdt/site.py` (variable pages, change pages), `lib/pdt/views.py` (shard specs and index), `lib/pdt/chains.py` (a `lineages()` helper over `related`), and their tests. pdt-pulse and pdt-pisa are tested by regenerating their views.
+
+**Open questions:**
+- Is 12 the right threshold for switching agent shards?
+- Should a lineage page also cover `renamed` chains? It does already, since a chain includes renames.
