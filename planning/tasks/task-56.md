@@ -148,11 +148,43 @@ What didn't fit, or needed work:
 6. **General missing codes declared once.** BLS lists -1 Blank, -2 Don't know and -3 Refused once ("Many ATUS variables have the following possible valid values ... not shown as valid entries for each variable"). A record gets the ones that occur in its column (rule `atus_general_codes`, origin publisher). "Blank" gives no reason, so its type is `unspecified`. Extra valid codes declared in a note ("-4 (Hours vary) is also valid for TEHRUSLT") need a rule too (`atus_codes_from_notes`).
 7. **A blocked publisher.** Every source is manual: bls.gov returns 403 to any script without a contact. `download.py` can only list what to fetch.
 
-## Proposals (not edits to STANDARD.md or schema/)
+## Proposals for the coordinator (not edits to STANDARD.md or schema/)
 
-1. **§4.5: a code that a variable stands for.** Add an optional record field, e.g. `code_of: {code_list, code}`, for variables that each hold one code's value (ATUS t010101; the same shape as one-hot or count columns elsewhere, such as GSS multiple-mention items). It would replace the `atus.activity_code` extension and let views link a column to its code and back.
-2. **§4.5: a harmonized list.** Let a code list say it harmonizes other lists (`harmonizes: [ids]`) and let a code carry `includes: [{list, code, waves}]` from the publisher's notes. ATUS's notes give exactly that, now kept as free text.
-3. **`design` by wave,** or `weights` entries with `waves`, so TU20FWGT for 2020 can be stated, not only noted.
-4. **`design.replicates.table`,** naming the table the replicate weights are in, and a check that the named columns exist there.
-5. **General missing codes at the dataset level.** A dataset-level list of codes the publisher declares for "many variables" (ATUS -1/-2/-3), applied where they occur, instead of each repo's own rule.
-6. **`write_release`: write to a temporary name, rename after the round trip** (sent to the coordinator for Task 58), and batch by rows as well as columns.
+Each one has a proposal, the ATUS case, and what changes if it's accepted.
+
+### P1. `code_of`: a variable that stands for one code (§4.5)
+
+- **Proposal:** an optional record field `code_of: {code_list, code}`, for a variable whose values are about one code in a list: minutes on it, a count of it, or whether it was mentioned.
+- **ATUS case:** the activity summary has 431 columns, one per lexicon code. t010101 is minutes on 010101, "Sleeping". Today each record carries `extensions.atus.activity_code` and `activity_code_list` (EXTENSIONS.md), and the label is copied from the list.
+- **If accepted:** the 431 records swap the extension for `code_of`. `pdt check` can then check the code exists in the list, and views can link column ↔ code both ways ("which column holds code X").
+
+### P2. `harmonizes` and `includes`: a list built from other lists (§4.5)
+
+- **Proposal:** a code list can name the lists it harmonizes (`harmonizes: [ids]`). A code can say which codes of those lists it includes, and when (`includes: [{list, code, waves}]`), from the publisher's own crosswalk.
+- **ATUS case:** the multi-year lexicon is BLS's harmonization of the single-year lexicons; it isn't any one year's list.
+  - 60 of the 2025 single-year codes aren't in it.
+  - Its pooled codes (8x) are in no single year.
+  - BLS's notes say what each pooled code includes: 020681 "includes 020601 (all years), 020602 (2008 and later years)". Today that's free text in the code's `note` attribute.
+- **If accepted:** the single-year lexicons become lists of their own, and the pooled codes' notes become structured `includes`. A user of a single-year file could map its codes to the multi-year ones.
+
+### P3. `design` that varies by wave (§2.1)
+
+- **Proposal:** let `design` be set per wave in a multi-wave release (`design.by_wave`), or let each entry in `weights` carry `waves`.
+- **ATUS case:** in the 2003–2025 file, the weight is TUFNWGTP in every year except 2020, where it is -1 and TU20FWGT is the weight. Today `weights` lists both, and the note explains which year uses which. A program reading `design` can't tell.
+- **If accepted:** `weights: [{name: TUFNWGTP, waves: {except: [2020]}}, {name: TU20FWGT, waves: [2020]}]` or similar. The same shape fits the GSS's weight changes across years.
+
+### P4. `design.replicates.table`: replicates in another table (§2.1)
+
+- **Proposal:** an optional `table` in `design.replicates`, naming the table that holds the replicate weights and the key it joins on. `pdt check` would then confirm the named columns exist there.
+- **ATUS case:** the 160 replicates of TUFNWGTP are in their own file (the `replicates` table), joined on TUCASEID. The respondent and summary tables' `design.replicates` names prefix TUFNWGTP, n = 160, and nothing says where those columns are. `pdt check` doesn't look.
+- **If accepted:** `replicates: {table: replicates, prefix: TUFNWGTP, n: 160, method: fay, fay_factor: 0.5}`, and a check that TUFNWGTP001–160 exist in that table.
+
+### P5. Codes declared once for many variables (§4.2)
+
+- **Proposal:** a dataset-level list of codes that the publisher declares once for "many variables". Each code has `kind`, `missing_types` and the publisher's location. The library would apply a code to a variable's values where it occurs, with origin publisher.
+- **ATUS case:** the Interview Data Dictionary (p. 7) says: "Many ATUS variables have the following possible valid values: -1 Blank, -2 Don't know, -3 Refused. Because so many variables have these possible values, they are not shown as valid entries for each variable."
+  - Today a repo rule (`atus_general_codes`) adds each code to the records whose column holds it.
+  - Weights write -1 as "-1.000000", so the rule compares by value.
+- **If accepted:** the rule goes; `dataset.yaml` holds the three codes once. Other publishers with the same convention (CPS-based files) could reuse it.
+
+Sent separately, to Task 58: `write_release` should batch by rows as well as columns, and should write to a temporary name and rename only after the round trip passes.
