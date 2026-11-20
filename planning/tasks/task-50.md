@@ -13,3 +13,30 @@ The National Health Interview Survey (NCHS) is on Twenge's list (planning/twenge
 **Files:** `~/pdt-nhis/` (new, no remote); this file; the Task 50 block on the board.
 
 ## Progress
+
+### Stopped here (2026-11-19)
+
+**Done.** These are committed in `~/pdt-nhis` (fadb9bb, no remote):
+- The data and documents for 2016–2024 are downloaded to `data/raw/` (not committed).
+- `build/nhis_docs.py` parses both kinds of documentation: the pre-2019 layout PDFs and the 2019+ codebooks, including the 2023–2024 codebook layout.
+- `build/slice.yaml` lists about 25 variables on each side of the redesign. It has an imputation flag (IMPINCFLG_A) and three links across 2019 that NCHS's redesign evaluation states item by item: SMKSTAT2→SMKCIGST_A, DEP_1→DEPFREQ_A and ANX_1→ANXFREQ_A. Everything else is unlinked across 2019.
+- `build/build_records.py` gives 231 records and 169 links. The rule finds these changes within eras:
+  - HISPALLP_A 2020→2021: labels_changed ("NH" → "Non-Hispanic");
+  - POVRATTC_A 2019→2020: codes_changed (top code 10 → 11);
+  - SUPPORT_A 2021→2024: labels_changed.
+  The comparison ignores the "* " markers in 2024's question text.
+
+**Uncommitted.** The generated `metadata/` and `build/report.md` are not committed, because `pdt check` hasn't run on them.
+
+**Next:**
+1. Write `dataset.yaml`:
+   - tables samadult, person and family before 2019, and adult from 2019; keys HHX/FMX/FPX and references;
+   - design: WTFA_SA or WTFA_A with PSTRAT and PPSU;
+   - terms `unknown`, quoting the NCHS Data User Agreement.
+2. Write `sources.yaml` with sha256 for each file.
+3. Write `scripts/build_data.py`.
+4. Run `make data`, `make views` and `make check` to 0 failures.
+5. Run `pdt diff` on each pair of years.
+6. Update the README, and add the findings and proposals here.
+
+**Allen to decide:** the NHIS terms. The NCHS DUA forbids re-identification and says nothing about redistribution.
