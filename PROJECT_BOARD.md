@@ -191,6 +191,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 ### Task 48 — What the codebooks trip over
 
 `DOING (yellow)`. A short, factual list of the failure modes we met parsing publishers' documentation, by format, with examples, detection and fixes, for data-dict item 8: [`planning/codebook_failure_modes.md`](planning/codebook_failure_modes.md). Details: [`planning/tasks/task-48.md`](planning/tasks/task-48.md).
+### Task 49 — One site page per variable; a `data` extra
+
+`DOING (red)`. The site writes one page per variable across releases (`pdt.chains`), with a Releases section for what differs; pandas, numpy and pyarrow move to `publicdatatoolkit[data]`. Details: [`planning/tasks/task-49.md`](planning/tasks/task-49.md).
+
 
 
 
