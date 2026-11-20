@@ -272,7 +272,7 @@ The library expands a record's list when it loads a repo, so every check and vie
 
 ### 5.1 Groups
 
-`groups.jsonl` holds sets of variables: batteries, codebook sections, modules, questionnaire forms, and the publisher's subject lists. `kind` is `battery`, `section`, `module`, `form`, `subject`, `plausible_values` (draws of one score, such as PISA's PV1READ–PV10READ, to be analyzed together and never one alone) or `other`. A group has an `id`, a `kind`, its `members` (in order when `ordered` is true), and an `origin`. A battery can have its shared `stem`. A group can name a `parent`, such as the section that contains a battery.
+`groups.jsonl` holds sets of variables: batteries, codebook sections, modules, questionnaire forms, and the publisher's subject lists. `kind` is `battery`, `section`, `module`, `form`, `subject`, `plausible_values` (draws of one score, such as PISA's PV1READ–PV10READ, to be analyzed together and never one alone), `variants` (versions of one item within a release, such as a GSS question asked in two wordings to random halves of the sample, `-v` and `-nv`) or `other`. A group has an `id`, a `kind`, its `members` (in order when `ordered` is true), and an `origin`. A battery can have its shared `stem`. A group can name a `parent`, such as the section that contains a battery.
 
 Groups the publisher defines have `origin: publisher` or `upstream_package`. Groups found by a rule, such as a battery inferred from a shared stem and value set, have `origin: rule`. Queries on publisher groups can be `complete`; queries on rule groups are `complete_by_rule` (§7).
 
