@@ -34,6 +34,7 @@ import yaml
 from . import __version__
 from .check import Repo
 from .common_format import CODE_SUFFIX, PROCESSED, ROW, code_text, file_name
+from .ranges import span, valid_ranges
 from .search import Index
 from .views import inputs_hash, origin_text, sort_key, wave_summary, when_text
 
@@ -108,6 +109,7 @@ class Losses:
         "missing_codes": "missing or unresolved codes, typed only in the `__code` column's labels",
         "untyped": "variables listed by name only (no type the records can support)",
         "open_ranges": "quantities exported with open range bounds (no valid range recorded)",
+        "several_ranges": "variables with several valid ranges, exported as one range spanning them",
         "wordings": "variables with several wordings, flattened into `details`",
         "availability": "availability entries (wave by form, with n), summarized as one line of text",
         "corrections": "corrections applied; only the corrected text is exported",
@@ -331,16 +333,15 @@ class Exporter:
         """data-dict type keys for a value column, from its records."""
         measure = rec.get("measure")
         storage = rec.get("storage_type")
-        vr = rec.get("valid_range") or {}
         numeric_codes = [v["code"] for v in valid if is_number(v["code"])]
         string_codes = [v["code"] for v in valid if isinstance(v["code"], str)]
 
         if string_codes and not numeric_codes and storage in (None, "string"):
             return {"type": "enum", "values": {c: code_label(v) or c for c, v in
                                                ((v["code"], v) for v in valid)}}
-        rng = None
-        if is_number(vr.get("min")) and is_number(vr.get("max")):
-            rng = [vr["min"], vr["max"]]
+        rng = list(span(rec)) if span(rec) else None
+        if len(valid_ranges(rec)) > 1:
+            self.losses.add(rel, "several_ranges")     # data-dict has one range: the span
         if measure in QUANTITY:
             out = {"type": "number(quantity)"}
             if rng is None and numeric_codes and len(numeric_codes) == len(valid) and len(valid) > 1:

@@ -23,7 +23,9 @@ from urllib.parse import quote
 from . import __version__
 from .check import Repo
 from .search import Index
-from .views import inputs_hash, natural, origin_text, release_order, sort_key, wave_list, wave_summary, when_text
+from .ranges import notes as range_notes, range_text, valid_ranges
+from .views import (AVAIL_DIMS, inputs_hash, natural, origin_text, release_order, sort_key, wave_list,
+                    wave_summary, when_text)
 
 DIRECTORY = "docs"
 
@@ -365,7 +367,8 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             for i, v in enumerate(values):
                 origin = v.get("origin") or (default if v.get("kind") != "valid" else None)
                 row = [f"<code>{esc(v.get('code'))}</code>",
-                       esc(v.get("label")) + mark(applied, f"/values/{i}/label") + retired_note(v),
+                       esc(v.get("label")) + mark(applied, f"/values/{i}/label") + retired_note(v)
+                       + (f'<br><span class="origin">Note: {esc(v["note"])}</span>' if v.get("note") else ""),
                        f'<span class="kind-{esc(v.get("kind"))}">{esc(v.get("kind"))}</span>',
                        esc(", ".join(v.get("missing_types") or [])),
                        f'<span class="origin">{esc(origin_text(origin))}</span>' if origin else ""]
@@ -379,9 +382,13 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             if counts:
                 body.append('<p class="origin">Cases: how many the publisher\'s codebook counts for each '
                             "code in this release.</p>")
-        if rec.get("valid_range"):
-            vr = rec["valid_range"]
-            body.append(dl([("Valid range", esc(", ".join(f"{k} {v}" for k, v in vr.items())))]))
+        if valid_ranges(rec):
+            rs = valid_ranges(rec)
+            items = [("Valid range" if len(rs) == 1 else "Valid ranges",
+                      "<br>".join(esc(range_text(r)) for r in rs))]
+            if range_notes(rec):
+                items.append(("Range note", "<br>".join(esc(n) for n in range_notes(rec))))
+            body.append(dl(items))
 
         if rec.get("availability"):
             body.append(f"<h2>Availability</h2><p>{esc(availability_line(rec, self.waves[rel], self.dim_label("form")))}</p>")
@@ -492,7 +499,10 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                     if diff_items != ["order or other code fields changed"]:
                         parts.append((f"Codes, compared with {esc(cur_rel)}",
                                       '<ul class="diff">' + "".join(f"<li>{d}</li>" for d in diff_items) + "</ul>"))
-                for field in ("valid_range", "measure", "implied_decimals"):
+                if "valid_range" in real:
+                    parts.append(("Valid range", "<br>".join(
+                        esc(range_text(r)) for r in valid_ranges({"valid_range": real["valid_range"].get("from")})) or "none"))
+                for field in ("measure", "implied_decimals"):
                     if field in real:
                         parts.append((field.replace("_", " ").capitalize(), esc(real[field].get("from"))))
                 details.append(f"<details><summary>{esc(rel)}: {esc(name)}, what differs from "
@@ -523,7 +533,7 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         """
         cols, cells = [], {}
         for a in rec["availability"]:
-            col = ", ".join(f"{self.dim_label(d)} {a[d]}" for d in ("form", "sample", "mode", "phase") if d in a)
+            col = ", ".join(f"{self.dim_label(d)} {a[d]}" for d in AVAIL_DIMS if d in a)
             col = col or "all"
             if col not in cols:
                 cols.append(col)

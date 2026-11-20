@@ -59,6 +59,7 @@ from pathlib import Path
 from . import __version__
 from .check import Repo
 from .compare import absent_by_chance, compare_text, norm, total_cases
+from .ranges import bounds, comparable as comparable_ranges, in_valid_range, valid_ranges, without_notes
 
 RULE = "release_diff"
 RULE_VERSION = "0.1"
@@ -77,10 +78,7 @@ def code_key(code):
 
 
 def in_range(code, record):
-    vr = record.get("valid_range") or {}
-    lo, hi = vr.get("min"), vr.get("max")
-    return (not isinstance(code, str) and isinstance(lo, (int, float)) and isinstance(hi, (int, float))
-            and lo <= code <= hi)
+    return not isinstance(code, str) and in_valid_range(record, code)
 
 
 def code_entry(v):
@@ -153,17 +151,17 @@ def range_changed(a, b):
     lists 15 to 50 one by one: no change)."""
     if "identifier" in (a.get("measure"), b.get("measure")):
         return None
-    va, vb = a.get("valid_range") or {}, b.get("valid_range") or {}
+    va, vb = valid_ranges(a), valid_ranges(b)
     if va and vb:
-        if [va.get(k) for k in ("top_coded", "bottom_coded")] != [vb.get(k) for k in ("top_coded", "bottom_coded")]:
-            return "documented"
-        if (va.get("min"), va.get("max")) == (vb.get("min"), vb.get("max")):
+        ca, cb = comparable_ranges(a), comparable_ranges(b)
+        if [c[3:] for c in ca] != [c[3:] for c in cb] or len(ca) != len(cb):
+            return "documented"      # top/bottom coding, or the number of ranges, changed
+        if [c[:2] for c in ca] == [c[:2] for c in cb]:
             return None
     elif va or vb:
-        stated, other = (va, b) if va else (vb, a)
-        lo, hi = stated.get("min"), stated.get("max")
-        if not (isinstance(lo, (int, float)) and isinstance(hi, (int, float))) or all(
-                lo <= c <= hi for c in numeric_codes(other)):
+        stated, other = (a, b) if va else (b, a)
+        if not any(bounds(r) for r in valid_ranges(stated)) or all(
+                in_valid_range(stated, c) for c in numeric_codes(other)):
             return None
     else:
         return None
@@ -188,8 +186,7 @@ def compare_pair(a, b, omits=(False, False), ignore=()):
     how = range_changed(a, b)
     if how:
         out["valid_range"] = {"how": how,
-                              "from": {k: v for k, v in (a.get("valid_range") or {}).items() if k != "note"} or None,
-                              "to": {k: v for k, v in (b.get("valid_range") or {}).items() if k != "note"} or None}
+                              "from": without_notes(a), "to": without_notes(b)}
     if a.get("implied_decimals") != b.get("implied_decimals"):
         out["implied_decimals"] = {"from": a.get("implied_decimals"), "to": b.get("implied_decimals")}
     if a.get("flag_for") != b.get("flag_for"):

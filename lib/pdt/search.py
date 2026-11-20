@@ -10,7 +10,9 @@ A filter is a dict; every key given must match (AND):
     topic            a topic annotation value, case-insensitive
     derived          {property: value}, e.g. {"scale_signature": "yes_no"}
     available        {"wave": W, "form": F}, form optional: an availability entry for wave W
-                     with form F or with no form (no form means everyone in that wave)
+                     with form F or with no form (no form means everyone in that wave).
+                     sample, mode, phase and geography work the same way:
+                     {"wave": 2022, "geography": "25"} is asked in that state, or everywhere
     waves            W, [W, ...] or {"from": A, "to": B}: an availability entry for any of
                      those waves (any form); labeled like `available`
     field            {"pointer": "/measure", "equals": "categorical"}
@@ -195,13 +197,17 @@ def origin_label(origin):
     return "approximate", {}
 
 
+AVAILABLE_DIMS = ("form", "sample", "mode", "phase", "geography")
+
+
 def available_matches(entry, want):
-    """An availability entry for the wanted wave, with the wanted form or no form at all."""
+    """An availability entry for the wanted wave whose other dimensions match the wanted ones.
+
+    An entry without a dimension covers all of it (no form: everyone in the wave; no
+    geography: every place), so it matches any wanted value of that dimension."""
     if str(entry.get("wave")) != str(want["wave"]):
         return False
-    if "form" not in want or "form" not in entry:
-        return True
-    return str(entry["form"]) == str(want["form"])
+    return all(d not in entry or str(entry[d]) == str(want[d]) for d in AVAILABLE_DIMS if d in want)
 
 
 def question_text(record):
@@ -312,8 +318,9 @@ def search(index, filt):
 
     if "available" in filt:
         want = filt["available"]
-        if "wave" not in want or set(want) - {"wave", "form"}:
-            raise ValueError('available takes {"wave": W} or {"wave": W, "form": F}')
+        if "wave" not in want or set(want) - {"wave", *AVAILABLE_DIMS}:
+            raise ValueError('available takes {"wave": W}, with optional ' + ", ".join(AVAILABLE_DIMS)
+                             + ', e.g. {"wave": W, "form": F}')
         for r, t, rec in scope:
             label, rule = origin_label(field_origin(rec, "/availability"))
             labels.append(label)

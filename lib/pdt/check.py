@@ -344,6 +344,9 @@ def check_name_reuse(repo, result):
                                         "a different item in each release")
 
 
+LINT_SHOWN = 10   # suspicious labels listed in the report; the count covers all
+
+
 def check_provenance(repo, result):
     """C6: sources are pinned; report gaps in the records."""
     used = {s for r in repo.dataset.get("releases", []) for s in r.get("sources", [])}
@@ -362,6 +365,11 @@ def check_provenance(repo, result):
             result.report("C6", f"{missing} of {len(recs)} records have no {name}")
     unresolved = sum(v["kind"] == "unresolved" for r in recs for v in r.get("values", []))
     result.report("C6", f"{unresolved} unresolved codes")
+    from .lint import label_problems
+    suspect = label_problems(recs)
+    result.report("C6", f"{len(suspect)} labels look like a parser's leftovers"
+                  + "".join(f"\n    {where}: {label[:60]!r} ({why})" for where, label, why in suspect[:LINT_SHOWN])
+                  + (f"\n    ... and {len(suspect) - LINT_SHOWN} more" if len(suspect) > LINT_SHOWN else ""))
     everything = [recs, repo.groups, repo.links, repo.annotations]
     unreviewed = sum(1 for o in origins(everything) if o["origin"] == "model" and not o.get("reviewed"))
     result.report("C6", f"{unreviewed} unreviewed model-made facts")
@@ -611,10 +619,10 @@ def check_codes(name, frame, records, result):
                 result.fail("C4", f"{name}/{r['name']}: codes not in values: {listed(bad)}")
         valid = [v["code"] for v in r.get("values", []) if v["kind"] == "valid"]
         if r.get("measure") in ("categorical", "ordinal") and valid and r["name"] in frame:
-            rng = r.get("valid_range") or {}
+            from .ranges import in_valid_range
             seen = frame[r["name"]].dropna().unique()
             extra = [x for x in seen if not any(same_value(x, v) for v in valid)
-                     and not ("min" in rng and rng["min"] <= x <= rng.get("max", rng["min"]))]
+                     and not in_valid_range(r, x)]
             if extra:
                 result.report("C4", f"{name}/{r['name']}: valid values not listed in values: "
                                     f"{listed(sorted(code_text(x) for x in extra))}")

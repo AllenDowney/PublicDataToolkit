@@ -39,7 +39,8 @@ def valid_labels(record):
 
 def scale_signature(record):
     """The record's scale signature, or None."""
-    if "degree" in (record.get("valid_range") or {}).get("note", "").lower():
+    from .ranges import notes
+    if any("degree" in n.lower() for n in notes(record)):
         return "thermometer"
     return SCALE_SIGNATURES.get(valid_labels(record))
 
