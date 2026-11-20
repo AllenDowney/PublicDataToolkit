@@ -197,7 +197,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 50 — An NHIS slice
 
-`DOING (yellow)`. The National Health Interview Survey (NCHS, adults) in `~/pdt-nhis`, on both sides of the 2019 redesign: design, demographics and Twenge's outcomes, linked across 2019 only where NCHS says items are comparable. Details: [`planning/tasks/task-50.md`](planning/tasks/task-50.md).
+`DONE (yellow)`; terms pending Allen. The National Health Interview Survey (NCHS, adults) in `~/pdt-nhis`, 2016–2024: 231 records and 170 links, four of them stated by NCHS (three across the 2019 redesign); `pdt check` 0 failures, data round trip exact and local. Findings and proposals: [`planning/tasks/task-50.md`](planning/tasks/task-50.md).
 ### Task 52 — Pre-publish review
 
 `DOING (red)`. Read only: what in the toolkit and each dataset repo is ready to publish, what to fix first, what v0.1.1 contains, and the publishing steps as commands for Allen. [`planning/publish_checklist.md`](planning/publish_checklist.md). Details: [`planning/tasks/task-52.md`](planning/tasks/task-52.md).
