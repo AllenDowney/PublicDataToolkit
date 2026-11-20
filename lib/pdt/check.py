@@ -558,6 +558,26 @@ def check_design_joins(repo, frames, result):
                     result.fail("C12", f"{name} ({', '.join(key)}): {unmatched:,} of {len(mine):,} rows without a match")
 
 
+def check_panel(repo, result):
+    """C2 for panel and reference periods (STANDARD.md §2.1, §4.1): each variable `panel` names has
+    a record in every release, and a wording with reference_period past_months says how many."""
+    panel = repo.dataset.get("panel") or {}
+    names = [panel.get("id"), panel.get("age_at_interview"), panel.get("noninterview"),
+             *(panel.get("interview_date") or [])]
+    for r in repo.dataset.get("releases", []):
+        have = {x["name"] for recs in repo.tables.get(r["id"], {}).values() for x in recs}
+        for name in names:
+            if name and name not in have:
+                result.fail("C2", f"{r['id']}: panel names {name}, which has no record in the release")
+    for rel, ts in repo.stored.items():
+        for tab, recs in ts.items():
+            for rec in recs:
+                for i, q in enumerate(rec.get("questions") or []):
+                    if q.get("reference_period") == "past_months" and not q.get("months"):
+                        where = f"{rel}/" + (f"{tab}/" if tab else "") + rec["name"]
+                        result.fail("C2", f"{where}: questions[{i}] has reference_period past_months but no months")
+
+
 def check_corrections(repo, result):
     """C7: each correction's original value still appears in its target."""
     if not repo.corrections:
@@ -1135,7 +1155,7 @@ def check_views(repo, result):
                                 f"this is {__version__}")
 
 
-CHECKS = [check_schemas, check_references, check_code_lists, check_code_of, check_replicate_tables, check_design_tables,
+CHECKS = [check_schemas, check_references, check_code_lists, check_code_of, check_replicate_tables, check_design_tables, check_panel,
           check_provenance, check_corrections,
           check_terms, check_extensions, check_docs, check_data, check_views]
 
