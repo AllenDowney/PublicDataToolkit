@@ -122,7 +122,7 @@
       "additionalProperties": false
     },
     "dimensions": {
-      "description": "What availability's wave, form, sample, mode and phase mean here. Omit the ones that don't apply.",
+      "description": "What availability's wave, form, sample, mode, phase and geography mean here. Omit the ones that don't apply.",
       "type": "object",
       "propertyNames": {
         "enum": [
@@ -130,7 +130,8 @@
           "form",
           "sample",
           "mode",
-          "phase"
+          "phase",
+          "geography"
         ]
       },
       "additionalProperties": {

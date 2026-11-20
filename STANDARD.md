@@ -95,7 +95,7 @@ Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A relea
 
 `design` names the survey design variables: `weights`, `strata` and `psu`, and `replicates` when variance comes from replicate weights. `replicates` names the weights, as a list of `variables` or a `prefix` and a count `n`, and the `method` (`brr`, `fay`, `jk1`, `jkn`, `bootstrap`, `sdr`, `other`), with `fay_factor` for Fay's method: PISA's 80 weights `W_FSTURWT1`–`W_FSTURWT80` use Fay's method. A release or table can override it. It's descriptive: which weight suits an analysis is the user's choice.
 
-`dimensions` says what availability's `wave`, `form`, `sample`, `mode` and `phase` mean for this dataset. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
+`dimensions` says what availability's `wave`, `form`, `sample`, `mode`, `phase` and `geography` mean for this dataset. `geography` is where a question was asked when that varies, such as a BRFSS state module (`{"wave": 2022, "geography": "25"}`, Massachusetts); `dimensions.geography.label` names the unit. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
 
 ### 2.2 `sources.yaml`
 
@@ -173,9 +173,9 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other`. A flag variable (allocation, imputation, top-code, swapping) names what it flags in `flag_for` |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime, boolean, geometry |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
-| `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one |
+| `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one. A code's `note` is the publisher's note on that code, verbatim, such as how a calculated variable's code is derived |
 | `code_list` | The id of a shared code list (§4.5) whose codes come before `values`' own |
-| `valid_range` | For numeric variables whose valid values aren't all labeled, such as thermometers and ages: min, max, and whether the ends are top- or bottom-coded. Labeled points inside the range (A_AGE's 80 "80-84 years of age") are listed in `values` as valid codes too |
+| `valid_range` | For numeric variables whose valid values aren't all labeled, such as thermometers and ages: min, max, and whether the ends are top- or bottom-coded. Labeled points inside the range (A_AGE's 80 "80-84 years of age") are listed in `values` as valid codes too. When the valid values form several ranges with different meanings, `valid_range` is a list, each range with its `label`: BRFSS ALCDAY5's 101–107 (days per week) and 201–230 (days in the past 30) |
 | `implied_decimals` | When numbers are stored without their decimal point (a weight of 255212 meaning 2552.12): the number of implied places. The data keep the stored value |
 | `units`, `universe`, `notes` | Verbatim from the publisher |
 | `availability` | One entry per (wave, form, sample, mode, phase) combination the publisher documents. An entry with only `wave` means everyone in that wave. `n` is the count of non-missing responses, when known |
@@ -321,7 +321,7 @@ Source records keep the original of *our* corrections. The library applies corre
 
 Some publishers document every year of a long-running dataset in one place, as FARS's 1975–2024 manual does with a matrix of codes by year range for each element. That matrix records two kinds of change. The same code can change meaning (FARS `LGT_COND` 9 is "Unknown" until 2017 and "Reported as Unknown" from 2018), and the same answer can change code (`WEATHER`'s "Unknown" goes from 9 to 99).
 
-A release's record says only what that release means (§4.2), and links (§5.2) connect variables, not codes. So the publisher's history is kept as data in `metadata/histories.jsonl`, written by the build with the publisher as its origin, one line per variable. Each line has:
+A release's record says only what that release means (§4.2), and links (§5.2) connect variables, not codes. So the publisher's history is kept as data in `metadata/histories.jsonl`, written by the build with the publisher as its origin, one line per variable. A history assembled by rule from one-release documents, as BRFSS's from its yearly codebooks, is allowed too, with `origin: rule`; its periods are only as fine as the releases built. Each line has:
 - the variable's `name` and `table`, its earlier `names` with the waves each applies to (names in another of the publisher's products, such as YRBSS's single-year files, name that product's `source`), and the publisher's `element` id when there is one;
 - the publisher's `periods`, in wave units;
 - its `attributes`: each row's label, verbatim, and its code in each period, or `null` where the publisher shows none.
@@ -336,13 +336,15 @@ These support search. They differ in what they let an agent claim. A publisher's
 
 | | Derived properties | Annotations |
 |---|---|---|
-| Examples | scale signature (agree/disagree 5-point, yes/no, thermometer) | topic tags, aliases ("fair housing law" for `racopen`), summaries |
+| Examples | scale signature (agree/disagree 5-point, yes/no, thermometer) | topic tags, aliases ("fair housing law" for `racopen`), summaries, series |
 | Made by | a named, versioned rule in the shared library | a person, a rule or a model |
 | Files | `metadata/derived/<property>.jsonl`, generated | `metadata/annotations/<name>.jsonl` |
 | Exact? | Yes, given the rule | No |
 | Supports | `complete_by_rule` results | `approximate` results only |
 
 Neither ever overwrites a source field.
+
+A **series** annotation groups one variable per release into a concept readers follow over time ("depression diagnosis, 2011–2023"), across renames no link states. Its `value` is the series id. It's ours, not the publisher's, so it stays separate from links (§5.2), and results built on it are `approximate`.
 
 ## 7. Generated views
 

@@ -9,11 +9,12 @@
       "$ref": "#/$defs/target"
     },
     "kind": {
-      "description": "topic: a subject tag. alias: a search term the text doesn't use (\"gay\" for 1970s \"homosexual\"). summary: a short plain-language description.",
+      "description": "topic: a subject tag. alias: a search term the text doesn't use (\"gay\" for 1970s \"homosexual\"). summary: a short plain-language description. series: groups one variable per release into a concept followed over time; value is the series id; never a link.",
       "enum": [
         "topic",
         "alias",
-        "summary"
+        "summary",
+        "series"
       ]
     },
     "value": {

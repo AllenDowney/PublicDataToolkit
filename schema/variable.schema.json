@@ -92,26 +92,33 @@
       "$ref": "common.schema.json#/$defs/id"
     },
     "valid_range": {
-      "description": "For numeric variables whose valid values are not all labeled (thermometers, ages, counts). Labeled codes inside the range still appear in values.",
-      "type": "object",
-      "properties": {
-        "min": {
-          "type": "number"
+      "description": "For numeric variables whose valid values are not all labeled (thermometers, ages, counts). Labeled codes inside the range still appear in values. A list when the valid values form several ranges with different meanings, each with its label.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "label": {"description": "What this range means, when there are several (BRFSS ALCDAY5: days per week, days in the past 30).", "type": "string"},
+            "top_coded": {"type": "boolean"},
+            "bottom_coded": {"type": "boolean"},
+            "note": {"type": "string"}
+          },
+          "additionalProperties": false
         },
-        "max": {
-          "type": "number"
-        },
-        "top_coded": {
-          "type": "boolean"
-        },
-        "bottom_coded": {
-          "type": "boolean"
-        },
-        "note": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
+        {"type": "array", "minItems": 2, "items": {
+          "type": "object",
+          "properties": {
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "label": {"description": "What this range means, when there are several (BRFSS ALCDAY5: days per week, days in the past 30).", "type": "string"},
+            "top_coded": {"type": "boolean"},
+            "bottom_coded": {"type": "boolean"},
+            "note": {"type": "string"}
+          },
+          "additionalProperties": false
+        }}
+      ]
     },
     "units": {
       "type": "string"
@@ -322,6 +329,10 @@
           "description": "The publisher's label, verbatim.",
           "type": "string"
         },
+        "note": {
+          "description": "The publisher's note on this code, verbatim, such as how a calculated variable's code is derived (BRFSS: \"SMOKE100 = 1 and SMOKEDAY = 1\").",
+          "type": "string"
+        },
         "kind": {
           "description": "valid or missing, as the sources say. unresolved: the sources don't say whether, or why, this code is missing. Record that rather than guess; origin.note says what was checked.",
           "enum": [
@@ -421,6 +432,10 @@
         },
         "phase": {
           "description": "Pre- or post-election, or similar.",
+          "type": "string"
+        },
+        "geography": {
+          "description": "Where the question was asked, when that varies: a state or region code (BRFSS state modules).",
           "type": "string"
         },
         "n": {
