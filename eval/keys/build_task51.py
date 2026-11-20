@@ -121,7 +121,7 @@ def gss_spending_2024(base, cm):
 # down or blue, or hopeless. Neutral: on the topic but not that (diagnoses, days of poor mental
 # health, help-seeking and treatment, vignettes, worthlessness, a trait self-description).
 # Anything else a candidate rule caught is out (blue cards, litmus paper, Blue Cross).
-CANDIDATES = re.compile(r"\bsad|hopeless|depress|\bblue\b|down.hearted|down in the dumps|worthless|"
+CANDIDATES = re.compile(r"\bsad|hopeless|depress|\bblues?\b|down.hearted|down in the dumps|worthless|"
                         r"melanchol|unhappy", re.I)
 SADNESS = {
     ("gss", "sad"): ("hit", "felt sad (1996 feelings list)"),
@@ -133,6 +133,9 @@ SADNESS = {
     ("gss", "unhappy"): ("hit", "unhappy or depressed, past 4 weeks"),
     ("gss", "hlthdep"): ("hit", "unhappy or depressed, past 4 weeks"),
     ("gss", "feeldown"): ("hit", "down, depressed or hopeless, past 2 weeks (PHQ-2)"),
+    # Added after run catalog_sadness-2 reported it (a false positive against the first key):
+    # the first CANDIDATES pattern had \bblue\b, which misses "blues".
+    ("gss", "shakeblu"): ("hit", "felt you couldn't shake the blues (1996 feelings list)"),
     ("yrbss", "q26"): ("hit", "sad or hopeless almost every day for two weeks"),
     ("yrbss", "qn26"): ("hit", "sad or hopeless, as a yes/no indicator"),
     ("gss", "sadblue"): ("neutral", "a trait self-description (is a person who feels sad and blue)"),
@@ -161,7 +164,7 @@ SADNESS = {
 }
 OUT = {("gss", n) for n in """impfam impwork imprelax impfrend impkin impchurh imppol litmstxt hrdshp6
          probfix1 probfix2 probfix3 probhlp1 probhlp2 probhlp3 skipwork scientda scientsn engda engson
-         divkids divwife divhubby happy7 hapunhap""".split()} \
+         divkids divwife divhubby happy7 hapunhap blues""".split()} \
     | {("anes-cdf", "VCF0806")}
 
 

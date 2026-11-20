@@ -16,10 +16,10 @@ scope:
     pdt-nsfg: 2f794be
     pdt-yrbss: 86494f6
     pdt-catalog: '2522621'
-    pdt-brfss: working-tree copy 2026-11-20T01:22:22Z (no git)
+    pdt-brfss: e81369f (committed after pre-registration, which used a working-tree copy)
 built_by: eval/keys/build_task51.py; candidates by keyword, decisions by hand in SADNESS
 author: Claude (PublicDataToolkit Task 51)
-candidates: 70
+candidates: 72
 items:
 - dataset: gss
   table: null
@@ -84,6 +84,13 @@ items:
   why: down, depressed or hopeless, past 2 weeks (PHQ-2)
   waves:
   - 2022
+- dataset: gss
+  table: null
+  name: shakeblu
+  status: hit
+  why: felt you couldn't shake the blues (1996 feelings list)
+  waves:
+  - 1996
 - dataset: yrbss
   table: national
   name: q26
