@@ -41,3 +41,27 @@ Until this is done, don't run `make data` on the full pdt-gss.
 - **Fixes from others:**
   - A table with no records was skipped with an error; it's fixed in purple's `5017b96`, with a test.
   - The replicate columns are also in `5017b96`.
+
+## Stopped here (orange, 2026-11-20)
+
+**Committed in the toolkit:**
+- `acc84a6`: the batched reader and writer, the verified-marker gate, the `read_sas` fix and the tests.
+- `029f131`: pass 2 in Arrow.
+- `eb773e8`: `pdt package` ships current releases by default, with `--release` and `--all`; a release without data files is noted as "not run".
+- Purple's `5017b96` fixed the empty-table bug red found.
+
+**Full GSS 7224r3a, measured:** `make data` took about 53 minutes for 7224r3a. The whole run, stopped during 7224r3, took 1 h 08 min and peaked at 4.7 GB: under the 6 GB cap, above the 3 GB target, with the peak in pass 2. Where the time goes: `pdt.data.split` and the round-trip rebuild handle each of 7224r3a's 525 million cells in Python, twice. Vectorizing them is the follow-up that would bring this down to minutes. ATUS activity: 1.85 GB, 4 min 24 s; summary: 1.06 GB, 11 min.
+
+**pdt-gss is uncommitted and not yet checked:**
+- the records with the 12 shared code lists (Task 41);
+- `data/processed/gss-7224r3a.parquet` (verified; 7224r3's build was stopped and its leftovers removed, per Allen);
+- the Makefile's `RELEASES ?= 7224r3a`, `build_data.py` taking releases, and a README note;
+- the views, regenerated (2 min 42 s, 380 MB).
+
+**The blocker:** `pdt check` was stopped by the 6 GB cap. Its data checks (C3–C5, C12) read the whole parquet file as one pandas frame (75,699 rows × about 14,000 columns).
+
+**Next:**
+1. Make `check.py`'s `load_data` return a lazy frame: columns and row count from the parquet metadata, and a column read only when a check asks for it. Every check reads columns one at a time, or a key's few columns. `check_keys_in_data` needs row filtering on a mask, so the lazy frame should apply a mask to the columns it reads.
+2. Test it, then run `pdt check` on pdt-gss under the cap.
+3. Commit pdt-gss: metadata/, build/, Makefile, README, scripts/build_data.py, agent/, export/.
+4. Tell the coordinator "gss done, <sha>, check 0", and tell green, who swaps in `scripts/extract.py`, and blue.
