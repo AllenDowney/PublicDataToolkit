@@ -14,7 +14,7 @@ Writes, next to this script:
 - gss_spending_2024.yaml: every GSS variable with scale signature spending_3 (too little,
   about right, too much) and an availability entry for 2024. A structural question that isn't
   one of SKILL.md's examples. (favor_oppose, RESULTS.md's first idea, has only 2 such items.)
-- catalog_sadness.yaml: which datasets ask about sadness or hopelessness, and in which years,
+- catalog_sadness_v1.yaml: which datasets ask about sadness or hopelessness, and in which years,
   across the catalog. The hand decisions are in SADNESS below.
 """
 
@@ -215,7 +215,8 @@ def main():
     write("religion_full.yaml", religion_full(base, cm), "Religion key, full GSS release.")
     write("gss_ballot_a_1988_full.yaml", gss_ballot_a_1988_full(base, cm), "Ballot A 1988, full GSS.")
     write("gss_spending_2024.yaml", gss_spending_2024(base, cm), "Spending items in 2024, GSS.")
-    write("catalog_sadness.yaml", catalog_sadness(base, cm), "Sadness or hopelessness across the catalog.")
+    # Version 1 of the catalog key; later versions come from build_catalog_sadness.py.
+    write("catalog_sadness_v1.yaml", catalog_sadness(base, cm), "Sadness or hopelessness across the catalog.")
 
 
 if __name__ == "__main__":

@@ -24,9 +24,17 @@ def waves_of(item):
     return {str(w) for w in item.get("waves") or []}
 
 
-def load_key(question):
-    with open(EVAL / "keys" / f"{question}.yaml") as f:
-        return yaml.safe_load(f)
+def load_key(question, version=None):
+    """The key a run was scored against. A run records the key version it was set up with
+    (config.json key_version); a run set up before keys had versions used version 1, which is
+    keys/<question>_v1.yaml when a later version has replaced keys/<question>.yaml."""
+    keys = EVAL / "keys"
+    path = keys / f"{question}.yaml"
+    if (keys / f"{question}_v{version or 1}.yaml").exists():
+        path = keys / f"{question}_v{version or 1}.yaml"
+    key = yaml.safe_load(path.read_text())
+    assert key.get("version", 1) == (version or 1), f"{path.name} is version {key.get('version', 1)}, not {version or 1}"
+    return key
 
 
 def ratio(num, den):
@@ -51,7 +59,7 @@ def score_items(key_items, reported):
 
 def score_run(run):
     cfg = json.loads((run / "config.json").read_text())
-    key = load_key(cfg["question"])
+    key = load_key(cfg["question"], cfg.get("key_version"))
     log = [json.loads(line) for line in (run / "log.jsonl").read_text().splitlines()] \
         if (run / "log.jsonl").exists() else []
     answer_path = run / "answer.json"

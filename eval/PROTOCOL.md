@@ -160,3 +160,21 @@ Two are new:
 The key's hit/neutral boundary still decides recall for religion.
 
 **Addendum (2026-11-20, before the runs): `gss_spending_2024` rerun.** At the coordinator's request, `gss_spending_2024` is also rerun, as `-3` and `-4`, under this section's setup: the same copies, library, harness and key. The question is whether agents now find the `spending_3` signature that SKILL.md names, and report `complete_by_rule`.
+
+## catalog_sadness key versions (written 2026-11-20, before any run against version 2)
+
+The catalog has grown since the question's first key. A key that predates a dataset marks that dataset's real hits as false positives: catalog_sadness-5 had recall 1.0 but precision 0.462, and its 14 "false positives" were in MEPS, NHANES, NHIS, NSDUH and Pulse. So each key version says which datasets it covers, and a run is scored against the version it was set up with.
+
+| Version | File | Catalog | Datasets covered | Candidates | Hits | Neutral |
+|---|---|---|---|---|---|---|
+| 1 | `keys/catalog_sadness_v1.yaml` (`build_task51.py`) | pdt-catalog `2522621` | 8: anes-cdf, brfss, chicago-crimes, cps-asec, fars, gss, nsfg, yrbss | 72 | 12 | 33 |
+| 2 | `keys/catalog_sadness.yaml` (`build_catalog_sadness.py`) | pdt-catalog `39a13b0` | 17: anes-cdf, atus, brfss, ces, chicago-crimes, cps-asec, fars, hints, meps, nhanes, nhis, nlsy97, nsduh, nsfg, pisa, pulse, yrbss | 32 | 18 | 13 |
+
+- **Version 1's items are unchanged.** It is version 1 as fixed in `58e55f6`, renamed. Runs 1–5 were set up before keys had versions, and `score.py` scores them against version 1: rescoring catalog_sadness-5 gives recall 1.0 and precision 0.462, as recorded.
+- **Version 2 leaves GSS out.** The catalog is rebuilt without it until GSS's records are rebuilt after Task 58. NCVS is left out because its metadata is unpublished. When GSS rejoins, the key becomes version 3 with version 1's GSS decisions, which `build_catalog_sadness.py` already holds. The script stops if the catalog's datasets aren't the ones its version declares, or if a candidate is undecided.
+- **Same candidates and rule as version 1.** Version 1's decisions are kept for its datasets. The new datasets' decisions were made by hand, from the candidates' labels and question text, before any run against this catalog, and are listed in the script. Version 2 was built before I read catalog_sadness-5's reported items.
+  - Hits include the PHQ-2 and PHQ-4 "down, depressed or hopeless" items and the K6 "so sad nothing could cheer you up" and "hopeless" items. NSDUH's ADDPREV is a hit too: ever having had several days of feeling sad, empty or depressed.
+  - Neutral: worthlessness (NHIS ASIWTHLS and WORTHLESS_A, NSDUH DSTNGD30), diagnoses, PHQ totals and categories, and the NSDUH major-depressive-episode classifications.
+- **Names match case-insensitively**, as `score.py` compares them: NSDUH's ADDPREV (2023) and addprev (2024) are one item with both years.
+- **The harness records the version.** `setup_run.py` writes `key_version` into each new run's `config.json`, and `score.py` loads `keys/<question>_v<N>.yaml` for an earlier version. The agent never sees it.
+- **Copies.** Version 2 was built from `git archive HEAD` copies of the 17 repos and pdt-catalog, at the commits in its `scope`. Runs against version 2 use copies at those commits.

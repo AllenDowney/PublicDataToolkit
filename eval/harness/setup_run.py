@@ -57,6 +57,13 @@ QUESTIONS = {
         "depressed, down or hopeless, with the years it was asked."),
 }
 
+def key_version(question):
+    """The current key's version (keys/<question>.yaml `version`, 1 if it has none)."""
+    import yaml
+    path = Path(__file__).resolve().parents[1] / "keys" / f"{question}.yaml"
+    return yaml.safe_load(path.read_text()).get("version", 1) if path.exists() else None
+
+
 CATALOG_RULES = """- The catalog is in `{sandbox}/catalog/agent/`. Start with its `index.md`.
 - Read files ONLY with `{sandbox}/bin/read PATH [FIRST LAST]` (PATH relative to `{sandbox}`;
   FIRST and LAST are line numbers; a directory path lists it). Search ONLY with
@@ -136,10 +143,12 @@ def main():
                     if (repos_base / "COMMITS").exists() else None),
         "pdt_lib": str(PDT / "lib"), "python": sys.executable,
         "log": str(run / "log.jsonl"), "budget": a.budget, "corpus_tokens": corpus,
+        # The version of the key the run will be scored against (score.py); never shown to the agent.
+        "key_version": key_version(a.question),
     }
     (run / "config.local.json").write_text(json.dumps(config, indent=1) + "\n")
     public = {k: v for k, v in config.items()
-              if k in ("run_id", "question", "budget", "corpus_tokens", "commits")}
+              if k in ("run_id", "question", "budget", "corpus_tokens", "commits", "key_version")}
     (run / "config.json").write_text(json.dumps(public, indent=1) + "\n")
     for call in ("read", "search"):
         make_shim(sandbox / "bin" / call, call, run / "config.local.json")

@@ -34,7 +34,11 @@ def test_keys_are_well_formed():
         if path.stem.endswith("_decisions"):
             continue  # an agent's or reader's decisions, the input to a key (Task 57)
         key = yaml.safe_load(path.read_text())
-        assert key["question"] == path.stem or path.stem.endswith("_" + key["question"])
+        stem = path.stem
+        if stem.rsplit("_v", 1)[-1].isdigit():       # an earlier version: <question>_v<N>.yaml
+            stem, version = stem.rsplit("_v", 1)
+            assert key.get("version", 1) == int(version), path.name
+        assert key["question"] == stem or stem.endswith("_" + key["question"])
         assert key["expected_label"] in {"complete", "complete_by_rule", "approximate"}
         seen = set()
         for item in key["items"]:
@@ -58,3 +62,14 @@ def test_keys_name_real_variables():
         for item in yaml.safe_load(path.read_text())["items"]:
             if item["dataset"] in names:
                 assert score.key_of(item) in names[item["dataset"]], (path.name, item)
+
+
+def test_runs_are_scored_against_their_key_version():
+    """A run set up before keys had versions is scored against version 1; a run that records
+    key_version against that version (catalog_sadness: v1 in catalog_sadness_v1.yaml, v2 in
+    catalog_sadness.yaml)."""
+    v1, v2 = score.load_key("catalog_sadness"), score.load_key("catalog_sadness", 2)
+    assert v1.get("version", 1) == 1 and v2["version"] == 2
+    assert {i["dataset"] for i in v1["items"]} <= {"gss", "yrbss", "brfss"}
+    assert "nhis" in {i["dataset"] for i in v2["items"]} and "gss" not in v2["covers"]
+    assert score.load_key("religion_full").get("version", 1) == 1
