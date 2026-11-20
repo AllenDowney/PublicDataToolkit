@@ -77,3 +77,72 @@ Groups and annotation together is a fourth condition, if the first three justify
 
 - No change to search, labels or the existing keys.
 - No embeddings. The plan keeps them optional, and the annotation is the cheaper test of the same idea.
+
+## Decisions (coordinator and Allen, 2026-11-20)
+
+1. **Variant groups** are a group kind, `variants`, with `origin: rule`. They're versions of one item within a release, not continuity across releases. The coordinator adds the kind to STANDARD.md and the schema. They're built by rule in pdt-gss after orange's rebuild is committed.
+2. **The annotation** uses a Haiku-class model through the API key, capped at 2M input tokens.
+   - Each tag gets `origin: model`, with the model id and prompt version, `reviewed: false`, and the label `approximate`.
+   - The prompt and batch plan (below) are fixed before the first call.
+   - The job runs under the memory cap and stops if the token cap is reached.
+3. **The second topic** is mental health.
+   - Its key is built by an agent under a blind protocol, before any annotation exists, and is labeled agent-made with no human check (Allen's choice).
+   - It's a fresh subagent that sees only the records.
+4. **Scope:** GSS only.
+
+**Order:**
+1. The mental-health key.
+2. The annotation.
+3. Adjudication and the 300-item sample.
+4. Reruns, three per condition.
+
+## The mental-health key: blind protocol
+
+**The question,** fixed now, word for word for the eval (`gss_mental_health_full`): "In the GSS, find every variable about the respondent's own mental health: how often they felt sad, depressed, anxious, stressed or lonely, their mental-health diagnoses, days of poor mental health, and treatment or help they sought for emotional problems."
+
+**The builder** is a fresh subagent. Its working directory holds only:
+- `records.jsonl`: one line per variable of pdt-gss 7224r3a at `cf22b43`, with name, label, question text, valid value labels, subjects and modules;
+- its instructions.
+
+It's told not to read anything else: not the religion keys or results, not `eval/`, not any annotation (none exists yet).
+
+**Its method,** as in the religion key:
+1. Find candidates by any rule it chooses (keywords, subjects, modules). It writes the rule down.
+2. Read each candidate.
+3. Sort each one under this rule:
+
+| Status | What |
+|---|---|
+| `hit` | The respondent's own mental-health state: feelings and symptoms (sad, depressed, anxious, stressed, lonely, hopeless), diagnoses, days of poor mental health, and treatment or help sought for their own emotional problems |
+| `neutral` | On the topic, but not the respondent's own state: attitudes toward mental illness, stigma vignettes, other people's mental health, hypothetical help-seeking, and general happiness or life satisfaction |
+| out | Matched a candidate rule but isn't about mental health |
+
+**Output:** `decisions.yaml`, with its candidate rule, its counts, and each hit and neutral with a reason. `eval/keys/full/build_gss_mental_health.py` turns it into the key, records the builder as "agent (fresh subagent, Task 57), no human check", and checks every name against the records.
+
+## The annotation: prompt and batch plan
+
+**Input:** the same `records.jsonl` as the key's builder. Each variable is shown with its name, its label, its question text cut to 400 characters, and up to 12 valid value labels.
+
+**Topics:** both topics are tagged in one pass, so the annotation treats them the same way. The definitions are the two eval questions' wording; the model never sees a key.
+
+**Prompt** (version `topics-0.1`). The system prompt:
+
+> You tag survey variables with topics. For each variable, list every topic below that the variable is about. A variable is about a topic if it asks the respondent about it, or records something about it. Use only these topics; give an empty list if none applies.
+> - religion: religious affiliation or preference, attendance at services, the importance of religion to the respondent, prayer, religious belief (for example, views about the Bible), religious experience, and attitudes about religion, religious groups or clergy.
+> - mental_health: feelings such as sadness, depression, anxiety, stress or loneliness, mental-health diagnoses, days of poor mental health, treatment or help for emotional problems, and attitudes about mental illness.
+> Answer with one JSON object mapping each variable name to its list of topics, and nothing else.
+
+The user message is the batch, one variable per block.
+
+The topic definitions are deliberately wider than the keys' hit rules: they include attitudes. A tag says only that a variable is on the topic. The key's neutral band absorbs the difference, as it does for subjects.
+
+**Batches:**
+- 100 variables per call, so 70 calls, run one at a time and resumable.
+- Each call's input tokens are logged, and the job stops before a call that would pass 2M.
+- The expected total is about 1M: about 110 tokens per variable plus the prompt.
+
+**Output:** `metadata/annotations/topics.jsonl` in pdt-gss, one line per (variable, topic), with:
+- `origin: model`, the model id and `prompt_version: topics-0.1`;
+- the date and `reviewed: false`.
+
+The raw responses are kept, outside any repo, for checking.
