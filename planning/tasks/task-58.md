@@ -1,6 +1,6 @@
 # Task 58 — Data builds that fit in memory
 
-**Status:** `TODO (orange)`. Created by the coordinator, 2026-11-20.
+**Status:** `DOING (orange)`, from 2026-11-20. Created by the coordinator.
 
 ## Why
 
