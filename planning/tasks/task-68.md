@@ -131,6 +131,15 @@ A file over 20,000 tokens splits into parts (`columns-01.md`, ...), with each pa
 
 **After acceptance (2026-11-20):** the coordinator added an optional `domain` to dataset.yaml (c430ad8). `pdt export daaf` takes it as the default, `--domain` overrides it, and the export fails, naming both, when neither is given. The template's `make export-daaf` passes `$(ARGS)`. pdt-nhis has `domain: health`, with its views and export regenerated (12faf75).
 
+**Load test inside DAAF (approved by Allen, 2026-11-20): not run.** Two things block it:
+1. **No Docker:** this machine has neither Docker nor Podman (`docker: command not found`). DAAF runs Claude Code inside a container built from its `Dockerfile` and `docker-compose.yml`.
+2. **A login:** DAAF's installation guide (`user_reference/01_installation_and_quickstart.md`, "AI Provider Account & Authentication") says every route needs a model-provider account: an Anthropic subscription or API key (an interactive login on first launch), or keys for OpenRouter, OpenAI, Bedrock or Vertex in `environment_settings.txt`.
+
+The coordinator's instructions were to stop at a login, so nothing was installed or pulled and nothing was sent anywhere. The test needs Allen to install Docker and log in, or to supply a key, in a session he runs. The planned questions:
+- "Which years asked about depression frequency, and what changed in 2019?" The records answer it: `DEP_1` 2016–2018 → `DEPFREQ_A` 2019–2024, `renamed`, from NCHS's redesign evaluation.
+- "How are don't know and refused coded in `DEPFREQ_A`?" The records answer it: 7 Refused, 8 Not Ascertained, 9 Don't Know.
+
+To record: whether DAAF's agents loaded the skill, whether they used the shards, whether the answers were right, and the tokens it took.
+
 **Next:**
-- A load test inside DAAF (Allen).
 - Related Data Sources from the catalog: it now says the records relate no other dataset.
