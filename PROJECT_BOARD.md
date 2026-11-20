@@ -308,6 +308,10 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 72 — Make `pdt check` fast on the full GSS
 
 `DONE (blue)`. Profiled on the full GSS: C1 resolved every schema `$ref` at each use, and C2's `Repo.resolve` scanned every record for each of 26,000 references. Schemas are now inlined once, and names indexed. Output is identical on four repos, and GSS takes 18–27 s, down from 76 s. The reported 40 minutes didn't reproduce. Details: [`planning/tasks/task-72.md`](planning/tasks/task-72.md).
+### Task 73 — A Pages site for the toolkit, and a contribution guide
+
+`DOING (red)`. A GitHub Pages site for this repo, generated from README, PROPOSAL.md and STANDARD.md: the goals, how a dataset repo works (the three forms), the standard, the catalog of dataset repos, and how to take part; with a Pages workflow. Also `CONTRIBUTING.md` and issue templates (new dataset, documentation error, standard proposal, bug). Public-facing: nothing from `planning/`. Nothing is published until Allen pushes. Details: [`planning/tasks/task-73.md`](planning/tasks/task-73.md).
+
 
 ### Task 74 — "About" and "Using this site" pages on every dataset site
 
