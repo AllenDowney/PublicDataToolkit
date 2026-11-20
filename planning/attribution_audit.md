@@ -92,8 +92,8 @@ After each change: rebuild, `make views`, `pdt check`.
 | pdt-anes-cdf | **done** by yellow, `65f3463`: `Claude (PublicDataToolkit Task 5)`; VCF0009z's availability `Claude (PublicDataToolkit Task 17)`; " for Allen Downey" dropped from the corrections |
 | pdt-nsfg | **done** by yellow, `cff7abd`: 2022-2023 `Claude (PublicDataToolkit Task 5)`; 2017-2019 `Claude (PublicDataToolkit Task 22)` |
 | the template | **done**, `8ec956a`: `build/slice.yaml` starts with `author:` empty, the stub's build stops until it's filled, and instructions 03 and 04 say so |
-| pdt-gss | sent to blue, for after Task 26 |
+| pdt-gss | **done** by blue (`bd67680`): `Claude (PublicDataToolkit Task 5)` (99 facts); `partyid`'s measure is Allen's (2 facts); the release-notes author is `Claude (PublicDataToolkit Task 21)`; the 4 corrections keep Allen (carried over) |
 | pdt-brfss | sent to green, before its first commit |
 | pdt-cps-asec, pdt-yrbss | already name Claude; yellow drops " for Allen Downey" in CPS after the coordinator's terms edit; optional for YRBSS (purple) |
 
-Re-run of the inventory after these fixes: hand facts naming "Allen Downey" alone remain only in pdt-gss (101, with blue) and pdt-brfss (157, with green).
+Re-run of the inventory after these fixes: hand facts naming "Allen Downey" alone remain only in pdt-brfss (157, with green), and in pdt-gss's `partyid` measure, which is Allen's own decision.

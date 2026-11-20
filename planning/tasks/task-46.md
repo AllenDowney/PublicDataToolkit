@@ -35,3 +35,5 @@ The Chicago terms decision was recorded by the coordinator on Allen's direct ins
 - The template fix is in (`8ec956a`), with a test. The two template tests that predated C8 now expect it.
 - Re-running the inventory: hand facts naming Allen alone remain only in pdt-gss (101, blue, after Task 26) and pdt-brfss (157, green).
 - Task 46 stays `DOING` until those two land.
+- GSS fixed by blue (`bd67680`), and verified: 99 facts name Claude (Task 5); `partyid`'s measure is Allen's. Only pdt-brfss (green) remains.
+- Task 27's last step is done too: blue's GSS build uses `pdt.derived.scale_signatures` (1,341 signatures at 0.2, including `gunlaw` and `cappun` as favor_oppose).
