@@ -96,21 +96,14 @@ For the library (views + site, or red):
 
 ## Stopped here (2026-11-19, green)
 
-**Done, on disk in `~/pdt-brfss` (not yet committed there; the repo has no commits):**
-- sources, terms, dataset.yaml, README, CLAUDE.md, EXTENSIONS.md;
-- the build (`build/codebook.py`, `xport.py`, `build_records.py`, `build_links.py`, `build_histories.py`) and `scripts/build_data.py`.
+`~/pdt-brfss` is committed (e81369f; no remote), after a final run that includes the 2021 header fix (MENTHLTH's and the other "." codes):
+- `make data`: all 13 years round-trip exactly;
+- views regenerated;
+- `pdt check`: 0 failures, 0 unresolved codes, 0 labels flagged.
 
-The last *complete* run (records, data, views, check) passed `pdt check` with 0 failures and 0 unresolved codes, and all 13 years round-tripped exactly. That run was before two fixes:
-- the 2021 split running header ("Overall version data" / "weighted with _LLCPWT"), which had made MENTHLTH's and other 2021 "." codes valid;
-- histories skipping codes with no label.
-
-**The final run** (with both fixes) rebuilt records, links (300) and histories (24), with 0 labels flagged. Its `make data`, `make views` and `pdt check` were still running when I stopped. So `data/processed/`, `agent/`, `docs/` and `export/` may be stale against the records, and C8 may fail until `make views` runs. Every "." code is now missing, with the right types, except two:
-
-**Open bug:** `_RACEGR2` 2011 and 2012: the "." row is labeled with a count ("126", "105") and typed valid. It's probably a BLANK row with a count and no label in the 2011–2012 layout; fix it in `build/codebook.py`.
+**Open bug:** `_RACEGR2`'s "." code in 2011 and 2012 is labeled with a count ("126", "105") and typed valid. It's probably a BLANK row with a count and no label in that layout. Every other "." code in all 13 years is missing, with the right types.
 
 **Next steps:**
-1. Fix `_RACEGR2`.
-2. `make build && make data && make views && make check`, and expect 0 failures.
-3. Check the numbers in this file: "about 50" differing same-name pairs, and "refused for SEX from 2016" in finding 3.
-4. `git add` and commit pdt-brfss by path.
-5. Set this file's status to DONE, then send red (XPORT reader review, views) and the coordinator a report.
+1. Fix `_RACEGR2` in `build/codebook.py`, then `make build && make data && make views && make check`.
+2. Check two claims in this file: "about 50" same-name pairs with changed documentation, and "refused for SEX from 2016" (finding 3).
+3. Set the status to DONE, then ask red to review `build/xport.py` for `pdt.readers` and to regenerate views.
