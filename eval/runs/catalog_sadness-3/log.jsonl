@@ -1,0 +1,4 @@
+{"time": 1795189854.4768798, "call": "read", "args": ["catalog/agent/index.md"], "chars": 3925, "tokens": 981, "printed": true, "spent_after": 981}
+{"time": 1795189860.7081587, "call": "search", "args": ["catalog", "{\"text\": [\"sad\", \"depress\", \"hopeless\", \"feel down\", \"worthless\"]}", "--names", "--limit", "100"], "chars": 3180, "tokens": 795, "printed": true, "spent_after": 1776}
+{"time": 1795189866.6827865, "call": "search", "args": ["catalog", "{\"text\": [\"sad\", \"hopeless\", \"feel down\", \"depressed\", \"blue\"]}", "--limit", "60"], "chars": 21791, "tokens": 5447, "printed": true, "spent_after": 7223}
+{"time": 1795189872.5980415, "call": "search", "args": ["catalog", "{\"text\": [\"depress\"]}", "--limit", "60"], "chars": 21115, "tokens": 5278, "printed": true, "spent_after": 12501}

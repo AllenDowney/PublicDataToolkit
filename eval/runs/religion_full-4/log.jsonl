@@ -1,0 +1,19 @@
+{"time": 1795189854.4802616, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 5315, "tokens": 1328, "printed": true, "spent_after": 1328}
+{"time": 1795189859.7784855, "call": "search", "args": ["gss", "{\"subject\":\"Religion\"}", "--names"], "chars": 4920, "tokens": 1230, "printed": true, "spent_after": 2558}
+{"time": 1795189862.1086755, "call": "search", "args": ["gss", "{\"text\":\"relig\"}", "--names"], "chars": 3706, "tokens": 926, "printed": true, "spent_after": 3484}
+{"time": 1795189864.27282, "call": "search", "args": ["gss", "{\"text\":\"church\"}", "--names"], "chars": 1989, "tokens": 497, "printed": true, "spent_after": 3981}
+{"time": 1795189866.7899477, "call": "search", "args": ["gss", "{\"text\":\"pray\"}", "--names"], "chars": 494, "tokens": 123, "printed": true, "spent_after": 4104}
+{"time": 1795189869.0797248, "call": "search", "args": ["gss", "{\"text\":\"bible\"}", "--names"], "chars": 515, "tokens": 128, "printed": true, "spent_after": 4232}
+{"time": 1795189872.6108367, "call": "read", "args": ["anes-cdf/agent/SKILL.md"], "chars": 5194, "tokens": 1298, "printed": true, "spent_after": 5530}
+{"time": 1795189874.5308802, "call": "search", "args": ["anes-cdf", "{\"subject\":\"Religion\"}", "--names"], "chars": 40, "tokens": 10, "printed": true, "spent_after": 5540}
+{"time": 1795189875.702297, "call": "search", "args": ["anes-cdf", "{\"text\":\"relig\"}", "--names"], "chars": 259, "tokens": 64, "printed": true, "spent_after": 5604}
+{"time": 1795189877.5152452, "call": "search", "args": ["nsfg", "{\"subject\":\"Religion\"}", "--names"], "chars": 40, "tokens": 10, "printed": true, "spent_after": 5614}
+{"time": 1795189883.6461208, "call": "search", "args": ["anes-cdf", "{\"text\":\"church\"}", "--names"], "chars": 238, "tokens": 59, "printed": true, "spent_after": 5673}
+{"time": 1795189885.8683197, "call": "search", "args": ["anes-cdf", "{\"text\":\"bible\"}", "--names"], "chars": 226, "tokens": 56, "printed": true, "spent_after": 5729}
+{"time": 1795189887.698848, "call": "search", "args": ["anes-cdf", "{\"text\":\"pray\"}", "--names"], "chars": 216, "tokens": 54, "printed": true, "spent_after": 5783}
+{"time": 1795189889.455058, "call": "search", "args": ["anes-cdf", "{\"text\":\"denomination\"}", "--names"], "chars": 233, "tokens": 58, "printed": true, "spent_after": 5841}
+{"time": 1795189891.0632033, "call": "search", "args": ["anes-cdf", "{\"text\":\"God\"}", "--names"], "chars": 215, "tokens": 53, "printed": true, "spent_after": 5894}
+{"time": 1795189892.7798939, "call": "search", "args": ["nsfg", "{\"text\":\"relig\"}", "--names"], "chars": 779, "tokens": 194, "printed": true, "spent_after": 6088}
+{"time": 1795189894.5909863, "call": "search", "args": ["nsfg", "{\"text\":\"church\"}", "--names"], "chars": 273, "tokens": 68, "printed": true, "spent_after": 6156}
+{"time": 1795189896.2191744, "call": "search", "args": ["nsfg", "{\"text\":\"pray\"}", "--names"], "chars": 271, "tokens": 67, "printed": true, "spent_after": 6223}
+{"time": 1795189897.855145, "call": "search", "args": ["nsfg", "{\"text\":\"service\"}", "--names"], "chars": 549, "tokens": 137, "printed": true, "spent_after": 6360}

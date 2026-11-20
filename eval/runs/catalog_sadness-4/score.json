@@ -1,0 +1,43 @@
+{
+ "run": "catalog_sadness-4",
+ "question": "catalog_sadness",
+ "answered": true,
+ "key_hits": 12,
+ "reported": 13,
+ "found": 12,
+ "recall": 1.0,
+ "precision": 1.0,
+ "misses": [],
+ "false_positives": [],
+ "waves_exact": 1.0,
+ "waves_wrong": [],
+ "tokens_read": 9613,
+ "corpus_tokens": 319675,
+ "effort": 0.03,
+ "calls": 5,
+ "searches": 4,
+ "refused": 0,
+ "label": "approximate",
+ "expected_label": "approximate",
+ "label_ok": true,
+ "by_dataset": {
+  "brfss": {
+   "recall": null,
+   "precision": null,
+   "found": 0,
+   "key_hits": 0
+  },
+  "gss": {
+   "recall": 1.0,
+   "precision": 1.0,
+   "found": 10,
+   "key_hits": 10
+  },
+  "yrbss": {
+   "recall": 1.0,
+   "precision": 1.0,
+   "found": 2,
+   "key_hits": 2
+  }
+ }
+}

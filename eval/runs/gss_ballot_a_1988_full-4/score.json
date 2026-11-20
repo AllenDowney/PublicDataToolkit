@@ -1,0 +1,21 @@
+{
+ "run": "gss_ballot_a_1988_full-4",
+ "question": "gss_ballot_a_1988_full",
+ "answered": true,
+ "key_hits": 635,
+ "reported": 642,
+ "found": 635,
+ "recall": 1.0,
+ "precision": 1.0,
+ "misses": [],
+ "false_positives": [],
+ "tokens_read": 7285,
+ "corpus_tokens": 14625651,
+ "effort": 0.0,
+ "calls": 2,
+ "searches": 1,
+ "refused": 0,
+ "label": "complete",
+ "expected_label": "complete",
+ "label_ok": true
+}

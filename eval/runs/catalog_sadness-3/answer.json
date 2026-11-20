@@ -1,0 +1,19 @@
+{"question": "catalog_sadness",
+ "label": "approximate",
+ "items": [
+  {"dataset": "gss", "table": null, "name": "sad", "waves": [1996]},
+  {"dataset": "gss", "table": null, "name": "shakeblu", "waves": [1996]},
+  {"dataset": "gss", "table": null, "name": "nocheer", "waves": [1998]},
+  {"dataset": "gss", "table": null, "name": "hopeless", "waves": [1998]},
+  {"dataset": "gss", "table": null, "name": "downblue", "waves": [2000]},
+  {"dataset": "gss", "table": null, "name": "sadblue", "waves": [2004]},
+  {"dataset": "gss", "table": null, "name": "cesd1", "waves": [2016]},
+  {"dataset": "gss", "table": null, "name": "cesd5", "waves": [2016]},
+  {"dataset": "gss", "table": null, "name": "unhappy", "waves": [2018]},
+  {"dataset": "gss", "table": null, "name": "hlthdep", "waves": [2022]},
+  {"dataset": "gss", "table": null, "name": "feeldown", "waves": [2022]},
+  {"dataset": "yrbss", "table": "national", "name": "q26", "waves": [1999,2001,2003,2005,2007,2009,2011,2013,2015,2017,2019,2021,2023]},
+  {"dataset": "yrbss", "table": "national", "name": "qn26", "waves": [1999,2001,2003,2005,2007,2009,2011,2013,2015,2017,2019,2021,2023]}
+ ],
+ "sources": ["pdt search --catalog text filters (sad, depress, hopeless, feel down, blue, worthless), index.md"],
+ "notes": "Label approximate because text search is always approximate. Excluded as not asking about feeling sad: BRFSS MENTHLTH (days mental health not good) and ADDEPEV2/3 (ever told depressive disorder), GSS depress (told have depression), mntlhlth, emoprobs (emotional problems), wrthless (1998, worthless, borderline), treat10/wait10 (treatment seeking), YRBSS q84. ANES and NSFG had no matches."}

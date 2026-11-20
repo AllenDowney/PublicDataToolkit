@@ -1,0 +1,11 @@
+{"time": 1795189854.4767196, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 5315, "tokens": 1328, "printed": true, "spent_after": 1328}
+{"time": 1795189860.3796074, "call": "search", "args": ["gss", "{\"subject\":\"Religion\"}", "--names"], "chars": 4920, "tokens": 1230, "printed": true, "spent_after": 2558}
+{"time": 1795189860.4312756, "call": "read", "args": ["anes-cdf/agent/SKILL.md"], "chars": 5194, "tokens": 1298, "printed": true, "spent_after": 3856}
+{"time": 1795189860.4835339, "call": "read", "args": ["nsfg/agent/SKILL.md"], "chars": 5173, "tokens": 1293, "printed": true, "spent_after": 5149}
+{"time": 1795189864.8230186, "call": "search", "args": ["anes-cdf", "{\"subject\":\"Religion\"}", "--names"], "chars": 40, "tokens": 10, "printed": true, "spent_after": 5159}
+{"time": 1795189866.2648113, "call": "search", "args": ["nsfg", "{\"subject\":\"Religion\"}", "--names"], "chars": 40, "tokens": 10, "printed": true, "spent_after": 5169}
+{"time": 1795189867.8413513, "call": "read", "args": ["anes-cdf/agent/index.md", "1", "40"], "chars": 3197, "tokens": 799, "printed": true, "spent_after": 5968}
+{"time": 1795189867.8918307, "call": "read", "args": ["nsfg/agent/index.md", "1", "40"], "chars": 1979, "tokens": 494, "printed": true, "spent_after": 6462}
+{"time": 1795189872.8966157, "call": "search", "args": ["anes-cdf", "{}", "--release", "all", "--limit", "60"], "chars": 5205, "tokens": 1301, "printed": true, "spent_after": 7763}
+{"time": 1795189874.2363842, "call": "search", "args": ["nsfg", "{\"text\":\"relig\"}", "--release", "all"], "chars": 2784, "tokens": 696, "printed": true, "spent_after": 8459}
+{"time": 1795189884.5010507, "call": "search", "args": ["gss", "{\"subject\":\"Religion\"}", "--names"], "chars": 4920, "tokens": 1230, "printed": true, "spent_after": 9689}

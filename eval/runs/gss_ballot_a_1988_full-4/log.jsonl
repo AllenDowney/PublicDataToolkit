@@ -1,0 +1,2 @@
+{"time": 1795189854.2080314, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 5315, "tokens": 1328, "printed": true, "spent_after": 1328}
+{"time": 1795189858.5626194, "call": "search", "args": ["gss", "{\"available\": {\"wave\": 1988, \"form\": \"A\"}}", "--names", "--release", "all"], "chars": 23828, "tokens": 5957, "printed": true, "spent_after": 7285}

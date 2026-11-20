@@ -1,6 +1,6 @@
 # Task 53 — Search fixes from the full-GSS eval
 
-**Status:** `DOING (blue)`
+**Status:** `DONE (blue)`, 2026-11-20
 
 Assigned by the coordinator on 2026-11-20, from the Task 51 findings ([`eval/RESULTS.md`](../../eval/RESULTS.md#task-51-the-full-gss-release)).
 
@@ -22,3 +22,37 @@ Assigned by the coordinator on 2026-11-20, from the Task 51 findings ([`eval/RES
 - `eval/` (harness, runs, RESULTS.md, PROTOCOL.md).
 
 Regenerating the views of pdt-gss and the catalog goes through the coordinator, or is done here only if it's asked for.
+
+## Done (2026-11-20)
+
+| Commit | What |
+|---|---|
+| `3310e55` | Library: search, catalog, CLI, SKILL.md template and tests (230 pass) |
+| `ba40c25` | Protocol section and harness options, before any run |
+
+**What was built:**
+- **`pdt search`.** A filter without `release` searches the current release(s), `pdt.search.default_releases`: the releases marked current, else all. `--release all|ID[,ID]` overrides it.
+  - `--names` prints the names on one line.
+  - `--limit` and `--offset` page the output. `count` is always the total, and the header keeps the scope, the label and the rule versions.
+  - On the GSS, the ballot-A query drops from 1,282 rows (about 32k tokens) to 642 names (about 2.2k).
+- **`waves` filter.** It takes a wave, a list or `{"from", "to"}`, and its label comes from availability's origin, as with `available`.
+- **Catalog search.** Waves on every dataset part, variable and result. `--names` gives one line per variable with its waves, as runs over that dataset's waves. The waves filter and paging work too.
+- **SKILL.md** (in `views.py`, so every repo gets it when its views are regenerated):
+  - It says to search first.
+  - It gives index.md's size when that's over 5,000 tokens (about 31,600 for the GSS).
+  - It names the default scope and the dataset's scale signatures.
+  - It says a signature search is `complete_by_rule` where text search or reading is `approximate`.
+
+**Results:** recall before, then after.
+
+| Question | Before (Task 51) | After |
+|---|---|---|
+| Ballot A 1988 | 0.02, 0.07 | 1.0, 1.0, labeled `complete` |
+| Catalog sadness | 0.83, 1.0 | 1.0, 1.0, with exact years |
+| Religion | 0.03, 0.11 | 0.86, 0.18 |
+
+The religion spread comes from whether the agent kept the publisher's subject list or pruned it. Details are in [`eval/RESULTS.md`](../../eval/RESULTS.md#task-53-after-the-search-fixes).
+
+**Not done here:**
+- pdt-gss's own `agent/` and `~/pdt-catalog` still have the old SKILL.md and index. Regenerating them (`make views`, `pdt catalog`) is for their owners or the coordinator.
+- The template copies nothing: SKILL.md comes from the library.

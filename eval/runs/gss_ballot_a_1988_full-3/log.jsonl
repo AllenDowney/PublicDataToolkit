@@ -1,0 +1,3 @@
+{"time": 1795189854.4714642, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 5315, "tokens": 1328, "printed": true, "spent_after": 1328}
+{"time": 1795189859.4826078, "call": "search", "args": ["gss", "{\"available\": {\"wave\": 1988, \"form\": \"A\"}}", "--names", "--limit", "5000"], "chars": 7433, "tokens": 1858, "printed": true, "spent_after": 3186}
+{"time": 1795189867.4805017, "call": "search", "args": ["gss", "{\"available\": {\"wave\": 1988, \"form\": \"A\"}}", "--names", "--limit", "5000"], "chars": 7433, "tokens": 1858, "printed": true, "spent_after": 5044}

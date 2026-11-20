@@ -103,3 +103,44 @@ Six of run 2's 15 GSS hits (`relig`, `relig16`, `denom`, `fund`, `reliten`, `att
 - Warn in GSS SKILL.md that `index.md` is large, and point to `subject` searches and scale signatures first. Or split the index.
 - Let catalog search return years, or filter on them.
 - Rerun these four questions after those changes, as a protocol change, with the same keys.
+
+## Task 53: after the search fixes
+
+Run on 2026-11-20 under PROTOCOL.md's Task 53 section, committed in `ba40c25` before any run. The records are the same as in Task 51 (pdt-gss `cf22b43`). What changed is the library (`3310e55`), the regenerated `agent/` and catalog, and the harness's search options. Same model, budget and keys.
+
+| Run | Recall | Precision | Found / hits | Tokens read | Calls | Label | Expected | Label ok |
+|---|---|---|---|---|---|---|---|---|
+| `religion_full-3` | 0.855 | 1.0 | 219 / 256 | 9,689 | 11 | `approximate` | `approximate` | yes |
+| `religion_full-4` | 0.184 | 1.0 | 47 / 256 | 6,360 | 19 | `approximate` | `approximate` | yes |
+| `gss_ballot_a_1988_full-3` | 1.0 | 1.0 | 635 / 635 | 5,044 | 3 | `complete` | `complete` | yes |
+| `gss_ballot_a_1988_full-4` | 1.0 | 1.0 | 635 / 635 | 7,285 | 2 | `complete` | `complete` | yes |
+| `catalog_sadness-3` | 1.0 | 1.0 | 12 / 12 | 12,501 | 4 | `approximate` | `approximate` | yes |
+| `catalog_sadness-4` | 1.0 | 1.0 | 12 / 12 | 9,613 | 5 | `approximate` | `approximate` | yes |
+
+Both catalog runs got every hit's years right (`waves_exact` 1.0). None of the six runs had a false positive, so the keys are unchanged.
+
+**Before and after** (Task 51 runs, then Task 53 runs):
+
+| Question | Recall before | Recall after | Tokens read before | Tokens read after |
+|---|---|---|---|---|
+| Religion, full GSS | 0.03, 0.11 | 0.86, 0.18 | 35–40k | 6–10k |
+| Ballot A 1988, full GSS | 0.02, 0.07 | 1.0, 1.0 (labels right) | 40k | 5–7k |
+| Catalog sadness | 0.83, 1.0 (years 0.5, 0.17) | 1.0, 1.0 (years 1.0, 1.0) | 33–35k | 10–13k |
+
+### Findings
+
+1. **Structural queries are solved at full scale.** Both ballot agents ran the `available` search with `--names` and reported 642 names, labeled `complete`, in 2–3 calls and 5–7k tokens.
+   - One added `--release all` and then took the 7224r3a names, which is also right.
+   - This is plan §13's criterion met on a 6,943-variable release, not a 50-variable slice.
+2. **Topic queries now depend on what the agent does with the subject list.**
+   - Run 3 took the GSS publisher's Religion subject (405 names) as it is: recall 0.85, precision 1.0. Its 37 misses are hits outside that subject, mostly belief items such as `biblauth`, `chrstsav` and the `postlf*` series.
+   - Run 4 pruned the subject list by judgment to 65 GSS names: recall 0.18.
+   - Both read about a quarter of their Task 51 tokens. The spread between them is the agent's choice, not the tools'.
+   - The key counts the subject's off-topic members as neutral, so keeping them costs nothing here. A user who wants a precise list still has to judge each one.
+3. **The catalog question is answered with years.** Both agents used `--names`, whose lines carry years. They found all 12 hits, `shakeblu` included, and gave exact years. Each also listed `sadblue`, which the key counts as neutral.
+4. **The read-only rule is still bent.** Every run but one piped search output through `head`, `tail`, `grep` or a Python script. Tokens read are counted at the source, so they're an upper bound. The answers are scored as written.
+
+### Next
+
+- Topic recall in the GSS is now limited by the publisher's subject list. A topic annotation for religion, or a battery or section group for the belief modules, would let a search reach the other 37 items. That's §7.5's with/without-annotations comparison, which this setup can now run.
+- `gss_spending_2024` wasn't rerun. SKILL.md now names `spending_3` and says what it gives, so a rerun would test whether the label problem (finding 3 of Task 51) is gone.

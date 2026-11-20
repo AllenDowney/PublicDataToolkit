@@ -1,0 +1,5 @@
+{"time": 1795189854.2812915, "call": "read", "args": ["catalog/agent/index.md"], "chars": 3925, "tokens": 981, "printed": true, "spent_after": 981}
+{"time": 1795189859.6901307, "call": "search", "args": ["catalog", "{\"text\": [\"sad\", \"depress\", \"hopeless\", \"feel down\", \"blue\"]}", "--names", "--limit", "80"], "chars": 3744, "tokens": 936, "printed": true, "spent_after": 1917}
+{"time": 1795189864.8505325, "call": "search", "args": ["catalog", "{\"text\": [\"sad\", \"depress\", \"hopeless\", \"feel down\"]}", "--limit", "80"], "chars": 24888, "tokens": 6222, "printed": true, "spent_after": 8139}
+{"time": 1795189871.5557225, "call": "search", "args": ["catalog", "{\"text\": [\"shakeblu\",\"downblue\",\"VCF0806\"]}"], "chars": 3326, "tokens": 831, "printed": true, "spent_after": 8970}
+{"time": 1795189875.3777223, "call": "search", "args": ["catalog", "{\"text\": [\"hopeless\",\"worthless\",\"nervous\"]}", "--names", "--limit", "30"], "chars": 2574, "tokens": 643, "printed": true, "spent_after": 9613}

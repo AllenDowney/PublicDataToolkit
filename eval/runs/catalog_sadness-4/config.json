@@ -1,0 +1,20 @@
+{
+ "run_id": "catalog_sadness-4",
+ "question": "catalog_sadness",
+ "commits": [
+  "pdt-anes-cdf 4027ba5",
+  "pdt-chicago-crimes 36e86e0",
+  "pdt-cps-asec ceb80de",
+  "pdt-fars 0791faa",
+  "pdt-gss cf22b43",
+  "pdt-nsfg 2f794be",
+  "pdt-yrbss 86494f6",
+  "pdt-catalog 2522621",
+  "pdt-brfss e81369f (committed after pre-registration, which used a working-tree copy)",
+  "views: agent/ of pdt-gss, pdt-anes-cdf, pdt-nsfg and the catalog regenerated with PublicDataToolkit 3310e55 (Task 53); records unchanged"
+ ],
+ "budget": 40000,
+ "corpus_tokens": {
+  "catalog": 319675
+ }
+}
