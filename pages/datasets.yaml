@@ -18,6 +18,8 @@ datasets:
   releases:
   - 2003-2025
 - id: anes-cdf
+  repo: https://github.com/AllenDowney/pdt-anes-cdf
+  site: https://allendowney.github.io/pdt-anes-cdf/
   title: ANES Time Series Cumulative Data File
   publisher: American National Election Studies
   kind: survey
@@ -69,6 +71,8 @@ datasets:
   - '2024'
   - '2025'
 - id: fars
+  repo: https://github.com/AllenDowney/pdt-fars
+  site: https://allendowney.github.io/pdt-fars/
   title: Fatality Analysis Reporting System
   publisher: National Highway Traffic Safety Administration (NHTSA), National Center for Statistics and Analysis
   kind: administrative
@@ -210,6 +214,8 @@ datasets:
   releases:
   - 1997-2023
 - id: nsfg
+  repo: https://github.com/AllenDowney/pdt-nsfg
+  site: https://allendowney.github.io/pdt-nsfg/
   title: National Survey of Family Growth
   publisher: National Center for Health Statistics (NCHS), CDC
   kind: survey
