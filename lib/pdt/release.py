@@ -86,6 +86,25 @@ def corrected_records(repo, release, table):
     return records, applied
 
 
+def replicate_extras(repo, release, table, records):
+    """The replicate weights design.replicates names for this table that have no records, so the
+    file carries them as plain columns (STANDARD.md §2.1; C3 accepts them without records).
+
+    Named by `variables`, they're those names. Named by `prefix` and `n`, they're prefix1..prefixn,
+    unpadded, unless the records already hold the replicates (ATUS's TUFNWGTP001..160): then
+    nothing is added, and zero-padded names without records need `variables`."""
+    from .design import effective_design, replicate_columns
+    design = effective_design(repo.dataset, release, table)
+    rep_table, _ = replicate_columns(design)
+    if not (design or {}).get("replicates") or rep_table not in (None, table):
+        return []
+    _, have = replicate_columns(design, list(records))
+    if have and not design["replicates"].get("variables"):
+        return []
+    _, names = replicate_columns(design)
+    return [n for n in names if n not in records]
+
+
 def check_terms(dataset, source):
     """Why this data may not go in a data release, or None if it may."""
     terms = dataset.get("terms", {}).get("data")
@@ -102,10 +121,13 @@ def write_one(root, repo, release, table, raw, source_id, log=print):
     sources = {s["id"]: s for s in yaml.safe_load((root / "sources.yaml").read_text())["sources"]}
     refusal = check_terms(repo.dataset, sources.get(source_id, {"id": source_id}))
     records, applied = corrected_records(repo, release, table)
+    extras = replicate_extras(repo, release, table, records)
     missing = [n for n in records if n not in raw.columns]
     if missing:
         raise ValueError(f"{release}/{table}: variables with records but not in the data: {missing}")
-    raw = raw[list(records)]
+    if absent := [n for n in extras if n not in raw.columns]:
+        raise ValueError(f"{release}/{table}: replicate weights design.replicates names but not in the data: {absent}")
+    raw = raw[list(records) + extras]
     table_df = add_empty_code_columns(data.split(raw, records), records)
     identity = release_identity(root, repo, release, table, source_id, sources, applied, refusal)
     identity["round_trip"] = ROUND_TRIP
@@ -239,7 +261,9 @@ def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_
     root = Path(root)
     sources = {s["id"]: s for s in yaml.safe_load((root / "sources.yaml").read_text())["sources"]}
     records, applied = corrected_records(repo, release, table)
-    names = list(records)
+    names = list(records) + replicate_extras(repo, release, table, records)   # replicates: columns, no records
+    if not names:
+        return None      # no records (a fresh repo): nothing to write
     rows = rows or chunk_rows(len(names))
     out = root / PROCESSED / file_name(repo.dataset["id"], release, table)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -260,7 +284,7 @@ def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_
                 raise ValueError(f"{release}/{table}: the reader gave nothing for batch {b}")
             raw_all, source_id = got
             del got
-            batch_records = {n: records[n] for n in cols}
+            batch_records = {n: records[n] for n in cols if n in records}
             # Pass-1 chunks are a whole number of row groups, so pass 2 reads whole row groups.
             split_rows = max(rows, CHUNK_CELLS // (2 * len(cols)) // rows * rows)
             info = {"order": None, "split_rows": split_rows, "parts": 0, "dtypes": {}, "codes": {}, "observed": {}}
@@ -268,7 +292,8 @@ def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_
             for c, raw in enumerate(row_chunks(raw_all, split_rows)):
                 missing = [n for n in cols if n not in raw.columns]
                 if missing:
-                    raise ValueError(f"{release}/{table}: variables with records but not in the data: {missing}")
+                    raise ValueError(f"{release}/{table}: variables with records (or replicate weights "
+                                     f"design.replicates names) but not in the data: {missing}")
                 raw = raw[cols]
                 part_df = add_empty_code_columns(data.split(raw, batch_records), batch_records)
                 part_df[data.ROW] = part_df[data.ROW] + offset
@@ -402,7 +427,9 @@ def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_
         if tmp.exists():
             tmp.unlink()
     codes = sum(1 for f in schema if f.name.endswith(data.CODE_SUFFIX))
-    log(f"  {out.relative_to(root)}: {n_rows:,} rows, {len(records)} variables, "
+    extra = len(names) - len(records)
+    log(f"  {out.relative_to(root)}: {n_rows:,} rows, {len(records)} variables"
+        + (f" and {extra} replicate weights" if extra else "") + ", "
         f"{codes} code columns, {len(applied)} corrections; round trip exact"
         + (f" in {len(batches)} column batches" if len(batches) > 1 else "")
         + (f"; local only, not for release: {refusal}" if refusal else ""))
@@ -422,7 +449,9 @@ def write_release(root, reader, releases=None, log=print, batch_size=BATCH_COLUM
     for (release, table) in release_files(repo.dataset):
         if releases and release not in releases:
             continue
-        names = [r["name"] for r in repo.tables[release][table]]
+        if not repo.tables[release][table]:
+            log(f"  skipped {release}" + (f"/{table}" if table else "") + ": no records")
+            continue
         path = write_batched(root, repo, release, table,
                              lambda cols, release=release, table=table: reader(release, table, cols),
                              log=log, batch_size=batch_size)
