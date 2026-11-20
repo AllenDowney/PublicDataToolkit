@@ -1,6 +1,6 @@
 # Task 52 — Pre-publish review
 
-**Status:** `DOING (red)`
+**Status:** `DONE (red)` (see "Resumed 2026-11-20" below)
 
 Read only. Allen will soon push the toolkit (unpushed since 63739da) and some dataset repos, and tag v0.1.1. The result is [`planning/publish_checklist.md`](../publish_checklist.md):
 
@@ -32,3 +32,33 @@ c. **What v0.1.1 should contain,** and the steps to publish in order (push the t
 - **`planning/publish_checklist.md`** isn't written yet.
 
 **Next step:** rerun the script per repo, write `planning/publish_checklist.md` (one ready / not ready line per repo; the toolkit fix above; the v0.1.1 contents; the commands in order: fix §5, push the toolkit, tag and push v0.1.1, create each GitHub repo, add the remote, run `pdt check` (C9 now fails rather than reports), push, set Pages source to GitHub Actions, run `pdt package` and `gh release create` per ship repo). Run nothing that publishes.
+
+## Resumed 2026-11-20: done
+
+**Status:** `DONE (red)`. Everything is in [`planning/publish_checklist.md`](../publish_checklist.md). Nothing was pushed, tagged or created, and no repo was changed.
+
+**Part (b), the dataset repos** (read-only script; `pdt check` with `has_remote` patched to True):
+
+| Repo | Verdict |
+|---|---|
+| gss | ready: 0 failures; 120 MB tracked (19.5 MB packed); `docs/` gitignored, so its Pages workflow must be added by hand |
+| anes-cdf, fars, chicago-crimes, yrbss, cps-asec, pisa | ready: 0 failures |
+| nsfg | ready once Allen confirms its terms (the summary says "pending his confirmation for this repo") |
+| brfss | not ready: uncommitted record changes, so C8 fails |
+| nhis | not ready: terms `unknown`, no views |
+
+None of the repos has a LICENSE (a decision for Allen), and none has the Pages workflow yet: it came after `v0.1.0`, and `copier update` brings it to the template-made repos.
+
+**Part (c):**
+- **v0.1.1's contents:** 116 commits since `v0.1.0`. STANDARD.md §2.4 would call this a minor bump (0.2.0), because the schemas gained a file and new optional fields; I recommend v0.2.0. `pyproject.toml` and `__version__` still say 0.1.0.
+- **Publishing commands,** in order, in the checklist.
+
+**§5's history** (after the coordinator's a0947e3): the private version is one blob of `planning/data_dict.md` (`d1212fb`), in 36 unpushed commits. The plan, in the checklist, rewrites a copy of the unpushed history in a separate clone, replacing that blob with the cleaned file. It was verified on a throwaway clone:
+- the same 177 commits, messages and authors;
+- an identical final tree;
+- none of the reply's phrases in any commit;
+- the private blob unreachable from the branch to push.
+
+Allen pushes that branch. The working repo is then rebased onto it, with the threads paused. `v0.1.0` predates the private commits.
+
+**Item 3** (the GSS search returning both releases) was handed to blue by the coordinator. The measurements went to blue: every GSS search doubles, e.g. the Religion subject gives 810 rows (~21.7k tokens) against 405 for 7224r3a alone.
