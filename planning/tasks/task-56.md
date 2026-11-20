@@ -1,6 +1,6 @@
 # Task 56 — An ATUS slice
 
-**Status:** `DOING (yellow)`, blocked on downloads from bls.gov. (First numbered Task 54, which red had already claimed; renumbered by the coordinator, 2026-11-20.)
+**Status:** `DONE (yellow)`, blocked on downloads from bls.gov. (First numbered Task 54, which red had already claimed; renumbered by the coordinator, 2026-11-20.)
 
 The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2023: the respondent file, the activity summary and the activity file's codes. The activity codes are the first real test of shared code lists (`metadata/code_lists.jsonl`, STANDARD.md §4.5).
 
@@ -218,3 +218,7 @@ The coordinator's decisions (standard and schema in 4ddaf02): P1–P4 accepted, 
 - `make data` (respondent, replicates; with the committed library, not the shared checkout's uncommitted Task 58 changes) passes the round trip. `pdt check` gives 0 failures.
 
 **For the coordinator:** the terms say everything ships, but every source in `sources.yaml` still has `redistribution: unknown`, so `write_release` marks the data local only. Changing it follows from Allen's decision, but it's a terms field, so I left it for you.
+
+### 2026-11-20: all four tables' data
+
+With Task 58's batched writer and a reader that streams row chunks (`~/pdt-atus` f945c0c), `make data` writes all four tables under the 6 GB cap in 19 minutes, with exact round trips. That includes activity (4,994,172 rows) and summary (456 columns, in 2 column batches). `pdt check` gives 0 failures and peaks at 3.4 GB. Task 56 is done.

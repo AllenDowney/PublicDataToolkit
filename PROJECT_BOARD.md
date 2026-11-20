@@ -242,7 +242,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 56 — An ATUS slice
 
-`DOING (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2025: 641 records in four tables, the activity lexicon as three code lists, `pdt check` 0 failures; terms: everything ships (Allen, 2026-11-20). Proposals P1–P4 accepted and built (library: `pdt.design`, C2 checks for `code_of` and replicate tables, view links; pdt-atus uses them, with seven single-year lexicons harmonized); P5 declined. Waiting on batched `make data` for the activity and summary tables (Task 58). Details: [`planning/tasks/task-56.md`](planning/tasks/task-56.md).
+`DONE (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2025: 641 records in four tables, the activity lexicon as three code lists, `pdt check` 0 failures; terms: everything ships (Allen, 2026-11-20). Proposals P1–P4 accepted and built (library: `pdt.design`, C2 checks for `code_of` and replicate tables, view links; pdt-atus uses them, with seven single-year lexicons harmonized); P5 declined. All four tables' data written under the 6 GB cap with exact round trips (after Task 58). Details: [`planning/tasks/task-56.md`](planning/tasks/task-56.md).
 
 ### Task 57 — Design: topic annotation vs. belief-module groups
 
@@ -319,7 +319,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 75 — pdt-nsfg: every cycle and variable MarriageNSFG uses
 
-`TODO (yellow, after ATUS)`. Extend `~/pdt-nsfg` back to the female respondent files of 1982, 1988, 1995, 2002, 2006–2010, 2011–2013, 2013–2015 and 2015–2017, and the male files from 2002, with every variable MarriageNSFG reads, so MarriageNSFG could later read pdt-nsfg's data instead of its own readers. Write the "adding a release" runbook as you go. Details: [`planning/tasks/task-75.md`](planning/tasks/task-75.md).
+`DOING (yellow)`. Extend `~/pdt-nsfg` back to the female respondent files of 1982, 1988, 1995, 2002, 2006–2010, 2011–2013, 2013–2015 and 2015–2017, and the male files from 2002, with every variable MarriageNSFG reads, so MarriageNSFG could later read pdt-nsfg's data instead of its own readers. Write the "adding a release" runbook as you go. Details: [`planning/tasks/task-75.md`](planning/tasks/task-75.md).
 
 ### Task 76 — pdt-nsfg: the release expected on 2026-12-01
 

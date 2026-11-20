@@ -1,6 +1,6 @@
 # Task 75 — pdt-nsfg: every cycle and variable MarriageNSFG uses
 
-**Status:** `TODO (yellow, after ATUS)`. Created by the coordinator, 2026-11-20, at Allen's request.
+**Status:** `DOING (yellow)`: started 2026-11-20. Created by the coordinator, 2026-11-20, at Allen's request.
 
 ## Why
 
