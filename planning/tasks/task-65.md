@@ -74,6 +74,6 @@ A history (§5.4) would also work for codes, but it's for a publisher's own mult
 The slice holds the cases the coordinator listed:
 - CV_MARSTAT_COLLAPSED: status as of each interview, all 21 years;
 - CV_WKSWK_DLI_ALL: weeks worked since the last interview, 2019–2023 only, under this name;
-- YSAQ-359 "ever smoked?": asked in 6 years, later only of those who hadn't said yes;
+- YSAQ-359 "ever smoked?": asked in 6 years; after 1997 only of those who hadn't answered it as of the last interview (1998, 1999), or had answered don't know or refused (2000, 2004, 2005);
 - YSAQ-360C "smoked since the last interview?": its reference period changes to twelve months in 2013;
 - YSAQ-363 "ever drink?": asked of no one in 2004.
