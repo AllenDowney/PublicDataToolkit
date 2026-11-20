@@ -28,7 +28,7 @@ The metadata is published in three forms, generated from the same records so the
 
 ## Background
 
-The approach generalizes work on the GSS and ANES in [CultureWar](https://github.com/AllenDowney/CultureWar). It takes inspiration from [gssrdoc](https://github.com/kjhealy/gssrdoc) and relates to [data-dict](https://data-dict.tidyverse.org/). The earlier design is in [`planning/survey_metadata_packages_plan.md`](planning/survey_metadata_packages_plan.md).
+The approach generalizes the work on the GSS and ANES behind [*You Would Choose Now*](https://allendowney.github.io/YouWouldChooseNow/). It takes inspiration from [gssrdoc](https://github.com/kjhealy/gssrdoc) and relates to [data-dict](https://data-dict.tidyverse.org/). The earlier design is in [`planning/survey_metadata_packages_plan.md`](planning/survey_metadata_packages_plan.md).
 
 ## Taking part
 
