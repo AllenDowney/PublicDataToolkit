@@ -141,8 +141,8 @@ def range_origin(record):
 def range_changed(a, b):
     """How the valid range changed: "documented", "observed", or None.
 
-    "documented" is a change of codes (FPOVCUT's documented cap went from 60000 to 99999),
-    and so is any change in top or bottom coding. "observed" is a range read from each
+    "documented" is a moved range (FPOVCUT's documented cap went from 60000 to 99999), and so is
+    any change in top or bottom coding: the link relation `range_changed` (STANDARD.md §5.2). "observed" is a range read from each
     release's data (origin data_file: FARS MOD_YEAR 1927-2018 vs 1929-2025), reported but
     not a change. Identifiers aren't compared: their range is which ids a release used.
 
@@ -205,8 +205,10 @@ def relations(changes):
     rel = []
     codes = changes.get("codes", {})
     if (codes.get("added") or codes.get("dropped") or codes.get("kind_changed")
-            or changes.get("valid_range", {}).get("how") == "documented" or "implied_decimals" in changes):
+            or "implied_decimals" in changes):
         rel.append("codes_changed")
+    if changes.get("valid_range", {}).get("how") == "documented":
+        rel.append("range_changed")      # the range or top code moved; the codes kept their meaning
     if codes.get("relabeled") or changes.get("label", {}).get("how") == "changed":
         rel.append("labels_changed")
     if changes.get("question", {}).get("how") == "changed":
@@ -265,7 +267,7 @@ def merge_split_candidates(only_a, only_b, ra, rb, renamed, threshold=RENAME_THR
     return out
 
 
-PAIRING = {"same_item", "renamed", "wording_changed", "codes_changed", "labels_changed",
+PAIRING = {"same_item", "renamed", "wording_changed", "codes_changed", "labels_changed", "range_changed",
            "universe_changed", "data_revised"}
 
 

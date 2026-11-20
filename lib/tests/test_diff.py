@@ -203,7 +203,7 @@ def test_valid_range_question_number_and_links(tmp_path):
     result = diff.diff(Repo.load(root), "r1", "r2")
     t = result["tables"][0]
     e = entries(result)
-    assert e["cut"]["relations"] == ["codes_changed"] and e["cut"]["changes"]["valid_range"]["to"]["max"] == 99999
+    assert e["cut"]["relations"] == ["range_changed"] and e["cut"]["changes"]["valid_range"]["to"]["max"] == 99999
     assert e["cut"]["changes"]["valid_range"]["how"] == "documented"
     assert "valid_range" not in e["age"]["changes"]
     assert e["num"]["relations"] == ["same_item"]
@@ -238,7 +238,7 @@ def test_observed_and_identifier_ranges(tmp_path):
     e = entries(diff.diff(Repo.load(root), "r1", "r2"))
     assert e["modyear"]["relations"] == ["same_item"] and e["modyear"]["changes"]["valid_range"]["how"] == "observed"
     assert e["case"]["changes"] == {}
-    assert e["age"]["relations"] == ["codes_changed"]                      # top coding changed
+    assert e["age"]["relations"] == ["range_changed"]                      # top coding changed
 
 
 def tabled_repo(tmp_path, releases, tables_by_release, records, links=()):
