@@ -87,37 +87,34 @@ Everything committed since `v0.1.0` (5d0a992), 116 commits:
 
 ## Keeping §5 out of the pushed history
 
-**Plan:** push a rewritten copy of the unpushed commits from a separate clone. In every commit since `origin/main` (63739da) where `planning/data_dict.md` is the private blob `d1212fb`, it's replaced by the cleaned file `e9614a3` (today's). Nothing else changes: the same commits, messages, authors and dates, and the same final tree. The real `main` isn't rewritten until other threads are paused (step D).
+**Plan:** push a rewritten copy of the unpushed commits from a separate clone. In every commit since `origin/main` (63739da), three files are cleaned:
+- `planning/data_dict.md`: where it's the private blob `d1212fb`, it's replaced by the cleaned file `e9614a3` (after a0947e3);
+- `planning/publish_checklist.md` and `planning/tasks/task-48.md`: every version goes through a sed script that removes what they quoted or reported from the private reply. The checklist used to quote the reply's phrases as grep patterns; task-48 reported an offer from it. The phrases and the script are outside the repo: `~/pdt-private/publish_phrases.txt` and `~/pdt-private/publish_clean.sed`.
 
-**Verified on a throwaway clone (2026-11-20),** at snapshot 3bd276c:
-- the same 177 commits, with the same messages and authors;
-- `git diff publish <snapshot>` is empty (identical final trees);
-- `git log -p 63739da..publish -- planning/data_dict.md` contains none of the reply's phrases (listed outside the repo, in `~/pdt-private/publish_phrases.txt`);
-- no commit contains them in any file;
-- the private blob isn't reachable from `publish`, so a push of it can't send it.
+Nothing else changes: the same commits, messages, authors and dates. The working repo's files were cleaned the same way before the snapshot, so the final tree is the same too. The real `main` isn't rewritten until other threads are paused (step D).
 
-**A. Make the rewritten branch** in a fresh clone (not the working repo):
+**Done (2026-11-20, red), in `~/pdt-publish`:** steps A and B were run at a snapshot taken after the version-0.2.0 commit and this cleanup. The snapshot and the `publish` SHAs are in `~/pdt-publish/.git/SNAPSHOT` and in the report to the coordinator. Step C is Allen's.
+
+**A. Make the rewritten branch** in a fresh clone (not the working repo). The filter is `~/pdt-private/publish_filter.sh`:
 
 ```bash
-cd /tmp && rm -rf pdt-publish && git clone --no-hardlinks ~/PublicDataToolkit pdt-publish && cd pdt-publish
-SNAP=$(git rev-parse HEAD); echo "snapshot: $SNAP"        # write it down; step D needs it
+cd ~ && rm -rf pdt-publish && git clone --no-hardlinks ~/PublicDataToolkit pdt-publish && cd pdt-publish
+SNAP=$(git rev-parse HEAD); echo $SNAP > .git/SNAPSHOT     # step D needs it
 git branch publish $SNAP
-PRIVATE=d1212fb34722a05724a179709dc58a24fe039e6d          # planning/data_dict.md with the private §5
-CLEAN=e9614a32be188c540f00e1715ccf4e49b174c091            # planning/data_dict.md after a0947e3
-FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --index-filter "
-  if [ \"\$(git rev-parse -q --verify \$GIT_COMMIT:planning/data_dict.md)\" = $PRIVATE ]; then
-    git update-index --cacheinfo 100644,$CLEAN,planning/data_dict.md
-  fi" -- 63739da..publish
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --index-filter "sh ~/pdt-private/publish_filter.sh" -- 63739da..publish
 ```
 
-If `planning/data_dict.md` changes again before this is run, check that `CLEAN` is still the blob you want: `git rev-parse HEAD:planning/data_dict.md`.
+If `planning/data_dict.md` changes again before this is run, check that `CLEAN` in the filter is still the blob you want: `git rev-parse HEAD:planning/data_dict.md`.
 
 **B. Verify before pushing** (each line must print as shown):
 
 ```bash
+SNAP=$(cat .git/SNAPSHOT)
 git diff --quiet publish $SNAP && echo "trees identical"
-git log -p 63739da..publish -- planning/data_dict.md | grep -c -f ~/pdt-private/publish_phrases.txt   # 0
-git rev-list --objects 63739da..publish | grep -c $PRIVATE                                                                    # 0
+[ "$(git rev-list --count 63739da..publish)" = "$(git rev-list --count 63739da..$SNAP)" ] && echo "same commit count"
+diff <(git log --format='%an|%ae|%ad|%B' $SNAP) <(git log --format='%an|%ae|%ad|%B' publish) && echo "same messages, authors, dates"
+git log -p 63739da..publish | grep -c -f ~/pdt-private/publish_phrases.txt          # 0, in any file of any commit
+git rev-list --objects 63739da..publish | grep -c d1212fb34722a05724a179709dc58a24fe039e6d   # 0
 ```
 
 **C. Push from the clone,** and tag on the rewritten history:
@@ -139,7 +136,7 @@ git log --oneline origin/main..main                       # only the commits mad
 git rev-list --objects origin/main | grep -c d1212fb      # 0
 ```
 
-Until step D, a plain `git push` from `~/PublicDataToolkit` is refused as non-fast-forward, which is a useful guard. Don't force it. The original commits stay in the working repo's reflog and in `/tmp/pdt-publish`'s `refs/original`, which are never pushed. Delete `/tmp/pdt-publish` after step D.
+Until step D, a plain `git push` from `~/PublicDataToolkit` is refused as non-fast-forward, which is a useful guard. Don't force it. The original commits stay in the working repo's reflog and in `~/pdt-publish`'s `refs/original`, which are never pushed. Delete `~/pdt-publish` after step D.
 
 ## The steps, in order
 
