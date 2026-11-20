@@ -44,6 +44,12 @@ QUESTIONS = {
         ["gss"],
         "In the GSS, list every variable asked in 2024 that asks whether we're spending too much, "
         "too little or about the right amount on something."),
+    # Task 57: the second topic, with a key built blind by an agent.
+    "gss_mental_health_full": (
+        ["gss"],
+        "In the GSS, find every variable about the respondent's own mental health: how often they "
+        "felt sad, depressed, anxious, stressed or lonely, their mental-health diagnoses, days of "
+        "poor mental health, and treatment or help they sought for emotional problems."),
     "catalog_sadness": (
         ["catalog"],
         "Which datasets ask about sadness or hopelessness, and in which years? List every variable, "

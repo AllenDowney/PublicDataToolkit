@@ -1,0 +1,472 @@
+topic: mental_health
+candidate_rules: "Union of three rules over records.jsonl. (1) subjects intersect {Mental Health, Feelings, Suicide, Happiness, Satisfaction, Anomia, Alienation, Life Outlook, Health, Trauma, Drug Use And Addiction, Life Events}. (2) modules intersect {Mental Health, Mental Health II, Mental Health III, Mental Health IV, Emotions, Health Status, Suicide, Hope and Optimism, Big 5, Disability, ESS Health, Negative Life Events, Doctors & Patients, Women & Alcohol}. (3) case-insensitive whole-word regex over label + description + question + value labels: sad|sadness|depress*|anxi*|nervous*|stress*|lonel*|lonesome|hopeless*|worthless*|mental*|emotion*|psych*|counsel*|therap*|blues|worr*|fear*|afraid|panic*|restless*|tense|tension|overwhelm*|suicid*|self-harm|harm yourself|sleep*|calm|peaceful|nerves|breakdown|bipolar|schizo*|ptsd|trauma*|antidepress*|tranquil*|felt down|down-hearted|downhearted|despair|helpless*|isolated|left out|lack companionship|mood|frustrat*|angry|anger|irritab*|upset|happy|happiness|cheerful|unhappy|crying|cry|shrink|substance|addict*|wellbeing|well-being|feel*|felt. A follow-up sweep of non-candidates for blue|concentrat*|tired|energy|appetite|pill|medication|medicine|crisis|cope|coping|distress*|hospitali*|disab*|optimis*|pessimis*|alone|grief|bereave*|joy|enjoy*|social worker|outlook|meaning found nothing to add."
+counts: {candidates: 1289, hit: 71, neutral: 396, out: 822}
+hit:
+  - {name: stresswk, why: "amount of stress R experienced in past 2 weeks"}
+  - {name: shakeblu, why: "days in past 7 R felt this negative feeling (Emotions module)"}
+  - {name: sad, why: "days in past 7 R felt this negative feeling (Emotions module)"}
+  - {name: lonely, why: "days in past 7 R felt this negative feeling (Emotions module)"}
+  - {name: fearful, why: "days in past 7 R felt this negative feeling (Emotions module)"}
+  - {name: worried, why: "days in past 7 R felt this negative feeling (Emotions module)"}
+  - {name: anxious, why: "days in past 7 R felt this negative feeling (Emotions module)"}
+  - {name: restless, why: "days in past 7 R felt this negative feeling (Emotions module)"}
+  - {name: relmhsp1, why: "R was the person hospitalized for mental illness"}
+  - {name: evbrkdwn, why: "R ever felt about to have a nervous breakdown"}
+  - {name: brkdwhy1, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: brkdwhy2, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: brkdwhy3, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: brkddo1, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: brkddo2, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: brkddo3, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: brkdhlp1, why: "help R sought during own near-breakdown"}
+  - {name: brkdhlp2, why: "help R sought during own near-breakdown"}
+  - {name: brkdhlp3, why: "help R sought during own near-breakdown"}
+  - {name: brkdtime, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: brkddur, why: "cause/response/timing/severity of R's own near-breakdown"}
+  - {name: evmhp, why: "R ever felt had a mental health problem"}
+  - {name: mnilwhy1, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: mnilwhy2, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: mnilwhy3, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: mnildo1, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: mnildo2, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: mnildo3, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: mnilhlp1, why: "help R sought for own mental health problem"}
+  - {name: mnilhlp2, why: "help R sought for own mental health problem"}
+  - {name: mnilhlp3, why: "help R sought for own mental health problem"}
+  - {name: mniltime, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: mnildur, why: "cause/response/timing/severity of R's own mental health problem"}
+  - {name: diagnosd, why: "R ever diagnosed with a mental health problem"}
+  - {name: mhtreatd, why: "R ever received treatment for own mental health problem"}
+  - {name: nocheer, why: "K6 distress item, past 30 days"}
+  - {name: nervous, why: "K6 distress item, past 30 days"}
+  - {name: fidgety, why: "K6 distress item, past 30 days"}
+  - {name: hopeless, why: "K6 distress item, past 30 days"}
+  - {name: effort, why: "K6 distress item, past 30 days"}
+  - {name: wrthless, why: "K6 distress item, past 30 days"}
+  - {name: usedmntl, why: "R sought care for emotions, nerves or mental health"}
+  - {name: mntlcare, why: "whether/how easily R got the mental health treatment R sought"}
+  - {name: mntldif, why: "whether/how easily R got the mental health treatment R sought"}
+  - {name: usedproz, why: "R has taken Prozac (antidepressant)"}
+  - {name: didlesse, why: "SF-12: emotional problems limited R's activities past 4 weeks"}
+  - {name: crelesse, why: "SF-12: emotional problems limited R's activities past 4 weeks"}
+  - {name: downblue, why: "SF-12: felt downhearted and blue past 4 weeks"}
+  - {name: mntlhlth, why: "days of poor mental health past 30 days"}
+  - {name: depress, why: "R told by a health professional R has depression"}
+  - {name: cesd1, why: "CES-D depression item, past week"}
+  - {name: cesd2, why: "CES-D depression item, past week"}
+  - {name: cesd4, why: "CES-D depression item, past week"}
+  - {name: cesd5, why: "CES-D depression item, past week"}
+  - {name: hlthmntl, why: "R's self-rated mental health"}
+  - {name: emoprobs, why: "how often bothered by anxiety/depression/irritability past 7 days"}
+  - {name: sadblue, why: "R often feels sad and blue (self-description)"}
+  - {name: disabld5, why: "R has an emotional or mental disability"}
+  - {name: mhtrtslf, why: "R ever received treatment for own mental health problem"}
+  - {name: lonely1, why: "loneliness scale item, past 4 weeks"}
+  - {name: lonely2, why: "loneliness scale item, past 4 weeks"}
+  - {name: lonely3, why: "loneliness scale item, past 4 weeks"}
+  - {name: unhappy, why: "how often felt unhappy and depressed past 4 weeks"}
+  - {name: pilingup, why: "how often felt difficulties could not be overcome past 4 weeks"}
+  - {name: hlth2, why: "R underwent counseling for mental or emotional problems past 12 months"}
+  - {name: hlthdep, why: "how often felt unhappy and depressed past 4 weeks"}
+  - {name: hlthnot, why: "how often felt difficulties could not be overcome past 4 weeks"}
+  - {name: feelnerv, why: "GAD-2 anxiety item, past 2 weeks"}
+  - {name: worry, why: "GAD-2 anxiety item, past 2 weeks"}
+  - {name: feeldown, why: "PHQ-2 depression item, past 2 weeks"}
+  - {name: nointerest, why: "PHQ-2 depression item, past 2 weeks"}
+neutral:
+  - {name: happy, why: "general happiness"}
+  - {name: suineg1, why: "distress from a suicide of someone R knew"}
+  - {name: suineg2, why: "distress from a suicide of someone R knew"}
+  - {name: rushed, why: "feels rushed for time"}
+  - {name: calm, why: "positive feeling days (Emotions module); affect, not distress"}
+  - {name: outraged, why: "other negative emotion days; not on the listed mental-health symptoms"}
+  - {name: hapfeel, why: "positive feeling days (Emotions module); affect, not distress"}
+  - {name: ashamed, why: "other negative emotion days; not on the listed mental-health symptoms"}
+  - {name: excited, why: "positive feeling days (Emotions module); affect, not distress"}
+  - {name: ovrjoyed, why: "positive feeling days (Emotions module); affect, not distress"}
+  - {name: contentd, why: "positive feeling days (Emotions module); affect, not distress"}
+  - {name: madat, why: "other negative emotion days; not on the listed mental-health symptoms"}
+  - {name: atease, why: "positive feeling days (Emotions module); affect, not distress"}
+  - {name: angry, why: "other negative emotion days; not on the listed mental-health symptoms"}
+  - {name: embarrss, why: "other negative emotion days; not on the listed mental-health symptoms"}
+  - {name: proud, why: "positive feeling days (Emotions module); affect, not distress"}
+  - {name: probfix1, why: "what R would do if very unhappy/nervous (hypothetical help-seeking)"}
+  - {name: probfix2, why: "what R would do if very unhappy/nervous (hypothetical help-seeking)"}
+  - {name: probfix3, why: "what R would do if very unhappy/nervous (hypothetical help-seeking)"}
+  - {name: probhlp1, why: "what R would do if very unhappy/nervous (hypothetical help-seeking)"}
+  - {name: probhlp2, why: "what R would do if very unhappy/nervous (hypothetical help-seeking)"}
+  - {name: probhlp3, why: "what R would do if very unhappy/nervous (hypothetical help-seeking)"}
+  - {name: vigversn, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: seriousp, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: charactr, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: imbalnce, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: wayraise, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: stresses, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: genetics, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: godswill, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: upsdowns, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: breakdwn, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mentlill, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: physill, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: viglabel, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: dectreat, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: decmoney, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: imprvown, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: imprvtrt, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: vignei, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: vigsoc, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: vigfrnd, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: vigwork, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: viggrp, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: vigmar, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: hurtoth, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: hurtself, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: tlkfam, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: tlkclrgy, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: meddoc, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mentldoc, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mentloth, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: sphealer, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: selfhelp, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: otcmed, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: rxmed, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mentlhos, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: dofirst, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: ortlkfm, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: ortlkclr, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: ormeddoc, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: ormntldc, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: ormntlot, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: orhealer, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: orslfhlp, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: orotcmed, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: orrxmed, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: ormntlhs, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mustdoc, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mustmed, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: musthosp, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: dangrslf, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: dangroth, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: medcare1, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: medcare2, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: spmentl, why: "policy attitudes about mental health care"}
+  - {name: govmentl, why: "policy attitudes about mental health care"}
+  - {name: mntlas1, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntlas2, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntlimp1, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntlimp2, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntlimp3, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntlsym1, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntlsym2, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntlsym3, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: mntloth, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdas1, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdas2, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdimp1, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdimp2, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdimp3, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdsym1, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdsym2, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdsym3, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: brkdoth, why: "what R thinks mental illness / nervous breakdown is"}
+  - {name: knwmhosp, why: "knows someone with mental illness/treatment"}
+  - {name: relmhsp2, why: "relationship of someone hospitalized for mental illness"}
+  - {name: relmhsp3, why: "relationship of someone hospitalized for mental illness"}
+  - {name: relmhsp4, why: "relationship of someone hospitalized for mental illness"}
+  - {name: relmhsp5, why: "relationship of someone hospitalized for mental illness"}
+  - {name: relmhsp6, why: "relationship of someone hospitalized for mental illness"}
+  - {name: knwpatnt, why: "knows someone with mental illness/treatment"}
+  - {name: mhtreat1, why: "named person's mental health problem"}
+  - {name: mhtreat2, why: "named person's mental health problem"}
+  - {name: mhtreat3, why: "named person's mental health problem"}
+  - {name: mhtreat4, why: "named person's mental health problem"}
+  - {name: mhtreat5, why: "named person's mental health problem"}
+  - {name: myprobs1, why: "named person's mental health problem"}
+  - {name: myprobs2, why: "named person's mental health problem"}
+  - {name: myprobs3, why: "named person's mental health problem"}
+  - {name: myprobs4, why: "named person's mental health problem"}
+  - {name: myprobs5, why: "named person's mental health problem"}
+  - {name: severe1, why: "named person's mental health problem"}
+  - {name: severe2, why: "named person's mental health problem"}
+  - {name: severe3, why: "named person's mental health problem"}
+  - {name: severe4, why: "named person's mental health problem"}
+  - {name: severe5, why: "named person's mental health problem"}
+  - {name: fammhneg, why: "family/acquaintances' attitudes toward mental health problems (stigma)"}
+  - {name: othmhneg, why: "family/acquaintances' attitudes toward mental health problems (stigma)"}
+  - {name: seenmntl, why: "R or anyone R knows has seen a psychiatrist/counselor (self not separable)"}
+  - {name: psycmed1, why: "attitudes toward psychiatric medication"}
+  - {name: psycmed2, why: "attitudes toward psychiatric medication"}
+  - {name: psycmed3, why: "attitudes toward psychiatric medication"}
+  - {name: psycmed4, why: "attitudes toward psychiatric medication"}
+  - {name: psycmed5, why: "attitudes toward psychiatric medication"}
+  - {name: psycmed6, why: "attitudes toward psychiatric medication"}
+  - {name: psycmed7, why: "attitudes toward psychiatric medication"}
+  - {name: usepsyc1, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: usepsyc2, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: usepsyc3, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: usepsyc4, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: psyckid1, why: "attitudes toward psychiatric medication"}
+  - {name: psyckid2, why: "attitudes toward psychiatric medication"}
+  - {name: psyckid3, why: "attitudes toward psychiatric medication"}
+  - {name: psycdrct, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: psycfdoc, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: psycpsyc, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: mntldeny, why: "denied services under plan, asked after mental health care questions"}
+  - {name: hmo7, why: "policy attitudes about mental health care"}
+  - {name: prozac, why: "knowledge/attitudes about Prozac"}
+  - {name: knwnproz, why: "knowledge/attitudes about Prozac"}
+  - {name: prozfor1, why: "knowledge/attitudes about Prozac"}
+  - {name: prozfor2, why: "knowledge/attitudes about Prozac"}
+  - {name: prozfor3, why: "knowledge/attitudes about Prozac"}
+  - {name: proz1, why: "knowledge/attitudes about Prozac"}
+  - {name: proz2, why: "knowledge/attitudes about Prozac"}
+  - {name: proz3, why: "knowledge/attitudes about Prozac"}
+  - {name: proz4, why: "knowledge/attitudes about Prozac"}
+  - {name: proz5, why: "knowledge/attitudes about Prozac"}
+  - {name: proz6, why: "knowledge/attitudes about Prozac"}
+  - {name: proz7, why: "knowledge/attitudes about Prozac"}
+  - {name: proz8, why: "knowledge/attitudes about Prozac"}
+  - {name: proz9, why: "knowledge/attitudes about Prozac"}
+  - {name: prozslf1, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: prozslf2, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: prozslf3, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: prozslf4, why: "would R take psychiatric medication / where seek care (hypothetical)"}
+  - {name: prozkid1, why: "knowledge/attitudes about Prozac"}
+  - {name: prozkid2, why: "knowledge/attitudes about Prozac"}
+  - {name: prozkid3, why: "knowledge/attitudes about Prozac"}
+  - {name: peaceful, why: "SF-12 positive-keyed mental item (calm and peaceful)"}
+  - {name: energy, why: "SF-12 vitality item"}
+  - {name: socacts, why: "physical or emotional problems interfered with social life"}
+  - {name: treat5, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: treat6, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: treat8, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: treat10, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: treat11, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: wait5, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: wait6, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: wait8, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: wait10, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: wait11, why: "whether/how long R would wait to seek treatment for emotional symptoms (hypothetical)"}
+  - {name: downqol, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: downfam, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: downcure, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: downrely, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: downfeel, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: emotqol, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: emotfam, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: emotcure, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: emotrely, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: emotfeel, why: "expected results of treatment for emotional problems (hypothetical)"}
+  - {name: hlthdays, why: "days limited/missed work for physical or mental health combined"}
+  - {name: usedup, why: "felt used up at end of day (work burnout)"}
+  - {name: slpprblm, why: "trouble sleeping; possible symptom, not specific"}
+  - {name: stress12, why: "took part in a workplace stress-management program"}
+  - {name: misswork, why: "days limited/missed work for physical or mental health combined"}
+  - {name: cesd3, why: "CES-D positive item (happy)"}
+  - {name: petcmfrt, why: "seeks pet for comfort when feeling bad"}
+  - {name: petb4cmfrt, why: "seeks pet for comfort when feeling bad"}
+  - {name: chldvig, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: chldprb, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: chldprob, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: chldhlp, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: badchar, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: chembal, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: stressfl, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: geneprob, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: raised, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: violtv, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: discipln, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: allergic, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: bettrown, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: imprvdis, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: imprveat, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: imprvmed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: nextdoor, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: spendeve, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: chldfrnd, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: chldsch, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adfam, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adfammed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adtch, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adtchmed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: addoc, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: addocmed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adcou, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adcoumed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adpsy, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adpsymed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adhos, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adhosmed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: forcedoc, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: forcemed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: forcehos, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: grwingup, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: mntlill, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: illphys, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: violpeop, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: violself, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: outsider, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: sufadult, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: comknows, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: failure, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: ovrmedkd, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: medkdneg, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: putsoff, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: trbllaw, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: medsavtx, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: zombies, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: pryntfam, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adhdknow, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adhdknw, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adhdreal, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adhdcon, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: adhdmed, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: mntlrel, why: "experience with another person's mental health problem"}
+  - {name: medsymps, why: "attitudes toward mental health medication"}
+  - {name: medaddct, why: "attitudes toward mental health medication"}
+  - {name: medweak, why: "attitudes toward mental health medication"}
+  - {name: medunacc, why: "attitudes toward mental health medication"}
+  - {name: solveown, why: "prefers to solve problems alone or seek advice"}
+  - {name: satself, why: "self-esteem scale item"}
+  - {name: afailure, why: "self-esteem scale item"}
+  - {name: slfrspct, why: "self-esteem scale item"}
+  - {name: ofworth, why: "self-esteem scale item"}
+  - {name: nogood, why: "self-esteem scale item"}
+  - {name: viglab06, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mhtrtoth, why: "knows someone with mental illness/treatment"}
+  - {name: mhothyou, why: "experience with another person's mental health problem"}
+  - {name: mhothrel, why: "experience with another person's mental health problem"}
+  - {name: seemhpub, why: "encounters with mentally ill people in public"}
+  - {name: gesttalk, why: "encounters with mentally ill people in public"}
+  - {name: avoidmh, why: "encounters with mentally ill people in public"}
+  - {name: disabld6, why: "difficulty learning/remembering/concentrating from physical, mental or emotional condition"}
+  - {name: vigvermy, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: mhproblm, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdofam, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdofrnd, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdorel, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdodoc, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdopsyc, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdomhp, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdoheal, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdootc, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdorx, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdohosp, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdopray, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdolife, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdoherb, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdofrgt, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdoactv, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdogrp, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdodiet, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdoexrc, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdomove, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdooth, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdonone, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhchrctr, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhbrain, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhraised, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhstress, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhgenes, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhgod, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhluck, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhupdown, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhillnss, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhphyscl, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhneihbr, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhsocial, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhkdcare, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhfriend, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhwkwith, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhwedrel, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhimpown, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhimptrt, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhdecslf, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhmoney, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhoutsdr, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhlosefr, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhlessop, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhuneasy, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhunsure, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhintl, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhnotpol, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhrdtlk, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhnokids, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhcreatv, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhnervs, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhprdctv, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhfeelem, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhtrusty, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhaccptd, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhired, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhnotell, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhsecret, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhsupwrk, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhnotch, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhlpfam, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhlpfrd, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhlprel, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhlpgp, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhlppsy, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhlpmhp, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhgvtjob, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhgvthlt, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhgvthme, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhgvtedc, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhgvtdis, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhslfshm, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhfamshm, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhseedoc, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhmeds, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhhsptrt, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhmnthsp, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhviooth, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhvioslf, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhcause, why: "mental illness vignette/stigma item about hypothetical person X"}
+  - {name: mhtrtot2, why: "knows someone with mental illness/treatment"}
+  - {name: mhdiagno, why: "knows someone with mental illness/treatment"}
+  - {name: mhclsoth, why: "experience with another person's mental health problem"}
+  - {name: mhseroth, why: "experience with another person's mental health problem"}
+  - {name: mhhlpoth, why: "experience with another person's mental health problem"}
+  - {name: mhresoth, why: "experience with another person's mental health problem"}
+  - {name: mhdisoth, why: "experience with another person's mental health problem"}
+  - {name: mhreloth, why: "experience with another person's mental health problem"}
+  - {name: mhexpoth, why: "experience with another person's mental health problem"}
+  - {name: mhseepub, why: "encounters with mentally ill people in public"}
+  - {name: mhfright, why: "encounters with mentally ill people in public"}
+  - {name: mhsymp, why: "encounters with mentally ill people in public"}
+  - {name: down1, why: "who R would turn to if feeling down (hypothetical help-seeking)"}
+  - {name: down2, why: "who R would turn to if feeling down (hypothetical help-seeking)"}
+  - {name: down1a, why: "who R would turn to if feeling down (hypothetical help-seeking)"}
+  - {name: down2a, why: "who R would turn to if feeling down (hypothetical help-seeking)"}
+  - {name: talkedto, why: "talked with someone else who was depressed"}
+  - {name: hlpdown, why: "who R would turn to if feeling down (hypothetical help-seeking)"}
+  - {name: strsshme, why: "work/home stress as an attitude or work condition"}
+  - {name: strsswrk, why: "work/home stress as an attitude or work condition"}
+  - {name: happy7, why: "general happiness"}
+  - {name: stress, why: "work/home stress as an attitude or work condition"}
+  - {name: hapunhap, why: "general happiness"}
+  - {name: big5d1, why: "neuroticism personality trait items"}
+  - {name: big5d2, why: "neuroticism personality trait items"}
+  - {name: askmentl, why: "policy attitudes about mental health care"}
+  - {name: knomentl, why: "policy attitudes about mental health care"}
+  - {name: hlthwbanx, why: "looked up online information on anxiety or stress"}
+  - {name: intlnly, why: "would feel lonely without internet (hypothetical)"}
+  - {name: morextrm, why: "mental illness vignette about a hypothetical person X (attitudes/stigma)"}
+  - {name: bullied, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: smedia, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: imprvown1, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: mustdoc1, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: mustmed1, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: musthosp1, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: physill1, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: bullpeer, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: rumopeer, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: fighpeer, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: schshoot, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: cutself, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: negself, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: foodalc, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: risklife, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: takelife, why: "child mental health vignette / attitudes about children's mental health"}
+  - {name: happy_next, why: "general happiness"}
