@@ -126,6 +126,18 @@
       },
       "additionalProperties": false
     },
+    "panel": {
+      "description": "A panel's timing variables, by name (STANDARD.md \u00a72.1).",
+      "type": "object",
+      "properties": {
+        "id": {"$ref": "common.schema.json#/$defs/name"},
+        "interview_date": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/name"}, "minItems": 1},
+        "age_at_interview": {"$ref": "common.schema.json#/$defs/name"},
+        "noninterview": {"$ref": "common.schema.json#/$defs/name"},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
     "dimensions": {
       "description": "What availability's wave, form, sample, mode, phase and geography mean here. Omit the ones that don't apply.",
       "type": "object",
