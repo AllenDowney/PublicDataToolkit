@@ -769,22 +769,30 @@ def check_availability(name, frame, records, wave_column, result, data_waves=Non
 
 def has_counts(record):
     """Whether a record carries counts to compare with the data: values[].n or availability[].n."""
-    return any("n" in v for v in record.get("values", [])) or any("n" in a for a in record.get("availability", []))
+    return (any("n" in v or "counts" in v for v in record.get("values", []))
+            or any("n" in a for a in record.get("availability", [])))
 
 
-def code_counts(frame, record):
+def code_counts(frame, record, waves=None):
     """{code text: rows} for a record's codes in the data: valid codes from the value column,
-    the others (missing, unresolved) from the code column, as data.split puts them."""
+    the others (missing, unresolved) from the code column, as data.split puts them. With waves
+    (a series of wave texts aligned with frame), {(wave, code text): rows}."""
     from .common_format import CODE_SUFFIX, code_text, is_number
     counts = {}
-    if record["name"] in frame:
-        for value, n in frame[record["name"]].dropna().value_counts().items():
-            key = code_text(value) if is_number(value) else str(value)
-            counts[key] = counts.get(key, 0) + int(n)
-    col = record["name"] + CODE_SUFFIX
-    if col in frame:
-        for code, n in frame[col].dropna().value_counts().items():
-            counts[str(code)] = counts.get(str(code), 0) + int(n)
+    for col, valid in ((record["name"], True), (record["name"] + CODE_SUFFIX, False)):
+        if col not in frame:
+            continue
+        cells = frame[col].dropna()
+        if waves is None:
+            groups = cells.value_counts().items()
+        else:
+            groups = (((w, c), n) for (w, c), n in
+                      cells.groupby(waves[cells.index], observed=True).value_counts().items())
+        for key, n in groups:
+            wave, cell = key if waves is not None else (None, key)
+            text = code_text(cell) if valid and is_number(cell) else str(cell)
+            k = text if waves is None else (wave, text)
+            counts[k] = counts.get(k, 0) + int(n)
     return counts
 
 
@@ -793,12 +801,13 @@ QUALIFIERS = {"form", "sample", "mode", "phase", "geography"}   # availability e
 
 def check_counts(name, frame, records, wave_column, result, data_waves=None, data_rows=None):
     """C5 counts (warns): the counts a record carries against the data. values[].n is the
-    publisher's count of cases with that code in the release; availability[].n is the number of
-    non-missing responses in that wave.
+    publisher's count of cases with that code in the release, and values[].counts its count in
+    each wave (n is their sum); availability[].n is the number of non-missing responses in that
+    wave. Counts by wave need the wave column.
 
     A file that holds only some rows (data_rows) can't be compared with either. One that holds
     only some waves (data_waves) can't be compared with values[].n, which counts the whole
-    release, but its kept waves are compared with availability[].n. An availability entry for
+    release, but its kept waves are compared with values[].counts and availability[].n. An availability entry for
     part of a wave (a form, sample, mode, phase or geography) isn't compared: the file doesn't say
     which rows each covers.
     """
@@ -811,20 +820,31 @@ def check_counts(name, frame, records, wave_column, result, data_waves=None, dat
                           f"({data_rows['column']} in data_rows)")
         return
     if data_waves is not None:
-        result.skip("C5", f"{name}: code counts (values[].n) not run, because the file holds only some waves "
-                          f"(data_waves); availability counts are compared for those waves")
+        result.skip("C5", f"{name}: code totals (values[].n) not run, because the file holds only some waves "
+                          f"(data_waves); counts by wave (values[].counts, availability) are compared for those waves")
     waves = None
     if wave_column in frame:
         waves = frame[wave_column].map(lambda w: None if w is None or w != w else code_text(w))
     qualified = 0
     for r in counted:
-        if data_waves is None and any("n" in v for v in r.get("values", [])):
+        values = r.get("values", [])
+        if data_waves is None and any("n" in v for v in values):
             got = code_counts(frame, r)
             off = [f"{code_text(v['code'])} ({v.get('label', '')}): codebook {v['n']:,}, data "
                    f"{got.get(code_text(v['code']), 0):,}"
-                   for v in r["values"] if "n" in v and got.get(code_text(v["code"]), 0) != v["n"]]
+                   for v in values if "n" in v and got.get(code_text(v["code"]), 0) != v["n"]]
             if off:
                 result.report("C5", f"warning: {name}/{r['name']}: code counts differ from the data: {listed(off)}")
+        if waves is not None and any("counts" in v for v in values):
+            got = code_counts(frame, r, waves)
+            off = [f"{code_text(v['code'])} ({v.get('label', '')}) in {c['wave']}: codebook {c['n']:,}, data "
+                   f"{got.get((str(c['wave']), code_text(v['code'])), 0):,}"
+                   for v in values for c in v.get("counts", [])
+                   if (data_waves is None or str(c["wave"]) in data_waves)
+                   and got.get((str(c["wave"]), code_text(v["code"])), 0) != c["n"]]
+            if off:
+                result.report("C5", f"warning: {name}/{r['name']}: code counts by wave differ from the data: "
+                                    f"{listed(off)}")
         avail = [a for a in r.get("availability", []) if "n" in a and not (QUALIFIERS & set(a))]
         qualified += sum("n" in a and bool(QUALIFIERS & set(a)) for a in r.get("availability", []))
         if not avail:

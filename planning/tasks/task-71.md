@@ -9,6 +9,7 @@
 Part of C5, at warn level, per data file (release or table), on the common-format files in `data/processed/`:
 
 - **Code counts.** Each `values[].n` (the publisher's count of cases with that code in the release) is compared with the rows that have it. Valid codes are counted in the value column. Missing and unresolved codes are counted in `<name>__code`, where `data.split` puts them. The records are the corrected ones, as the other data checks use. A mismatch warns with the code, its label and both counts: `C5: warning: r1/crash/LIGHT: code counts differ from the data: 1 (Day): codebook 3, data 2`.
+- **Code counts by wave.** When a code has `counts` (`[{wave, n}]`, accepted in b820cc6 for records spanning waves in one release, like NLSY97's person_year), each wave's count is compared with that wave's rows that have the code. This needs the wave column, and with `data_waves` only the kept waves are compared. A mismatch warns: `1 (Day) in 2020: codebook 2, data 1`.
 - **Availability counts.** Each `availability[].n` (non-missing responses in that wave) is compared with the non-missing values in that wave. It uses the wave column, or the whole file when the file is one wave.
 
 **Not run, each recorded with `Result.skip` (Task 70):**
@@ -17,10 +18,10 @@ Part of C5, at warn level, per data file (release or table), on the common-forma
 |---|---|
 | Data files are loaded but no record has counts | "counts not run, because there are no codebook counts" (once per repo) |
 | The file holds only some rows (`data_rows`) | Neither count can be compared |
-| The file holds only some waves (`data_waves`) | `values[].n` counts the whole release, so it isn't compared; availability is compared for the kept waves |
+| The file holds only some waves (`data_waves`) | `values[].n` counts the whole release, so it isn't compared; `values[].counts` and availability are compared for the kept waves |
 | An availability entry with a form, sample, mode, phase or geography | The file doesn't say which rows it covers (BRFSS's state modules) |
 
-Tests: `lib/tests/test_check_counts.py`, 7 cases. The full suite passes: 304 in the working tree, and 294 on the committed tree without orange's uncommitted Task 58 hunks.
+Tests: `lib/tests/test_check_counts.py`, 8 cases. The full suite passes: 305 in the working tree, and 295 on the committed tree without orange's uncommitted Task 58 hunks.
 
 ## Run across the repos (2026-11-20)
 

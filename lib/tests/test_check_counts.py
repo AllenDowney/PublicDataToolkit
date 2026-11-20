@@ -56,7 +56,7 @@ def test_data_waves_skips_code_counts_and_checks_kept_waves(tmp_path):
     avail = [{"wave": 2020, "n": 2}, {"wave": 2021, "n": 5}]
     result = run(make_data_repo(tmp_path, crash=kept, tables=tables, crash_recs=counted(avail=avail)))
     assert not counts_warnings(result)                  # 2021 isn't in the file; 2020 matches
-    assert any("code counts (values[].n) not run, because the file holds only some waves" in m
+    assert any("code totals (values[].n) not run, because the file holds only some waves" in m
                for m in result.not_run)
     avail = [{"wave": 2020, "n": 3}, {"wave": 2021, "n": 5}]
     result = run(make_data_repo(tmp_path / "b", crash=kept, tables=tables, crash_recs=counted(avail=avail)))
@@ -79,3 +79,27 @@ def test_qualified_availability_counts_are_not_run(tmp_path):
     assert not counts_warnings(result)
     assert any("r1/crash: 1 availability counts by form/geography/mode/phase/sample not run" in m
                for m in result.not_run)
+
+
+def test_counts_by_wave_compared_per_wave(tmp_path):
+    # values[].counts (STANDARD.md §4, b820cc6): the codebook's count for a code in each wave; n is their sum.
+    recs = counted()
+    for r in recs:
+        if r["name"] == "LIGHT":
+            for v in r["values"]:
+                if v["code"] == 1:
+                    v["counts"] = [{"wave": 2020, "n": 1}, {"wave": 2021, "n": 1}]
+    assert not counts_warnings(run(make_data_repo(tmp_path, crash_recs=recs)))
+    for r in recs:
+        if r["name"] == "LIGHT":
+            r["values"][0]["counts"] = [{"wave": 2020, "n": 2}, {"wave": 2021, "n": 0}]
+    msgs = [m for m in reports(run(make_data_repo(tmp_path / "b", crash_recs=recs)), "C5: warning")
+            if "by wave" in m]
+    assert msgs == ["C5: warning: r1/crash/LIGHT: code counts by wave differ from the data: "
+                    "1 (Day) in 2020: codebook 2, data 1, 1 (Day) in 2021: codebook 0, data 1"]
+    # With data_waves, only the kept waves are compared.
+    tables = [dict(TABLES[0], data_waves=["2021"]), TABLES[1]]
+    kept = CRASH[CRASH["YEAR"] == 2021]
+    result = run(make_data_repo(tmp_path / "c", crash=kept, tables=tables, crash_recs=recs))
+    assert [m for m in reports(result, "C5: warning") if "by wave" in m] == [
+        "C5: warning: r1/crash/LIGHT: code counts by wave differ from the data: 1 (Day) in 2021: codebook 0, data 1"]
