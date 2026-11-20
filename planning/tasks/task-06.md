@@ -16,4 +16,6 @@ Background: plan §4.3.
 - Value labels exist only on `enum` columns, and enum codes must be strings. `number` columns get `range` and `examples`.
 - The spec has `number(ordinal)`, `number(quantity)` and `number(id)` measures, `units`, a `glossary`, and `relationships`. It doesn't say whether the validator rejects unknown keys, so we ask (question 3).
 
-**2026-11-19:** Hadley replied; his answers and what they mean for us are in [`planning/data_dict.md`](../data_dict.md) §5. Allen posted our use case and the two-column missing-code design on [data-dict#9](https://github.com/tidyverse/data-dict/issues/9#issuecomment-7027122678).
+**2026-11-19:** Hadley replied by email (summary kept outside the repo). Allen posted our use case and the two-column missing-code design on [data-dict#9](https://github.com/tidyverse/data-dict/issues/9#issuecomment-7027122678).
+
+**2026-11-20:** Hadley asked on #9 why we keep numeric codes and code (not type) columns; Allen replied ([comment](https://github.com/tidyverse/data-dict/issues/9#issuecomment-7042301177)). `planning/data_dict.md` §5 now covers only the public discussion.
