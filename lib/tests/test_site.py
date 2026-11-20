@@ -27,7 +27,7 @@ def test_build_writes_pages_with_headers(repo_dir):
     manifest = site.build(repo_dir)
     files = set(manifest["files"])
     assert {"index.html", "style.css", ".nojekyll", "search-index.js",
-            "releases/r1.html", "variables/r1/q1.html", "variables/r1/q2.html",
+            "releases/r1.html", "variables/q1.html", "variables/q2.html",
             "groups/battery-q1.html"} <= files
     for f in files:
         if f.endswith(".html"):
@@ -37,19 +37,19 @@ def test_build_writes_pages_with_headers(repo_dir):
 
 def test_variable_page(repo_dir):
     site.build(repo_dir)
-    page = read(repo_dir, "variables/r1/q1.html")
+    page = read(repo_dir, "variables/q1.html")
     assert "Do you agree?" in page
     assert "<code>9</code>" in page and "dk" in page and "publisher:cb" in page
     assert 'href="https://example.org/q1"' in page
     assert "all 1985, 1987; form A 1988 (not 1986)" in page
     assert "not in this wave" in page                 # 1986 row: a release wave it skipped
-    assert 'href="../../groups/battery-q1.html"' in page
-    assert 'href="../../style.css"' in page
+    assert 'href="../groups/battery-q1.html"' in page
+    assert 'href="../style.css"' in page
 
 
 def test_corrections_shown_with_evidence(repo_dir):
     site.build(repo_dir)
-    page = read(repo_dir, "variables/r1/q2.html")
+    page = read(repo_dir, "variables/q2.html")
     assert "And this one?" in page and "And this?" in page
     assert 'class="corrected"' in page and "Questionnaire" in page and "verified" in page
     assert "q2" in read(repo_dir, "index.html") and "Truncated." in read(repo_dir, "index.html")
@@ -57,7 +57,7 @@ def test_corrections_shown_with_evidence(repo_dir):
 
 def test_text_is_escaped(repo_dir):
     site.build(repo_dir)
-    page = read(repo_dir, "variables/r1/q2.html")
+    page = read(repo_dir, "variables/q2.html")
     assert "<script>x</script>" not in page and "&lt;script&gt;x&lt;/script&gt;" in page
 
 
@@ -65,7 +65,7 @@ def test_search_index(repo_dir):
     site.build(repo_dir)
     text = read(repo_dir, "search-index.js")
     rows = json.loads(text[text.index("["):text.rindex("]") + 1])
-    assert ["q1", "Question one", "r1", "variables/r1/q1.html", "Do you agree?"] in rows
+    assert ["q1", "Question one", "r1", "variables/q1.html", "Do you agree?"] in rows
 
 
 def test_is_current_and_refuses_hand_made_docs(repo_dir):
@@ -94,8 +94,15 @@ def test_two_releases_links_and_changes(tmp_path):
          "relations": ["same_item"], "origin": {"origin": "rule", "rule": "same_name",
                                                 "rule_version": "0.1", "source": "cb"}}])
     site.build(root)
-    page = read(root, "variables/r1/q1.html")
-    assert 'href="../../variables/r2/q1.html"' in page and "same_item" in page
+    manifest = site.build(root)
+    pages = sorted(f for f in manifest["files"] if f.startswith("variables/"))
+    assert pages == ["variables/q1.html", "variables/q2.html", "variables/q3.html"]     # one page per variable
+    page = read(root, "variables/q1.html")
+    assert "Question one, revised" in page and "<h2>Releases</h2>" in page             # r2's record, then releases
+    assert "<td>label</td>" in page and "r1: q1, what differs from r2" in page
+    assert "<h2>Releases</h2>" not in read(root, "variables/q3.html")
+    assert 'href="../variables/q1.html"' in read(root, "releases/r1.html")              # both releases link to it
+    assert 'href="../variables/q1.html"' in read(root, "releases/r2.html")
     changes = read(root, "changes/r1--r2.html")
     assert "Added (1)" in changes and "q3" in changes
     assert "Removed (1)" in changes and "q2" in changes
@@ -111,7 +118,7 @@ def test_tables(tmp_path):
     write_jsonl(root / "metadata" / "releases" / "r1" / "a" / "variables.jsonl", [VARIABLES[0]])
     site.build(root)
     assert "Table A" in read(root, "releases/r1-a.html")
-    assert 'href="../../../style.css"' in read(root, "variables/r1/a/q1.html")
+    assert 'href="../../style.css"' in read(root, "variables/a/q1.html")
 
 
 def test_references_with_conditions(tmp_path):
@@ -129,7 +136,7 @@ def test_references_with_conditions(tmp_path):
     site.build(root)
     per = read(root, "releases/r1-per.html")
     assert 'href="../releases/r1-veh.html">veh</a>' in per and "when" in per and " is 1, 2 or 9" in per
-    assert 'href="../variables/r1/per/q2.html"' in per and "One row per person." in per
+    assert 'href="../variables/per/q2.html"' in per and "One row per person." in per
     assert "Referred to by" in read(root, "releases/r1-veh.html")
     from pdt import views
     views.build(root)
@@ -141,7 +148,7 @@ def test_correction_evidence_quote(tmp_path):
     c = dict(CORRECTIONS[0], evidence=[{"citation": "Data file", "quote": "code 9: 1,204 cases"}])
     root = make_repo(tmp_path, corrections=[c])
     site.build(root)
-    assert "<blockquote>code 9: 1,204 cases</blockquote>" in read(root, "variables/r1/q2.html")
+    assert "<blockquote>code 9: 1,204 cases</blockquote>" in read(root, "variables/q2.html")
 
 
 def test_code_history_table(repo_dir):
@@ -153,12 +160,12 @@ def test_code_history_table(repo_dir):
                "origin": {"origin": "publisher", "source": "cb", "location": "p. 78"}}
     write_jsonl(repo_dir / "metadata" / "histories.jsonl", [history])
     site.build(repo_dir)
-    page = read(repo_dir, "variables/r1/q1.html")
+    page = read(repo_dir, "variables/q1.html")
     assert "Code history" in page and "p. 78" in page
     assert "<th>1975–1979</th><th>1980</th><th>1981–</th>" in page
     assert "<td>Reported as Unknown</td><td>—</td><td>—</td><td><code>9</code></td>" in page
     assert "Q1OLD (1975–1979)" in page
-    assert "Code history" not in read(repo_dir, "variables/r1/q2.html")
+    assert "Code history" not in read(repo_dir, "variables/q2.html")
 
 
 def test_release_revisions(tmp_path):
@@ -186,6 +193,25 @@ def test_cases_column_when_n_present(tmp_path):
     with_n = dict(VS[0], values=[dict(v, n=k) for v, k in zip(VS[0]["values"], (1204, 7))])
     root = make_repo(tmp_path, variables=[with_n, VS[1]])
     site.build(root)
-    page = read(root, "variables/r1/q1.html")
+    page = read(root, "variables/q1.html")
     assert "<th>Cases</th>" in page and '<span class="num">1,204</span>' in page
-    assert "<th>Cases</th>" not in read(root, "variables/r1/q2.html")
+    assert "<th>Cases</th>" not in read(root, "variables/q2.html")
+
+
+def test_change_of_meaning_is_a_separate_cross_linked_page(tmp_path):
+    dataset = dict(DATASET, releases=[
+        {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
+        {"id": "r2", "label": "R2", "status": "current", "sources": ["cb"]}])
+    root = make_repo(tmp_path, dataset=dataset, variables=[dict(VARIABLES[0], release="r1")], groups=[],
+                     corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl",
+                [dict(VARIABLES[0], release="r2", values=[{"code": 1, "label": "yes", "kind": "valid"}])])
+    write_jsonl(root / "metadata" / "links.jsonl", [
+        {"from": {"release": "r1", "name": "q1"}, "to": {"release": "r2", "name": "q1"},
+         "relations": ["codes_changed"], "origin": {"origin": "publisher", "source": "cb"}}])
+    manifest = site.build(root)
+    pages = sorted(f for f in manifest["files"] if f.startswith("variables/"))
+    assert pages == ["variables/q1%40r1.html", "variables/q1.html"]                  # same name, two variables
+    new, old = read(root, "variables/q1.html"), read(root, "variables/q1%40r1.html")
+    assert "Related variables" in new and 'href="../variables/q1%40r1.html"' in new and "(earlier)" in new
+    assert 'href="../variables/q1.html"' in old and "(later)" in old and "codes_changed" in old

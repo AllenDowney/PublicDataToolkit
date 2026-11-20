@@ -359,8 +359,8 @@ def test_c8_views_current(repo_dir):
     views.build(repo_dir)
     site.build(repo_dir)
     dd.build(repo_dir)
-    (repo_dir / "docs" / "variables" / "r1" / "q1.html").unlink()
-    assert c8(check(repo_dir)) == ["C8: docs/ is missing 1 generated file(s), e.g. variables/r1/q1.html; "
+    (repo_dir / "docs" / "variables" / "q1.html").unlink()
+    assert c8(check(repo_dir)) == ["C8: docs/ is missing 1 generated file(s), e.g. variables/q1.html; "
                                    "run `make views`"]
 
 
