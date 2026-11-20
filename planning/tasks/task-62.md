@@ -1,6 +1,6 @@
 # Task 62 — An NCVS slice, metadata only
 
-**Status:** `DOING (blue)`, claimed 2026-11-20. Metadata from the codebooks done (pdt-ncvs 6c94a4a); waiting for the data files for C3–C5.
+**Status:** `DOING (blue)`, claimed 2026-11-20. Metadata from the codebooks (pdt-ncvs 6c94a4a), checked against the Stata files (1ce52e4). Local only, unpublished.
 
 The National Crime Victimization Survey (Bureau of Justice Statistics, distributed by ICPSR's National Archive of Criminal Justice Data) in `~/pdt-ncvs`: household, person and incident tables for a few years.
 
@@ -55,3 +55,31 @@ The incident key is read from the codebook: V4011 is the screen question that pr
 - 8 variables list only their first 50 categories in the PDF (in `build/report.md`).
 - 1059 of 2146 records have no question text (IDs, weights, derived and admin variables).
 - C3–C5 need the Stata files; when they arrive, add `read_data()` as in pdt-nhanes. 2023 (ICPSR 38962) would be a second release.
+
+## Checked against the data (2026-11-20)
+
+Allen downloaded the Stata version, about 795 MB. It's in `data/raw/ICPSR_38603-V1-stata.zip`, recorded as a manual, build-only source with its sha256. The zip also holds ICPSR's full TermsOfUse.html.
+
+`build/check_data.py` (`make check-data`) reads the files in row chunks of 25,000 and reads only the key columns for the key checks. It ran under the 6 GB cap and writes `build/data_report.md`. pdt-ncvs commit 1ce52e4; `pdt check` passes with 0 failures.
+
+| Table | Rows | Columns |
+|---|---|---|
+| address | 257,272 | 10 |
+| household | 257,272 | 448 |
+| person | 277,892 | 427 |
+| incident | 9,545 | 1,261 |
+
+- **C3:** the data's columns match the records exactly in all four files.
+- **C4:** clean. No value is outside the listed codes and the codebook's range. Two false alarms came from the check, not the data, and are fixed in it: YEARQ is a Stata float, so 2022.1 reads as 2022.0999755859375 and is now rounded to float precision; and identifiers have no codes or range to check.
+- **C5:** every codebook count matches the data, for every listed code and every count of valid cases.
+- **Keys and references:**
+  - All four keys are unique and have no blanks, and every reference finds its row.
+  - The incident key `[YEARQ, IDPER, V4011, V4012]` is minimal. Without V4011 there are 834 duplicate rows, and without V4012 there are 1,178.
+- **Missing codes:** ICPSR's supplemental .do files recode the same codes the records mark missing, in all 809 variables, with one exception: V4400.
+
+**V4400, corrected (inferred):**
+- The codebook doesn't mark code 99 "Out of universe" (6,303 cases) missing, although it marks every other "Out of universe" code missing.
+- The .do file recodes 9 instead, which doesn't occur. It is probably left over from the 2017 collapse of categories the codebook notes.
+- `metadata/corrections.jsonl` makes 99 missing (inap), with confidence `inferred` and upstream `not_filed`. Reporting it to ICPSR is Allen's call.
+
+**What ICPSR counts as missing:** only "Out of universe" and blank codes. "Residue" (8/98, 692 codes), "Don't know" (95) and "Refused" (19) are listed as valid. The records follow the codebook; a user who wants them treated as missing has to recode them.
