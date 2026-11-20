@@ -327,7 +327,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 77 — QA of the published sites
 
-`DOING (purple)`. Crawl the toolkit site and the 16 dataset sites on GitHub Pages: broken internal links, the GitHub repo, issues and toolkit links, the About, Using and search-index pages, the terms notice in every footer, and whether search loads. Spot-check rendering in a headless browser. Fix generator problems (site.py, pages/build.py) with tests. Details: [`planning/tasks/task-77.md`](planning/tasks/task-77.md).
+`DOING (purple)`, stopped at the wrap-up. Fixed in site.py, with tests: links to `NAME@release` pages broke on 8 sites (the file names held a literal `%40`), and About and Using overflowed at phone width. Crawled so far: toolkit, anes-cdf and atus, with no broken internal links; the toolkit's home page links to the CultureWar repo, which returns 404. The rest of the crawl is listed under Stopped here. Details: [`planning/tasks/task-77.md`](planning/tasks/task-77.md).
 ### Task 78 — A fast common-format build: vectorized split and round trip
 
 `DOING (red)`. `pdt.data.split`, `rebuild` and `same_cells` handle every cell in Python (the full GSS: about 50 minutes per release). Vectorize them with numpy and pyarrow, with byte-identical output files on ANES, FARS, NSFG, BRFSS and a GSS column batch, the same errors on bad input, and memory no worse. Benchmark before and after. Changes in `data.py`; `release.py` is orange's. Details: [`planning/tasks/task-78.md`](planning/tasks/task-78.md).
