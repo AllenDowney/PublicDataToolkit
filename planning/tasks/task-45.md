@@ -94,3 +94,9 @@ The coordinator's decisions (2026-11-20; standard `d04af94`):
 **Open:**
 - The NCES files' `redistribution` is `unknown`. NCES is a US federal agency, so they are probably public domain, but that's Allen's decision.
 - Still missing: the OECD's international 2012–2018 questionnaires and the technical reports, which would give Fay's factor, BELONG's rescaling, and whether ST87 continues as ST034. They are behind a bot check. Per the coordinator, ask Allen for them only if needed.
+
+### Technical reports (coordinator, 2026-11-20)
+
+- **2012:** Allen downloaded the report from UNESCO's NEQMAP mirror (https://neqmap.bangkok.unesco.org/wp-content/uploads/2019/08/PISA-2012-technical-report-final-1.pdf). It's now in `~/pdt-pisa/data/raw/PISA-2012-technical-report-final-1.pdf` (5.2 MB). Record it as a source, with the mirror and the OECD as publisher.
+- **2015 and 2018:** the OECD links failed for Allen in a browser too, so don't ask him again. Look for mirrors that serve scripts: NEQMAP, NCES's "Technical Report and User Guide" for PISA 2015 and 2018, and ministry repositories. Stop at any bot check.
+- Then settle the three open facts, citing pages: Fay's factor, whether BELONG was rescaled, and ST87→ST034.
