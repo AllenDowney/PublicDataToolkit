@@ -197,6 +197,8 @@
         "psu": {
           "$ref": "common.schema.json#/$defs/name"
         },
+        "table": {"description": "The table that holds the design variables, when it isn't the one described (NLSY: strata and PSU in the person table).", "$ref": "common.schema.json#/$defs/id"},
+        "key": {"description": "The columns that join to it.", "type": "array", "items": {"$ref": "common.schema.json#/$defs/name"}, "minItems": 1},
         "replicates": {
           "description": "Replicate weights, when variance comes from them: the variables (or a prefix and count) and the method. PISA: 80 weights W_FSTURWT1-80, Fay's method.",
           "type": "object",

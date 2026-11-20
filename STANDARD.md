@@ -95,7 +95,7 @@ Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A relea
 
 **Partial data files.** When a release's or table's common-format file holds only some waves, because the table is too large or keeps growing, `data_waves` lists them, and C5 checks availability only for those. When it holds only some rows of each wave, such as some countries, `data_rows` names the `column` and the codes it keeps (`in`), and C3–C5 read it the same way.
 
-`design` names the survey design variables: `weights`, `strata` and `psu`, and `replicates` when variance comes from replicate weights. `replicates` names the weights, as a list of `variables` or a `prefix` and a count `n`, and the `table` that holds them when it's another table (with the `key` it joins on), and the `method` (`brr`, `fay`, `jk1`, `jkn`, `bootstrap`, `sdr`, `other`), with `fay_factor` for Fay's method: PISA's 80 weights `W_FSTURWT1`–`W_FSTURWT80` use Fay's method. A weight used only in some waves is an object with its `name` and `waves` (ATUS: `{name: TU20FWGT, waves: [2020]}`); the others apply to every wave. A release or table can override it. A variable named in `replicates` needs no record of its own: C3 accepts it. It's descriptive: which weight suits an analysis is the user's choice.
+`design` names the survey design variables: `weights`, `strata` and `psu`, and `replicates` when variance comes from replicate weights. `replicates` names the weights, as a list of `variables` or a `prefix` and a count `n`, and the `table` that holds them when it's another table (with the `key` it joins on), and the `method` (`brr`, `fay`, `jk1`, `jkn`, `bootstrap`, `sdr`, `other`), with `fay_factor` for Fay's method: PISA's 80 weights `W_FSTURWT1`–`W_FSTURWT80` use Fay's method. When the design variables are in another table than the one described, as the NLSY's strata and PSU are in its person table, `design.table` and `design.key` say where. A weight used only in some waves is an object with its `name` and `waves` (ATUS: `{name: TU20FWGT, waves: [2020]}`); the others apply to every wave. A release or table can override it. A variable named in `replicates` needs no record of its own: C3 accepts it. It's descriptive: which weight suits an analysis is the user's choice.
 
 `dimensions` says what availability's `wave`, `form`, `sample`, `mode`, `phase` and `geography` mean for this dataset. `geography` is where a question was asked when that varies, such as a BRFSS state module (`{"wave": 2022, "geography": "25"}`, Massachusetts); `dimensions.geography.label` names the unit. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
 
@@ -175,11 +175,11 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other`. A flag variable (allocation, imputation, top-code, swapping) names what it flags in `flag_for`. A variable that stands for one code in a list, such as ATUS's `t010101` (minutes on lexicon code 010101, "Sleeping"), names it in `code_of` (`{code_list, code}`). When the publisher's file holds the variable in a different column in each wave, as the NLSY's wide file does (YHEA-100 is R0320600 in 1997, another reference number each round), `source_columns` lists them (`[{waves, column}]`), and the common-format table is long, one row per person and wave |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime, boolean, geometry |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
-| `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one. A code's `note` is the publisher's note on that code, verbatim, such as how a calculated variable's code is derived |
+| `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one; when the codebook prints counts by wave, they go in `counts` (`[{wave, n}]`) and `n` is their sum. A code's `note` is the publisher's note on that code, verbatim, such as how a calculated variable's code is derived |
 | `code_list` | The id of a shared code list (§4.5) whose codes come before `values`' own |
 | `valid_range` | For numeric variables whose valid values aren't all labeled, such as thermometers and ages: min, max, and whether the ends are top- or bottom-coded. Labeled points inside the range (A_AGE's 80 "80-84 years of age") are listed in `values` as valid codes too. When the valid values form several ranges with different meanings, `valid_range` is a list, each range with its `label`: BRFSS ALCDAY5's 101–107 (days per week) and 201–230 (days in the past 30) |
 | `implied_decimals` | When numbers are stored without their decimal point (a weight of 255212 meaning 2552.12): the number of implied places. The data keep the stored value |
-| `units`, `universe`, `notes` | Verbatim from the publisher |
+| `units`, `universe`, `notes` | Verbatim from the publisher. When the universe differs by wave, as in a panel's rounds, `universe` is a list of `{text, waves}` |
 | `availability` | One entry per (wave, form, sample, mode, phase) combination the publisher documents. An entry with only `wave` means everyone in that wave. `n` is the count of non-missing responses, when known |
 | `source_location` | Where a person can read this variable's documentation: source, page, URL, anchor, and the publisher's own id for it |
 | `provenance` | Required. §3 |
@@ -206,7 +206,7 @@ Codes are stored as they appear in the data file: numbers as numbers, and Stata 
 | `no_answer` | No answer recorded, reason unknown | GSS `.n`; ANES 99 "NA" |
 | `inap` | Not applicable: outside the universe or skipped by design | GSS `.i` "iap" |
 | `skipped` | The respondent skipped it (self-administered modes) | GSS `.s` "skipped on web" |
-| `not_asked` | Not asked of this respondent's wave, form or interview | GSS `.y` "not available in this year"; ANES "no Post IW" |
+| `not_asked` | Not asked of this respondent's wave, form or interview, including a panel round the respondent missed | GSS `.y` "not available in this year"; ANES "no Post IW"; NLSY -5 "non-interview" |
 | `not_available` | Asked, but not released in this file | GSS `.x` "not available in this release" |
 | `uncodeable` | Answered, but couldn't be coded or imputed | GSS `.u`, `.p` |
 | `unknown` | The source records the value as unknown. For administrative and coded data, where no respondent was asked | FARS "Unknown", "Reported as Unknown" |
@@ -301,6 +301,8 @@ Groups the publisher defines have `origin: publisher` or `upstream_package`. Gro
 | `derived_from` | `from` is built from `to`, as a cumulative-file variable is built from single-year items |
 | `split_from`, `merged_into` | One variable became several, or several became one |
 | `rescaled` | The same construct, but the scale was re-estimated, so values aren't comparable across the pair without the publisher's trend or linking file. PISA's ESCS and BELONG are re-estimated each cycle |
+
+A link that holds only for some of the `from` variable's waves, as a cumulative-file variable is `derived_from` one year's item only for that year's rows, lists them in `waves`. When a crosswalk maps several yearly items, unchanged, to the same cumulative variable, `same_item` links between those yearly items may be made by rule from it, citing it as the source.
 
 A link the publisher states can carry `evidence`, as corrections do (§5.3): a citation, URL and verbatim quote.
 

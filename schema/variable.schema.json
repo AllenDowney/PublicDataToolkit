@@ -153,8 +153,11 @@
       "minimum": 1
     },
     "universe": {
-      "description": "Who was asked, verbatim from the publisher when available.",
-      "type": "string"
+      "description": "Who was asked, verbatim from the publisher when available. A list of {text, waves} when it differs by wave.",
+      "oneOf": [
+        {"type": "string"},
+        {"type": "array", "minItems": 1, "items": {"type": "object", "properties": {"text": {"type": "string"}, "waves": {"type": "array", "minItems": 1}}, "required": ["text", "waves"], "additionalProperties": false}}
+      ]
     },
     "availability": {
       "description": "Where the variable has data: one entry per (wave, form, sample, mode) combination the publisher documents. An entry with only wave means everyone in that wave.",
@@ -354,6 +357,11 @@
         "label": {
           "description": "The publisher's label, verbatim.",
           "type": "string"
+        },
+        "counts": {
+          "description": "The codebook's count for this code by wave; n is their sum.",
+          "type": "array",
+          "items": {"type": "object", "properties": {"wave": {}, "n": {"type": "integer", "minimum": 0}}, "required": ["wave", "n"], "additionalProperties": false}
         },
         "includes": {
           "description": "In a harmonized code list: the codes of other lists this code includes, and when, from the publisher's statement (STANDARD.md \u00a74.5).",

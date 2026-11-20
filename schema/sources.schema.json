@@ -35,6 +35,7 @@
             "release_notes",
             "errata",
             "crosswalk",
+            "code",
             "upstream_package",
             "api",
             "other"

@@ -37,6 +37,7 @@
         { "required": ["source"] }
       ]
     },
+    "waves": {"description": "The waves of `from` for which the link holds, when not all.", "type": "array", "minItems": 1},
     "evidence": { "$ref": "correction.schema.json#/properties/evidence" },
     "note": { "type": "string" }
   },
