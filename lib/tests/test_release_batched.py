@@ -158,3 +158,30 @@ def test_read_sas_system_missing_is_a_code(monkeypatch):
     raw = readers.read_sas("unused.sas7bdat", ["INCOME"])
     cells = raw["INCOME"].tolist()
     assert cells[0] == 1.0 and isinstance(cells[1], data.Code) and str(cells[1]) == "."
+
+
+def test_package_ships_current_releases_by_default(tmp_path):
+    """pdt-gss ships data for its current release only (STANDARD.md §8): a superseded release
+    without a data file doesn't stop packaging, and its data checks are noted as not run."""
+    import yaml
+    from test_check import DATASET, run
+    dataset = dict(DATASET, releases=[dict(DATASET["releases"][0]),
+                                      dict(DATASET["releases"][0], id="r0", label="Release 0", status="superseded")])
+    root = make_repo(tmp_path, dataset=dataset, variables=VARIABLES)
+    (root / "metadata" / "releases" / "r0").mkdir(parents=True)
+    (root / "metadata" / "releases" / "r0" / "variables.jsonl").write_text(
+        (root / "metadata" / "releases" / "r1" / "variables.jsonl").read_text().replace('"r1"', '"r0"'))
+    sources = yaml.safe_load((root / "sources.yaml").read_text())
+    sources["sources"][0]["path"] = "data/raw/cb.pdf"
+    (root / "sources.yaml").write_text(yaml.safe_dump(sources))
+    (root / "data" / "raw").mkdir(parents=True)
+    (root / "data" / "raw" / "cb.pdf").write_text("publisher file")
+    release.write_release(root, lambda rel, tab, names: (raw_frame(), "cb"), releases=["r1"], log=lambda *a: None)
+    out = release.package(root, log=lambda *a: None)                       # r1 only, by default
+    assert sorted(p.name for p in out.iterdir()) == ["SHA256SUMS", "cb.pdf", "toy-r1.parquet"]
+    with pytest.raises(ValueError, match="toy-r0.parquet is missing"):
+        release.package(root, log=lambda *a: None, all_releases=True)
+    with pytest.raises(ValueError, match="no release"):
+        release.package(root, log=lambda *a: None, releases=["r9"])
+    result = run(root)
+    assert "C3-C5, C12: r0: not run, because it has no data file in data/processed/ (make data)" in result.not_run

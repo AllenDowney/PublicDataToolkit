@@ -755,7 +755,7 @@ def load_data(repo, result):
             name = processed_name(repo.dataset.get("id"), release, table)
             path = repo.root / PROCESSED / name
             if not path.exists():
-                missing.append(name)
+                missing.append((release, table, name))
                 continue
             variables = repo.root / "metadata" / "releases" / release / (table or "") / "variables.jsonl"
             ident = data.identity_of(path)
@@ -773,8 +773,14 @@ def load_data(repo, result):
                 continue
             fixed = [apply_corrections(r, release, table, repo.corrections)[0] for r in records]
             frames[(release, table)] = (data.read(path), fixed)
-    if missing:
-        result.report("C3-C5, C12", f"skipped, no data file in {PROCESSED}/ (make data): {listed(missing)}")
+    # A release without data files is one the repo doesn't build data for (pdt-gss builds only its
+    # current release), so its data checks don't run: noted, not warned.
+    by_release = {}
+    for release, table, name in missing:
+        by_release.setdefault(release, []).append(table)
+    for release, tables in by_release.items():
+        what = release + (f" ({', '.join(t for t in tables if t)})" if any(tables) else "")
+        result.skip("C3-C5, C12", f"{what}: not run, because it has no data file in {PROCESSED}/ (make data)")
     return frames
 
 

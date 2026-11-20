@@ -465,8 +465,11 @@ def write_release(root, reader, releases=None, log=print, batch_size=BATCH_COLUM
 RELEASE = Path("data") / "release"
 
 
-def package(root, log=print):
+def package(root, log=print, releases=None, all_releases=False):
     """Assemble the data release asset: publisher's data files, common-format files, SHA256SUMS.
+
+    Packages the releases with status `current` (STANDARD.md §8), or the ones named in
+    `releases`, or every release with all_releases.
 
     Refuses, before writing anything, if terms.data isn't ship, if any common-format
     file is local_only or missing, or if a publisher data file isn't ship or is missing.
@@ -482,7 +485,15 @@ def package(root, log=print):
         problems.append(terms)
     sources = {s["id"]: s for s in yaml.safe_load((root / "sources.yaml").read_text())["sources"]}
     files = []
+    if not releases:
+        releases = [r["id"] for r in repo.dataset.get("releases", [])
+                    if all_releases or r.get("status", "current") == "current"]
+    unknown = sorted(set(releases) - {r["id"] for r in repo.dataset.get("releases", [])})
+    if unknown:
+        raise ValueError(f"not packaged: no release {unknown} in dataset.yaml")
     for (release, table), name in release_files(repo.dataset).items():
+        if release not in releases:
+            continue
         path = root / PROCESSED / name
         if not path.exists():
             problems.append(f"{name} is missing; run make data")

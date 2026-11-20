@@ -49,6 +49,9 @@ def main(argv=None):
     dif.add_argument("rest", nargs=argparse.REMAINDER)
     pkg = sub.add_parser("package", help="assemble the data release asset in data/release/ (ship data only)")
     pkg.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
+    pkg.add_argument("--release", action="append", default=[], metavar="ID",
+                     help="package this release (repeatable); by default, the releases with status current")
+    pkg.add_argument("--all", action="store_true", help="package every release")
     exp = sub.add_parser("export", help="export a dataset repo for another tool: `pdt export daaf -h`",
                          add_help=False)
     exp.add_argument("format", choices=["daaf"], help="daaf: a DAAF data-source skill in export/daaf/")
@@ -64,7 +67,7 @@ def main(argv=None):
     if args.command == "package":
         from .release import package
         try:
-            out = package(args.path)
+            out = package(args.path, releases=args.release or None, all_releases=args.all)
         except ValueError as e:
             print(e, file=sys.stderr)
             return 1
