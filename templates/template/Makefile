@@ -2,7 +2,7 @@ PYTHON ?= python
 # A PublicDataToolkit checkout. Or `pip install -e $(PDT)` and run `pdt check`.
 PDT ?= ../PublicDataToolkit
 
-.PHONY: download build views check export-daaf
+.PHONY: download build data views check export-daaf
 
 ## Fetch the sources into data/raw. Read the publisher's terms first, then: make download ARGS=--accept-terms
 download:
@@ -11,6 +11,12 @@ download:
 ## Build metadata records from data/raw (build/build_records.py writes build/report.md)
 build:
 	$(PYTHON) build/build_records.py
+
+## Write the data in the common format, data/processed/ (scripts/build_data.py), checking each
+## file's round trip. RELEASES="2022 2024" limits it to some releases. Under the memory cap:
+## systemd-run --user --scope -p MemoryMax=6G -p MemorySwapMax=0 --quiet make data
+data:
+	PYTHONPATH=$(PDT)/lib $(PYTHON) scripts/build_data.py $(RELEASES)
 
 ## Generate agent/, docs/ and export/ from the records (pdt views).
 ## VIEWS_ARGS="--only site" builds docs/ alone, as the Pages workflow does.

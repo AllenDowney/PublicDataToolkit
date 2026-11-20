@@ -4,6 +4,7 @@ Needs the `copier` command (set $COPIER, or have it on PATH); skipped without it
 pdt check runs with this interpreter, which needs the library's dependencies.
 """
 
+import json
 import os
 import shutil
 import subprocess
@@ -115,3 +116,19 @@ def test_hand_facts_need_a_real_author(tmp_path):
                                          "date": "2026-11-19"}
     record = build.build_variable("q1", {"measure": "ordinal"}, {}, "2024", filled)
     assert record["provenance"]["fields"]["measure"]["author"] == "Claude (PublicDataToolkit Task 99)"
+
+
+def test_make_data_runs_the_build_and_skips_a_release_without_data(tmp_path):
+    # `data` is a target (and phony, since data/ exists): it runs scripts/build_data.py, which
+    # skips a release whose data source isn't there yet instead of failing.
+    repo = render(tmp_path / "pdt-testdata")
+    run([sys.executable, "build/build_records.py"], repo)
+    record = {"dataset": "testdata", "release": "2024", "name": "x",
+              "provenance": {"record": {"origin": "hand", "author": "Test", "date": "2026-11-20"}}}
+    (repo / "metadata" / "releases" / "2024" / "variables.jsonl").write_text(json.dumps(record) + "\n")
+    (repo / "data").mkdir(exist_ok=True)
+    dry = run(["make", "-n", "data", f"PYTHON={sys.executable}"], repo)
+    assert "scripts/build_data.py" in dry.stdout, dry.stdout + dry.stderr
+    result = run([sys.executable, "scripts/build_data.py"], repo)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "skipped 2024" in result.stdout, result.stdout
