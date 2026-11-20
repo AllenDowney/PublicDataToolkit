@@ -270,7 +270,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 63 — A HINTS slice
 
-`TODO`. The Health Information National Trends Survey (NCI) in `~/pdt-hints`: a few cycles, with replicate weights (`design.replicates`). Record the terms for Allen; download needs registration, so the sources may be manual. Memory cap applies. Take the next task file, `planning/tasks/task-63.md`, when you claim it.
+`DOING (blue)`. The Health Information National Trends Survey (NCI) in `~/pdt-hints`: HINTS 5 Cycle 4, 6 and 7, every variable (1,380 records), checked against the Stata files, with the JK1 replicate design; `pdt check` passes. No login is needed to download. Terms are quoted for Allen and all `unknown`. Details: [`planning/tasks/task-63.md`](planning/tasks/task-63.md).
 
 ### Task 64 — A MEPS slice
 
