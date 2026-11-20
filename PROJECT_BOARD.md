@@ -324,3 +324,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 76 — pdt-nsfg: the release expected on 2026-12-01
 
 `TODO (waits for NCHS)`. When NCHS publishes the next NSFG release (Allen is watching for it), add it to `~/pdt-nsfg` by the Task 75 runbook. Details: [`planning/tasks/task-76.md`](planning/tasks/task-76.md).
+
+### Task 77 — QA of the published sites
+
+`DOING (purple)`. Crawl the toolkit site and the 16 dataset sites on GitHub Pages: broken internal links, the GitHub repo, issues and toolkit links, the About, Using and search-index pages, the terms notice in every footer, and whether search loads. Spot-check rendering in a headless browser. Fix generator problems (site.py, pages/build.py) with tests. Details: [`planning/tasks/task-77.md`](planning/tasks/task-77.md).
