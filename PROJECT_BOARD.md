@@ -206,6 +206,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 ### Task 53 — Search fixes from the full-GSS eval
 
 `DOING (blue)`. `pdt search` defaults to the current release, with `--names` and paging; catalog search returns and filters waves; SKILL.md points agents to exact searches first; then three eval questions rerun. Details: [`planning/tasks/task-53.md`](planning/tasks/task-53.md).
+### Task 54 — Comparing releases: ignored markers, across tables, over gaps
+
+`DOING (red)`. From yellow's NHIS proposals (Task 50): `pdt.compare` takes patterns to ignore (NHIS's "* "), `pdt diff` pairs tables across a redesign (`samadult` → `adult`), and `pdt diff --gaps` compares each variable with the next release it appears in. Details: [`planning/tasks/task-54.md`](planning/tasks/task-54.md).
+
 
 
 
