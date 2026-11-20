@@ -242,7 +242,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 56 — An ATUS slice
 
-`DOING (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2025: 641 records in four tables, the activity lexicon as three code lists, `pdt check` 0 failures; terms: everything ships (Allen, 2026-11-20). Waiting on: answers to proposals P1–P5, batched `make data` for the activity and summary tables (Task 58), and five single-year lexicons for each code's years. Details: [`planning/tasks/task-56.md`](planning/tasks/task-56.md).
+`DOING (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2025: 641 records in four tables, the activity lexicon as three code lists, `pdt check` 0 failures; terms: everything ships (Allen, 2026-11-20). Proposals P1–P4 accepted and built (library: `pdt.design`, C2 checks for `code_of` and replicate tables, view links; pdt-atus uses them, with seven single-year lexicons harmonized); P5 declined. Waiting on batched `make data` for the activity and summary tables (Task 58). Details: [`planning/tasks/task-56.md`](planning/tasks/task-56.md).
 
 ### Task 57 — Design: topic annotation vs. belief-module groups
 

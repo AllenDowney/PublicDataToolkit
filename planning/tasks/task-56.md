@@ -192,3 +192,29 @@ Sent separately, to Task 58: `write_release` should batch by rows as well as col
 ### 2026-11-20: terms decided
 
 Allen decided: data, documentation and metadata ship, and LLM processing is allowed, with a notice citing BLS. The coordinator committed it in `~/pdt-atus` 5a75e90 (dataset.yaml, README, views); `pdt check` gives 0 failures. Still open: the coordinator's answers to P1–P5, the five single-year lexicons, and `make data` for `activity` and `summary` (Task 58).
+
+### 2026-11-20: the accepted proposals, in the library and in pdt-atus
+
+The coordinator's decisions (standard and schema in 4ddaf02): P1–P4 accepted, P5 declined for now (the rule stays; the three codes keep origin publisher, Interview Data Dictionary p. 7).
+
+**Library** (PublicDataToolkit):
+- `pdt.design` (95ec1a5, asked for by purple, whose C3 change uses it):
+  - `effective_design`: the table's design, else the release's, else the dataset's;
+  - `weight_names`: plain names or `{name, waves}`, filtered by wave;
+  - `replicate_columns`: matches a prefix against the real columns, padded (TUFNWGTP001) or not (W_FSTURWT1);
+  - `replicate_key`.
+- `pdt check` (2e364df), C2:
+  - `code_of` names an existing list and code;
+  - `design.replicates` resolves: the table exists, its key has records in both tables, and the columns are among its records or, when they have none, in its data file's schema.
+- `pdt views` (2e364df): a `code_of` variable's page says which code it stands for and links to that code's row on a page of a variable using the list; each code row links back to its columns.
+- Tests: `test_design.py`, `test_code_of_replicates.py`, and a site test; 270 pass.
+- Nothing else in the library read `design.weights`. `eval/keys/build_task51.py` did, and now accepts the object form.
+
+**pdt-atus** (b7ef53b):
+- The 431 summary columns use `code_of`; the extension is gone.
+- Seven single-year lexicons are code lists, `atus-lexicon-2003` … `atus-lexicon-2025`, read from BLS's XLS files through LibreOffice. Each stands for the years until the next crosswalk in `lexiconchanges.pdf`: 2005 for 2005–2006, 2008 for 2008–2012, 2013 for 2013–2023, 2025 for 2024–2025.
+- `atus-lexicon-0325` harmonizes them. 68 of its codes have `includes` from BLS's notes: 688 entries, each a single-year list, a code and its years. Every code a note names is in a single-year list of those years.
+- `design.weights`: TUFNWGTP with its waves (every year but 2020), TU20FWGT with `[2020]`. `design.replicates`: `table: replicates`, `key: [TUCASEID]`.
+- `make data` (respondent, replicates; with the committed library, not the shared checkout's uncommitted Task 58 changes) passes the round trip. `pdt check` gives 0 failures.
+
+**For the coordinator:** the terms say everything ships, but every source in `sources.yaml` still has `redistribution: unknown`, so `write_release` marks the data local only. Changing it follows from Allen's decision, but it's a terms field, so I left it for you.
