@@ -241,3 +241,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 56 — An ATUS slice
 
 `DOING (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2023: the respondent file, the activity summary and the activity file's codes. The activity codes are the first real test of shared code lists (`metadata/code_lists.jsonl`, STANDARD.md §4.5). Blocked on bls.gov downloads. Details: [`planning/tasks/task-56.md`](planning/tasks/task-56.md).
+
+### Task 57 — Design: topic annotation vs. belief-module groups
+
+`DOING (blue)`. A design for the §7.5 comparison: a religion topic annotation versus belief-module groups, and how to measure each with the eval. Design only, until the coordinator has read it. Details: [`planning/tasks/task-57.md`](planning/tasks/task-57.md).
