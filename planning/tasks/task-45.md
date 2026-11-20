@@ -100,3 +100,15 @@ The coordinator's decisions (2026-11-20; standard `d04af94`):
 - **2012:** Allen downloaded the report from UNESCO's NEQMAP mirror (https://neqmap.bangkok.unesco.org/wp-content/uploads/2019/08/PISA-2012-technical-report-final-1.pdf). It's now in `~/pdt-pisa/data/raw/PISA-2012-technical-report-final-1.pdf` (5.2 MB). Record it as a source, with the mirror and the OECD as publisher.
 - **2015 and 2018:** the OECD links failed for Allen in a browser too, so don't ask him again. Look for mirrors that serve scripts: NEQMAP, NCES's "Technical Report and User Guide" for PISA 2015 and 2018, and ministry repositories. Stop at any bot check.
 - Then settle the three open facts, citing pages: Fay's factor, whether BELONG was rescaled, and ST87→ST034.
+
+### Technical reports, settled (purple, 2026-11-20)
+
+pdt-pisa `afde85d`, `pdt check` 0 failures. New sources: `pisa2012-techrep` (the copy from UNESCO's NEQMAP mirror, `acquisition: manual`), and NCES's `nces-pisa2015-techrep` (NCES 2017-095) and `nces-pisa2018-techrep` (NCES 2021-011), which urllib fetches. All three have `redistribution: unknown`. They're OECD and NCES reports, not questionnaires, so that's Allen's call.
+
+| Question | Answer | Source |
+|---|---|---|
+| Fay's factor | **0.5**, for 2012, 2015 and 2018, set in those releases' `design.replicates.fay_factor`. Left out for 2022, which has no source. | 2012: PISA 2012 Technical Report, Ch. 8, pp. 139–140 (weights × 1.5 and × 0.5; V = 0.05 Σ). 2015: NCES 2017-095, §10.1, p. 64 ("the Fay coefficient set to 0.5"). 2018: NCES 2021-011, §10, p. 66 (the same words). |
+| ST87Q01–06 → ST034Q01TA–06TA | **Not settled; still unlinked.** The 2012 report says only ST87Q01–06 are trend items with 2003 (p. 51: "Trend analyses should only involve the 6 common items (i.e. ST87Q01 to ST87Q06)"; p. 332: same wording as the first 6 items of 2012). It predates 2015, so it can't say what continues. | Needs the OECD's 2015 Technical Report, Ch. 16. |
+| BELONG rescaled | **Not settled; still unlinked.** The 2012 report says the 2012 scale was extended from 6 to 9 items (p. 51), which concerns 2003→2012, not the cycles here. | Needs the 2015 and 2018 OECD reports, Ch. 16. |
+
+**Still blocked:** every copy of the OECD's 2015 and 2018 technical reports that searches turn up is on www.oecd.org, t4.oecd.org or search.oecd.org, behind the bot check or no longer resolving. NCES's US reports carry no chapter on scaling the context questionnaire. No other mirror turned up (NEQMAP has only 2012).
