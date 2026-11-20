@@ -78,3 +78,10 @@ The design:
 **Memory.** The activity file is large (80 MB zipped for 0323; millions of rows). Every data job runs under `systemd-run --user --scope -p MemoryMax=6G -p MemorySwapMax=0`, and the activity file is read in batches of columns, only the slice's.
 
 **Terms.** BLS's copyright page (https://www.bls.gov/opub/copyright-information.htm) says "everything that we publish ... is in the public domain, except for previously copyrighted photographs and illustrations". It also says "You are free to use our public domain material without specific permission, although we do ask that you cite the Bureau of Labor Statistics as the source." The download block is about scripts, not reuse. The decision stays open for Allen; every terms field stays `unknown`.
+
+### 2026-11-20: decisions from the coordinator
+
+- **Replicates:** `method: fay`, `fay_factor: 0.5`. The guide names the method ("a modified balanced half-sample method of replication, developed in the 1980s by Robert Fay", §7.5, p. 44), but not the factor. The note will say the factor is derived from the guide's formula there, Var(Ŷ₀) = 4/160 · Σᵢ (Ŷᵢ − Ŷ₀)². For Fay's method the multiplier is 1/(R(1−k)²), so 4/R means k = 0.5.
+- **The 2020 weight:** `design` can be set for the dataset, a release or a table (schema/dataset.schema.json), but not for a wave. With one multi-year release, TU20FWGT for 2020 can't be an override; it goes in the note.
+  - **Finding:** a multi-year release whose weight differs by wave has no way to say so. This will be a proposal: `design` by wave, or `weights` entries that carry `waves`.
+- **Summary columns named by the lexicon:** built by a rule, each record pointing to its lexicon code. A proposal for §4.5 will follow; the coordinator decides the standard change after the build.
