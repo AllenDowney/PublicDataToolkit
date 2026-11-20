@@ -195,6 +195,11 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DOING (red)`. The site writes one page per variable across releases (`pdt.chains`), with a Releases section for what differs; pandas, numpy and pyarrow move to `publicdatatoolkit[data]`. Details: [`planning/tasks/task-49.md`](planning/tasks/task-49.md).
 
+### Task 50 — An NHIS slice
+
+`DOING (yellow)`. The National Health Interview Survey (NCHS, adults) in `~/pdt-nhis`, on both sides of the 2019 redesign: design, demographics and Twenge's outcomes, linked across 2019 only where NCHS says items are comparable. Details: [`planning/tasks/task-50.md`](planning/tasks/task-50.md).
+
+
 
 
 
