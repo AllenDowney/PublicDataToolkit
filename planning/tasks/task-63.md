@@ -69,3 +69,29 @@ One code is unresolved: hints7 `SexualOrientation2_OS` -4 "Verbatim response", i
 
 - Links between cycles: most names repeat across cycles, but same-item links need a check that the wording matches. That's a follow-up.
 - `measure` isn't set, since the files are taken whole.
+
+## Links between cycles (2026-11-20)
+
+The coordinator asked for links where the wording and codes are identical. pdt-hints 7346e46: `build/build_links.py` writes `metadata/links.jsonl` and `build/links_report.md`, and `make build` runs it.
+
+**Rule `hints_same_name_identical`** links a variable to the next cycle's variable of the same name (case-insensitive) only when all of these hold:
+- the question text, the label without its item number, and the universe are the same, after normalizing case, whitespace, dashes and quotes;
+- the valid codes and their labels are the same (for a numeric item, the same listing label);
+- the storage type is the same;
+- missing codes differ at most in wording or in which ones occur, and no code is valid in one cycle and missing in the other.
+
+The source is NCI's merge code, which "will match up variables that have the same name and format" (each cycle's Survey Overview, "Merging HINTS Survey Iterations"). It's quoted as evidence on each link.
+
+| Pair | Names in both | Linked | Candidates |
+|---|---|---|---|
+| hints5-cycle4 → hints6 | 235 | 76 | 159 |
+| hints6 → hints7 | 288 | 150 | 138 |
+
+**Relations:**
+- 88 links are `same_item` alone.
+- 128 add `labels_changed`: only the item number moved ("A1." → "A2.").
+- 10 add `renamed`: the name changed case (MailHHAdults vs MAILHHADULTS).
+
+**Candidates aren't linked.** HINTS's methodology reports and history documents don't list item changes between cycles, so there's no publisher statement to cite. Most candidates are real but small rewordings: "3G/4G" became "3G/4G/5G", and "trust information about cancer family or friends" was corrected to "from family or friends". Others are relabeled design variables, and universes with new filter expressions. `build/links_report.md` lists them by reason, and `pdt diff` shows each change.
+
+**Not done:** links between nonconsecutive cycles (2020 → 2024), and renamed items. A renamed item needs the publisher's statement.
