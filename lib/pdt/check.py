@@ -772,7 +772,7 @@ def load_data(repo, result):
                                             "rebuild it (make data)")
                 continue
             fixed = [apply_corrections(r, release, table, repo.corrections)[0] for r in records]
-            frames[(release, table)] = (data.read(path), fixed)
+            frames[(release, table)] = (LazyFrame(path), fixed)
     # A release without data files is one the repo doesn't build data for (pdt-gss builds only its
     # current release), so its data checks don't run: noted, not warned.
     by_release = {}
@@ -782,6 +782,66 @@ def load_data(repo, result):
         what = release + (f" ({', '.join(t for t in tables if t)})" if any(tables) else "")
         result.skip("C3-C5, C12", f"{what}: not run, because it has no data file in {PROCESSED}/ (make data)")
     return frames
+
+
+class LazyFrame:
+    """A common-format file that reads a column only when a check asks for it (Task 58: the full
+    GSS as one frame is 75,699 rows by about 14,000 columns, more than the memory cap).
+
+    Supports what the data checks use: `columns`, `in`, `len()`, frame[name] (a Series),
+    frame[[names]] (a DataFrame), frame[boolean mask] (the same file, those rows) and
+    duplicated(names). One open ParquetFile is reused, so its footer is parsed once.
+    """
+
+    CACHE = 8
+
+    def __init__(self, path, mask=None, _file=None):
+        import pyarrow.parquet as pq
+        self.path = path
+        self._file = _file or pq.ParquetFile(path)
+        self._names = self._file.schema_arrow.names
+        self._mask = mask           # a numpy bool array over the file's rows, or None
+        self._cache = {}
+
+    @property
+    def columns(self):
+        import pandas as pd             # data checks only: metadata tools don't need pandas
+        return pd.Index(self._names)
+
+    def __contains__(self, name):
+        return name in self._names
+
+    def __len__(self):
+        return self._file.metadata.num_rows if self._mask is None else int(self._mask.sum())
+
+    def _read(self, names):
+        frame = self._file.read(columns=list(names)).to_pandas()
+        if self._mask is not None:
+            frame = frame[self._mask].reset_index(drop=True)
+        return frame
+
+    def __getitem__(self, key):
+        import numpy as np
+        import pandas as pd
+        if isinstance(key, str):
+            if key not in self._cache:
+                if len(self._cache) >= self.CACHE:
+                    self._cache.pop(next(iter(self._cache)))
+                self._cache[key] = self._read([key])[key]
+            return self._cache[key]
+        if isinstance(key, (list, tuple, pd.Index)):
+            return self._read(key)
+        if hasattr(key, "fillna"):
+            key = key.fillna(False)                 # a nullable comparison: missing isn't selected
+        mask = np.asarray(key, dtype=bool)          # a boolean Series over this frame's rows
+        if self._mask is not None:
+            full = self._mask.copy()
+            full[full] = mask
+            mask = full
+        return LazyFrame(self.path, mask, self._file)
+
+    def duplicated(self, names):
+        return self._read(names).duplicated()
 
 
 def value_columns(frame):

@@ -185,3 +185,17 @@ def test_package_ships_current_releases_by_default(tmp_path):
         release.package(root, log=lambda *a: None, releases=["r9"])
     result = run(root)
     assert "C3-C5, C12: r0: not run, because it has no data file in data/processed/ (make data)" in result.not_run
+
+
+def test_data_checks_read_columns_lazily(tmp_path):
+    """C3-C5 and C12 get a LazyFrame: columns from the file's metadata, a column read when asked
+    for, and a row mask applied to what's read (the full GSS doesn't fit as one frame)."""
+    from pdt.check import LazyFrame
+    root = make_repo(tmp_path, variables=VARIABLES)
+    path, = release.write_release(root, lambda rel, tab, names: (raw_frame(), "cb"), log=lambda *a: None)
+    lazy = LazyFrame(path)
+    assert list(lazy.columns) == pq.read_schema(path).names and len(lazy) == 7 and "q1" in lazy
+    assert lazy["q2"].tolist() == data.read(path)["q2"].tolist()
+    some = lazy[lazy["q1"] == 1]
+    assert len(some) == 4 and some["q5"].tolist() == data.read(path)[data.read(path)["q1"] == 1]["q5"].tolist()
+    assert some[["q1", "q4"]].shape == (4, 2)
