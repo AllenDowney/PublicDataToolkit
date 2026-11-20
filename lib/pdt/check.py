@@ -488,6 +488,66 @@ def check_replicate_tables(repo, result):
                                   f"{target} (records, or its data file when there is one)")
 
 
+def check_design_tables(repo, result):
+    """C2 for design.table (STANDARD.md §2.1): the table that holds design variables exists, its
+    key has records in both tables, and each weight, stratum and PSU has a record in this table
+    or in that one. A design set for the release or the dataset (not the table) applies to every
+    table, so there each name needs a record in some table of the release."""
+    from .design import effective_design, weight_names
+    for r in repo.dataset.get("releases", []):
+        tables = [t["id"] for t in r.get("tables") or []] or [None]
+        for tab in tables:
+            design = effective_design(repo.dataset, r["id"], tab)
+            if not design:
+                continue
+            where = f"{r['id']}" + (f"/{tab}" if tab else "")
+            own = tab is None or any(t.get("id") == tab and t.get("design") is not None for t in r.get("tables") or [])
+            have = ({x["name"] for x in repo.tables.get(r["id"], {}).get(tab, [])} if own
+                    else {x["name"] for recs in repo.tables.get(r["id"], {}).values() for x in recs})
+            other = design.get("table")
+            if other:
+                if other not in repo.tables.get(r["id"], {}):
+                    result.fail("C2", f"{where}: design.table {other} isn't a table of release {r['id']}")
+                    continue
+                theirs = {x["name"] for x in repo.tables[r["id"]][other]}
+                if not design.get("key"):
+                    result.fail("C2", f"{where}: design.table {other} needs a key to join on")
+                for col in design.get("key") or []:
+                    for t, names in ((tab, have), (other, theirs)):
+                        if col not in names:
+                            result.fail("C2", f"{where}: design key column {col} has no record in table {t}")
+                have = have | theirs
+            for name in weight_names(design) + [design.get("strata"), design.get("psu")]:
+                if name and name not in have:
+                    result.fail("C2", f"{where}: design names {name}, which has no record in "
+                                      + (f"{tab} or {other}" if other else (f"{tab}" if own and tab else "the release")))
+
+
+def check_design_joins(repo, frames, result):
+    """C12 for design.table and design.replicates.table: every key in this table's data finds its
+    row in the table that holds the design variables."""
+    from .design import effective_design
+    for r in repo.dataset.get("releases", []):
+        for t in r.get("tables") or []:
+            design = effective_design(repo.dataset, r["id"], t["id"])
+            for part in (design or {}, (design or {}).get("replicates") or {}):
+                other, key = part.get("table"), part.get("key")
+                if not other or not key or other == t["id"]:
+                    continue
+                name = f"{r['id']}/{t['id']} -> {other} (design)"
+                if (r["id"], t["id"]) not in frames or (r["id"], other) not in frames:
+                    result.report("C12", f"{name}: skipped, no data file for one of the tables")
+                    continue
+                mine, theirs = frames[(r["id"], t["id"])][0], frames[(r["id"], other)][0]
+                if absent := [c for c in key if c not in mine or c not in theirs]:
+                    result.report("C12", f"{name}: skipped, key columns not in the data: {listed(absent)}")
+                    continue
+                have = set(map(tuple, theirs[key].dropna().astype(object).itertuples(index=False)))
+                unmatched = sum(tuple(k) not in have for k in mine[key].astype(object).itertuples(index=False))
+                if unmatched:
+                    result.fail("C12", f"{name} ({', '.join(key)}): {unmatched:,} of {len(mine):,} rows without a match")
+
+
 def check_corrections(repo, result):
     """C7: each correction's original value still appears in its target."""
     if not repo.corrections:
@@ -966,6 +1026,7 @@ def check_data(repo, result):
         check_counts(name, frame, records, wave_column, result, data_waves(repo, release, table), rows)
     for r in repo.dataset.get("releases", []):
         check_keys_in_data(r["id"], r.get("tables") or [], frames, result)
+    check_design_joins(repo, frames, result)
 
 
 VIEWS = [("agent/", "agent/manifest.json"), ("docs/", "docs/manifest.json"),
@@ -1056,7 +1117,7 @@ def check_views(repo, result):
                                 f"this is {__version__}")
 
 
-CHECKS = [check_schemas, check_references, check_code_lists, check_code_of, check_replicate_tables,
+CHECKS = [check_schemas, check_references, check_code_lists, check_code_of, check_replicate_tables, check_design_tables,
           check_provenance, check_corrections,
           check_terms, check_extensions, check_docs, check_data, check_views]
 

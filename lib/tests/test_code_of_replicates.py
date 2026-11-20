@@ -42,7 +42,8 @@ def dataset_with_replicates(**rep):
 
 def rep_tables(names=("R001", "R002")):
     from test_check import TABLED
-    return dict(TABLED, reps=[tabled("reps", "CASEID")] + [tabled("reps", n) for n in names])
+    return dict(TABLED, female=TABLED["female"] + [tabled("female", "W"), tabled("female", "W20")],
+                reps=[tabled("reps", "CASEID")] + [tabled("reps", n) for n in names])
 
 
 def test_replicates_in_another_table_pass(tmp_path):
