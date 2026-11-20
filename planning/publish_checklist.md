@@ -2,6 +2,14 @@
 
 A read-only review (Task 52, 2026-11-20) of what's ready to publish, what to fix first, and the steps in order. Nothing has been pushed, tagged or created. The commands at the end are for Allen to run.
 
+**Allen's decisions (2026-11-20):**
+- **Version:** v0.2.0.
+- **Licenses:** MIT for code; CC BY 4.0 for our metadata, documents and views; publisher files keep their terms. Committed in 19f0e6e: the toolkit README, `templates/template/LICENSE.jinja`, a License section in the template README, and a copier question `copyright_holder` (default "Allen Downey").
+- **NSFG terms:** confirmed, with a notice (pdt-nsfg bc9d6a8, 743bf75; `pdt check` 0 failures).
+- **NHIS terms:** decided, everything ships (pdt-nhis 71bbf37, 7837c82; `pdt check` 0 failures).
+- **BRFSS:** green is still committing.
+- **The final push:** Allen runs it himself, from the clean clone (steps A–D).
+
 ## Summary
 
 | Repo | Verdict | Before publishing |
@@ -9,16 +17,18 @@ A read-only review (Task 52, 2026-11-20) of what's ready to publish, what to fix
 | PublicDataToolkit | **Ready once its history is cleaned** | §5 is fixed in the files (a0947e3), but 36 unpushed commits still hold the private version: push a rewritten branch (below); bump the version |
 | pdt-gss | **Ready** | Its site needs the Pages workflow added by hand (not made from the template) |
 | pdt-anes-cdf | **Ready** | |
-| pdt-nsfg | **Ready after one confirmation** | Terms summary says "pending his confirmation for this repo" |
+| pdt-nsfg | **Ready** | Terms confirmed by Allen (bc9d6a8, 743bf75) |
 | pdt-fars | **Ready** | |
 | pdt-chicago-crimes | **Ready** | |
 | pdt-yrbss | **Ready** | |
 | pdt-cps-asec | **Ready** | |
 | pdt-pisa | **Ready** | |
 | pdt-brfss | **Not ready** | Uncommitted record changes; views stale (C8) |
-| pdt-nhis | **Not ready** | Terms all `unknown`; no views yet |
+| pdt-nhis | **Ready** | Terms decided, everything ships (71bbf37, 7837c82); `pdt check` 0 failures, per the coordinator |
 
-**For every dataset repo:** no repo has a LICENSE. The publishers' terms govern their data and documentation; the code and our records need a license of their own (the toolkit is MIT). Decide one (say MIT for code and CC BY 4.0 for the records) before publishing, and the template should create it.
+**Every dataset repo needs a LICENSE** (decided: MIT for code, CC BY 4.0 for metadata, documents and views):
+- **By `copier update` after the v0.2.0 tag** (made from the template; they also get the README's License section): pdt-chicago-crimes, pdt-yrbss, pdt-cps-asec, pdt-pisa, pdt-nhis, and pdt-brfss when it's ready.
+- **By hand** (not made from the template): pdt-gss, pdt-anes-cdf, pdt-nsfg, pdt-fars. Render the template's `LICENSE.jinja` with `copyright_holder` "Allen Downey", and add a License section to each README (step 4b).
 
 ## The toolkit
 
@@ -73,7 +83,7 @@ Everything committed since `v0.1.0` (5d0a992), 116 commits:
 - **Schemas:** `code_list` is new; there are new optional fields (`values[].n`, `questions[].number`, `flag_for`, `implied_decimals`, `reference_period`, `lists_only_occurring_codes`, `convert`, `live`, `kind`, `data_waves`, `revisions`, …).
 - **Template:** the Pages workflow, and `VIEWS_ARGS`.
 
-**A version decision:** STANDARD.md §2.4 makes additive changes (a new optional field, a check that only warns) a **minor** bump, so by its own table this is **0.2.0**, not 0.1.1. Before 1.0 there are no compatibility promises, so 0.1.1 is allowed, but the tag will be read against §2.4. My recommendation is **v0.2.0**: the template changed, and the schemas gained a file. If it's 0.1.1, say so in the tag's message. `standard_version: 0.1` in the dataset repos stays valid either way, because nothing is required that wasn't before.
+**Version: v0.2.0** (decided). STANDARD.md §2.4 makes additive changes a minor bump, and the template and schemas gained files; the license files (19f0e6e) are part of it. `standard_version: 0.1` in the dataset repos stays valid either way, because nothing is required that wasn't before.
 
 ## Keeping §5 out of the pushed history
 
@@ -160,7 +170,17 @@ done
 **4. Template-made repos: bring the template forward** (adds `.github/workflows/pages.yml` and the `VIEWS_ARGS` Makefile line). Review each diff before committing:
 
 ```bash
-for r in chicago-crimes yrbss cps-asec pisa; do (cd ~/pdt-$r && copier update --vcs-ref v0.2.0 && git status); done
+for r in chicago-crimes yrbss cps-asec pisa nhis; do (cd ~/pdt-$r && copier update --vcs-ref v0.2.0 && git status); done
+```
+
+**4b. LICENSE in the four repos not made from the template.** The toolkit commit 19f0e6e must be in the clone you run this from:
+
+```bash
+for r in gss anes-cdf nsfg fars; do
+  sed 's/{{ copyright_holder }}/Allen Downey/' ~/PublicDataToolkit/templates/template/LICENSE.jinja > ~/pdt-$r/LICENSE
+  # add the README's License section by hand, as in templates/template/README.md.jinja
+  (cd ~/pdt-$r && git add LICENSE && git commit -m "LICENSE: MIT for code, CC BY 4.0 for metadata and views" -- LICENSE)
+done
 ```
 
 **5. The GSS's site.** `docs/` is gitignored and the GSS wasn't made from the template, so copy the workflow and pin the tag in it. In the copy, replace the "Read the toolkit version" step with a fixed `ref: v0.2.0`:
@@ -206,4 +226,6 @@ done
 
 The `make data` and `pdt package` targets exist in nsfg, anes-cdf and the template-made repos. In gss and fars, run `python scripts/build_data.py` and `python -m pdt package .`.
 
-**9. Later:** pdt-brfss once green commits and its views are current (C8); pdt-nhis once Allen decides its terms and yellow builds it.
+**9. Later:** pdt-brfss once green commits and its views are current (C8).
+
+The loops in steps 3, 6, 7 and 8 list the ready repos as of 2026-11-19. Add `nhis` to each, now that its terms are decided.
