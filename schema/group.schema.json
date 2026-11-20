@@ -7,8 +7,8 @@
   "properties": {
     "id": { "$ref": "common.schema.json#/$defs/id" },
     "kind": {
-      "description": "battery: items sharing a stem and response format. section: part of the codebook or questionnaire. module: a topical module fielded as a unit. form: everything on one questionnaire form or ballot. subject: a subject or topic list the publisher (or an upstream package) assigns, e.g. GSS Data Explorer's \"Abortion\"; a variable can be in several. other: say what in note.",
-      "enum": ["battery", "section", "module", "form", "subject", "other"]
+      "description": "battery: items sharing a stem and response format. section: part of the codebook or questionnaire. module: a topical module fielded as a unit. form: everything on one questionnaire form or ballot. subject: a subject or topic list the publisher (or an upstream package) assigns, e.g. GSS Data Explorer's \"Abortion\"; a variable can be in several. plausible_values: draws of one score (PISA PV1READ-PV10READ), analyzed together, never one alone. other: say what in note.",
+      "enum": ["battery", "section", "module", "form", "subject", "plausible_values", "other"]
     },
     "label": { "type": "string" },
     "stem": {

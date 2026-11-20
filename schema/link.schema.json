@@ -23,7 +23,8 @@
           "data_revised",
           "derived_from",
           "split_from",
-          "merged_into"
+          "merged_into",
+          "rescaled"
         ]
       }
     },

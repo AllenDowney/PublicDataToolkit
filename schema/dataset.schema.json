@@ -187,10 +187,35 @@
         "psu": {
           "$ref": "common.schema.json#/$defs/name"
         },
+        "replicates": {
+          "description": "Replicate weights, when variance comes from them: the variables (or a prefix and count) and the method. PISA: 80 weights W_FSTURWT1-80, Fay's method.",
+          "type": "object",
+          "properties": {
+            "variables": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/name"}, "minItems": 1},
+            "prefix": {"type": "string"},
+            "n": {"type": "integer", "minimum": 1},
+            "method": {"enum": ["brr", "fay", "jk1", "jkn", "bootstrap", "sdr", "other"]},
+            "fay_factor": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
+            "note": {"type": "string"}
+          },
+          "required": ["method"],
+          "oneOf": [{"required": ["variables"]}, {"required": ["prefix", "n"]}],
+          "additionalProperties": false
+        },
         "note": {
           "type": "string"
         }
       },
+      "additionalProperties": false
+    },
+    "data_rows": {
+      "description": "When the common-format data file holds only some rows of each wave (some countries, some states), the column and the codes kept. C3-C5 check only those rows.",
+      "type": "object",
+      "properties": {
+        "column": {"$ref": "common.schema.json#/$defs/name"},
+        "in": {"type": "array", "items": {"type": ["string", "integer"]}, "minItems": 1}
+      },
+      "required": ["column", "in"],
       "additionalProperties": false
     },
     "releases": {
@@ -326,6 +351,9 @@
                   },
                   "minItems": 1
                 },
+                "data_rows": {
+                  "$ref": "#/properties/data_rows"
+                },
                 "design": {
                   "$ref": "#/properties/design"
                 }
@@ -368,6 +396,9 @@
               "type": "string"
             },
             "minItems": 1
+          },
+          "data_rows": {
+            "$ref": "#/properties/data_rows"
           },
           "design": {
             "$ref": "#/properties/design"

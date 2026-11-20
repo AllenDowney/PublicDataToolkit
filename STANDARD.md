@@ -91,9 +91,9 @@ Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A relea
 
 `kind` says what sort of dataset it is: `survey`, `administrative` (FARS) or `portal` (a table on an open-data portal). It's optional, and tunes what C6 reports.
 
-**Partial data files.** When a release's or table's common-format file holds only some waves, because the table is too large or keeps growing, `data_waves` lists them, and C5 checks availability only for those.
+**Partial data files.** When a release's or table's common-format file holds only some waves, because the table is too large or keeps growing, `data_waves` lists them, and C5 checks availability only for those. When it holds only some rows of each wave, such as some countries, `data_rows` names the `column` and the codes it keeps (`in`), and C3–C5 read it the same way.
 
-`design` names the survey design variables: `weights`, `strata` and `psu`. A release or table can override it. It's descriptive: which weight suits an analysis is the user's choice.
+`design` names the survey design variables: `weights`, `strata` and `psu`, and `replicates` when variance comes from replicate weights. `replicates` names the weights, as a list of `variables` or a `prefix` and a count `n`, and the `method` (`brr`, `fay`, `jk1`, `jkn`, `bootstrap`, `sdr`, `other`), with `fay_factor` for Fay's method: PISA's 80 weights `W_FSTURWT1`–`W_FSTURWT80` use Fay's method. A release or table can override it. It's descriptive: which weight suits an analysis is the user's choice.
 
 `dimensions` says what availability's `wave`, `form`, `sample`, `mode` and `phase` mean for this dataset. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
 
@@ -191,7 +191,7 @@ Each code has `code`, `label`, and `kind`, which is `valid`, `missing` or `unres
 
 **Labels for one release.** When a release's documentation covers many years, as FARS's 1975–2024 manual does, a label can carry history ("Unknown/Reported as Unknown (Since 2018)"). The record uses the label specific to its release when a source gives one, such as the data file's own label ("Reported as Unknown"), with that source as the values' origin.
 
-Codes are stored as they appear in the data file: numbers as numbers, and Stata extended missing values as strings such as `".d"`.
+Codes are stored as they appear in the data file: numbers as numbers, and Stata extended missing values as strings such as `".d"`. When the documentation gives other codes for the same values, as PISA's 2022 codebook gives 9999995–9999999 (the SAS files' codes) where the SPSS file has 95–99, the record keeps the data file's codes, matches them to the documentation by label, and says so in the codes' origin `note`.
 
 **Retired codes.** A code the publisher has retired but that still occurs in earlier data stays `valid`, with `retired: true` as the publisher marks it, and `waves` (`{from, to}`) when the publisher says when it was in use.
 
@@ -272,7 +272,7 @@ The library expands a record's list when it loads a repo, so every check and vie
 
 ### 5.1 Groups
 
-`groups.jsonl` holds sets of variables: batteries, codebook sections, modules, questionnaire forms, and the publisher's subject lists. A group has an `id`, a `kind`, its `members` (in order when `ordered` is true), and an `origin`. A battery can have its shared `stem`. A group can name a `parent`, such as the section that contains a battery.
+`groups.jsonl` holds sets of variables: batteries, codebook sections, modules, questionnaire forms, and the publisher's subject lists. `kind` is `battery`, `section`, `module`, `form`, `subject`, `plausible_values` (draws of one score, such as PISA's PV1READ–PV10READ, to be analyzed together and never one alone) or `other`. A group has an `id`, a `kind`, its `members` (in order when `ordered` is true), and an `origin`. A battery can have its shared `stem`. A group can name a `parent`, such as the section that contains a battery.
 
 Groups the publisher defines have `origin: publisher` or `upstream_package`. Groups found by a rule, such as a battery inferred from a shared stem and value set, have `origin: rule`. Queries on publisher groups can be `complete`; queries on rule groups are `complete_by_rule` (§7).
 
@@ -295,6 +295,7 @@ Groups the publisher defines have `origin: publisher` or `upstream_package`. Gro
 | `data_revised` | The same item, but its values in the data were revised between releases: recoded missing codes, restored or corrected data, reassigned cases. Release notes are the usual source |
 | `derived_from` | `from` is built from `to`, as a cumulative-file variable is built from single-year items |
 | `split_from`, `merged_into` | One variable became several, or several became one |
+| `rescaled` | The same construct, but the scale was re-estimated, so values aren't comparable across the pair without the publisher's trend or linking file. PISA's ESCS and BELONG are re-estimated each cycle |
 
 Every link names a `source`: a crosswalk, release notes, or a documented naming convention (`origin: rule`, for "the GSS keeps a name when the item is unchanged"). Links never come from a model (rule 8).
 
