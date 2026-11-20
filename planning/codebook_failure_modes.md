@@ -47,6 +47,19 @@ All parsed from `pdftotext -layout` output.
 
 None parsed yet. The only spreadsheet source so far is the PISA codebook (xlsx), not yet built.
 
+## Open-data portals
+
+From a Socrata table (Chicago's "Crimes - 2001 to Present").
+
+| What goes wrong | Example | How we detect it | How we fix it |
+|---|---|---|---|
+| **No versions, only timestamps** | The table changes daily; the API gives "rows updated" and "metadata updated" times | n/a | A release is a dated snapshot, with every file's checksum |
+| **Two sets of column names** | The API uses `case_number`; the portal's export uses "Case Number" | The header doesn't match the metadata | Use the API and its field names; keep the display name as the label |
+| **Columns the portal adds** | `:@computed_region_*` boundary columns, not in the API's output | Metadata columns missing from the data | Leave them out, and say so |
+| **The obvious key isn't one** | `case_number` repeats: homicides have one row per victim | Duplicate keys | Use `id` |
+| **Code lists are separate datasets, or dead links** | IUCR codes are their own dataset, with retired codes; `fbi_code` points to a page that needs a sign-in | Codes in the data with no labels | A code list as a table with a reference; leave values empty where the list can't be reached |
+| **Leading zeros** | IUCR `0110`, beat `0322` | Codes that lose their zeros | Read every column as text, then convert by type |
+
 ## SAS, SPSS and Stata files
 
 | What goes wrong | Example | How we detect it | How we fix it |

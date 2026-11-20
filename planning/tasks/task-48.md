@@ -8,10 +8,11 @@ To compare notes with data-dict on what the codebooks trip over when drafting di
 
 ## Progress
 
-**Done 2026-11-19.** [`planning/codebook_failure_modes.md`](../codebook_failure_modes.md), about 40 failure modes in seven groups:
+**Done 2026-11-19.** [`planning/codebook_failure_modes.md`](../codebook_failure_modes.md), about 45 failure modes in eight groups:
 - PDF text (11);
 - HTML codebooks (5);
 - spreadsheets (none parsed yet; the PISA xlsx is pending);
+- open-data portals (6);
 - SAS, SPSS and Stata files (6);
 - what the documentation says about codes (8);
 - across releases (10);
