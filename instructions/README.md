@@ -57,4 +57,4 @@ Read their build scripts in `build/` and their `build/report.md` before writing 
 | `scripts/download.py`, the data release | Working (Task 18): `pdt download`, wrapped by `scripts/download.py` and `make download`; `pdt.release` writes the common-format files. The template includes `download.py`; `make data` needs a reader for each dataset |
 | `scripts/extract.py` | Not written yet (Task 19) |
 | `templates/` and Copier | Working: `copier copy` from a tagged toolkit release, and `copier update` to a later one ([`templates/`](../templates/README.md); `copier.yml` is at the toolkit's root) |
-| `pdt views`, `pdt search`, `pdt check` | Working. Run from the dataset repo with `PYTHONPATH=../PublicDataToolkit/lib python -m pdt <command> .` |
+| `pdt views`, `pdt search`, `pdt check` | Working. Run from the dataset repo with `PYTHONPATH=../PublicDataToolkit/lib python -m pdt <command> .` They need only the base install (`pyyaml`, `jsonschema`, `referencing`); the data files (`pdt.data`, `make data`, `extract.py`, the data checks) need the `data` extra: `pip install -e "../PublicDataToolkit[data]"` (pandas, numpy, pyarrow) |

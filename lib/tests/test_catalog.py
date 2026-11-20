@@ -137,3 +137,24 @@ def test_chains_across_releases(tmp_path):
     assert [v["names"] for v in roll] == ["ROLL 2011\u20132012", "ROLL 2013"]
     assert roll[0]["related"] == [{"relations": ["codes_changed"], "direction": "to", "names": "ROLL 2013",
                                    "id": "ROLL@2013"}]
+
+
+def test_metadata_tools_import_without_the_data_extra():
+    """pdt views, check, search, diff, catalog and export import with pandas, numpy and pyarrow absent;
+    pdt.data says what to install."""
+    import subprocess, sys, textwrap
+    code = textwrap.dedent("""
+        import sys
+        for m in ("pandas", "numpy", "pyarrow", "pyarrow.parquet"):
+            sys.modules[m] = None
+        import pdt.views, pdt.site, pdt.export, pdt.check, pdt.search, pdt.diff, pdt.catalog, pdt.chains
+        try:
+            import pdt.data
+        except ImportError as e:
+            assert 'publicdatatoolkit[data]' in str(e), str(e)
+            print("ok")
+    """)
+    from pathlib import Path
+    lib = Path(__file__).resolve().parents[1]
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env={"PYTHONPATH": str(lib)})
+    assert out.stdout.strip() == "ok", out.stderr

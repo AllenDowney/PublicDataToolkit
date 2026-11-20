@@ -55,8 +55,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install what the site generator needs
-        run: pip install pyyaml jsonschema referencing
+      - name: Install the toolkit, without the data extra (the site needs no pandas)
+        run: pip install ./_toolkit
 
       - name: Build docs/ (no data needed)
         run: make views PYTHON=python PDT=_toolkit VIEWS_ARGS="--only site"

@@ -38,11 +38,7 @@ from . import data
 from .check import Repo
 from .search import apply_corrections
 
-PROCESSED = Path("data") / "processed"
-
-
-def file_name(dataset, release, table=None):
-    return f"{dataset}-{release}" + (f"-{table}" if table else "") + ".parquet"
+from .common_format import PROCESSED, file_name  # noqa: E402,F401  (re-exported)
 
 
 def release_files(dataset_yaml):

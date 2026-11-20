@@ -33,9 +33,8 @@ import yaml
 
 from . import __version__
 from .check import Repo
-from .data import CODE_SUFFIX, ROW, code_text
+from .common_format import CODE_SUFFIX, PROCESSED, ROW, code_text, file_name
 from .search import Index
-from .release import PROCESSED, file_name
 from .views import inputs_hash, origin_text, sort_key, wave_summary, when_text
 
 DIRECTORY = Path("export") / "data-dict"

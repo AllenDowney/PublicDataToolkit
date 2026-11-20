@@ -370,7 +370,7 @@ def check_provenance(repo, result):
 def check_code_lists(repo, result):
     """C2 for shared code lists (STANDARD.md §4.5): unique ids, codes unique within a list, every
     record's list exists, and no code both in a record's list and in its own values."""
-    from .data import code_text
+    from .common_format import code_text
     ids = [cl["id"] for cl in repo.code_lists]
     for dupe in sorted({i for i in ids if ids.count(i) > 1}):
         result.fail("C2", f"duplicate code list id {dupe}")
@@ -537,7 +537,7 @@ def listed(items):
 
 def same_value(a, b):
     """A data cell and a metadata value are equal: numbers by value, anything else as text."""
-    from .data import is_number
+    from .common_format import is_number
     if is_number(a) and is_number(b):
         return float(a) == float(b)
     return str(a) == str(b)
@@ -550,7 +550,11 @@ def load_data(repo, result):
     splits the data with them: a code an inferred correction makes valid is in the
     value column, not the code column.
     """
-    from . import data
+    try:
+        from . import data
+    except ImportError as e:
+        result.report("C3-C5, C12", f"skipped: {e}")
+        return {}
     from .search import apply_corrections
     corrections_file = repo.root / "metadata" / "corrections.jsonl"
     corrections_sha = data.metadata_sha256(corrections_file) if corrections_file.exists() else None
@@ -580,7 +584,7 @@ def load_data(repo, result):
 
 
 def value_columns(frame):
-    from .data import CODE_SUFFIX, ROW
+    from .common_format import CODE_SUFFIX, ROW
     return [c for c in frame.columns if c != ROW and not c.endswith(CODE_SUFFIX)]
 
 
@@ -597,7 +601,7 @@ def check_coverage(name, frame, records, result):
 def check_codes(name, frame, records, result):
     """C4: every code in a code column is in the record's values. Valid values of a categorical
     variable that aren't listed (and aren't in valid_range) are reported."""
-    from .data import CODE_SUFFIX, code_text
+    from .common_format import CODE_SUFFIX, code_text
     for r in records:
         documented = {code_text(v["code"]) for v in r.get("values", [])}
         col = r["name"] + CODE_SUFFIX
@@ -627,7 +631,7 @@ def check_availability(name, frame, records, wave_column, result, data_waves=Non
         return waves if data_waves is None else waves & data_waves
     declared_all = {w for r in records for w in kept(r.get("availability", []))}
     if wave_column in frame:
-        from .data import code_text
+        from .common_format import code_text
         waves = frame[wave_column].map(lambda w: None if w is None or w != w else code_text(w))
     elif len(declared_all) == 1:
         waves = None  # one wave per file: the release (NSFG cycle, FARS data year)

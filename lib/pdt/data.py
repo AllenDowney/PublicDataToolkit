@@ -20,18 +20,22 @@ can restore every cell exactly without guessing.
 import hashlib
 import json
 import math
-import numbers
 import warnings
 
-import numpy as np
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+try:
+    import numpy as np
+    import pandas as pd
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+except ImportError as e:                               # the `data` extra isn't installed
+    raise ImportError(
+        f"pdt.data reads and writes the common-format parquet files, and needs pandas, numpy "
+        f"and pyarrow ({e.name} is missing). Install them with: "
+        f"pip install \"publicdatatoolkit[data]\"") from e
 
 from . import __version__
+from .common_format import CODE_SUFFIX, ROW, as_float, code_text, is_number  # noqa: F401  (re-exported)
 
-CODE_SUFFIX = "__code"
-ROW = "_row"
 META_KEY = b"pdt"
 REQUIRED_IDENTITY = ("dataset", "release", "metadata_sha256")
 INT64_MAX = 2**63 - 1
@@ -54,25 +58,6 @@ class InferredClassification(UserWarning):
 
 
 # ------------------------------------------------------------------ codes
-
-
-def is_number(x):
-    return isinstance(x, numbers.Number) and not isinstance(x, (bool, np.bool_))
-
-
-def as_float(x):
-    """A number as a Python float; float32 goes through its shortest repr, so 0.1 stays 0.1."""
-    if isinstance(x, np.floating) and x.dtype.itemsize < 8:
-        return float(str(x))
-    return float(x)
-
-
-def code_text(code):
-    """The text form of a code: integers without a decimal point, other numbers in shortest form."""
-    if isinstance(code, str):
-        return str(code)
-    number = as_float(code)
-    return str(int(number)) if number.is_integer() else repr(number)
 
 
 def nonvalid_codes(record):
