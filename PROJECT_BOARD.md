@@ -286,4 +286,4 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 67 — Library and pdt-brfss use the Task 30 standard changes
 
-`DOING (green)`. Several valid ranges, a `geography` dimension, histories by rule, `values[].note` and `series` annotations in the library (check, diff, site, export, derived, availability filters) with tests, then in pdt-brfss; a label lint in `pdt check`; `pdt.readers.read_sas_xport` from pdt-brfss's reader. Details: [`planning/tasks/task-67.md`](planning/tasks/task-67.md).
+`DONE (green)`. `pdt.ranges` (one valid range or a list) in check, diff, site, export and derived; `geography` in the `available` filter and the views; `values[].note` on site pages; a label lint under C6 (2 real hits, ATUS, fixed); `pdt.xport.read_sas_xport`; a `pdt search` bug fixed (`name` with `available` matched nothing). pdt-brfss uses all of them (ee3c818). Every repo's views need regenerating. Details: [`planning/tasks/task-67.md`](planning/tasks/task-67.md).
