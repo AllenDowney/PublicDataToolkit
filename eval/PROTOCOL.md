@@ -158,3 +158,5 @@ Two are new:
 - **Catalog:** search now returns years.
 
 The key's hit/neutral boundary still decides recall for religion.
+
+**Addendum (2026-11-20, before the runs): `gss_spending_2024` rerun.** At the coordinator's request, `gss_spending_2024` is also rerun, as `-3` and `-4`, under this section's setup: the same copies, library, harness and key. The question is whether agents now find the `spending_3` signature that SKILL.md names, and report `complete_by_rule`.
