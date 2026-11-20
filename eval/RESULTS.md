@@ -154,3 +154,9 @@ Added at the coordinator's request, under the protocol addendum (`5e88f50`) and 
 | `gss_spending_2024-4` | 1.0 | 1.0 | 1,517 | 2 | `complete_by_rule` | `complete_by_rule` | yes |
 
 Both agents read SKILL.md and ran one search, `{"derived": {"scale_signature": "spending_3"}, "available": {"wave": 2024}}` with `--names`, and reported its 27 names under its label. In Task 51, both agents found the same 27 items with text searches and labeled them `approximate`. Naming the dataset's signatures in SKILL.md closed Task 51's finding 3. Neither agent piped output or wrote outside the Write tool.
+
+## Check: the `name` filter bug (fixed in 1ea1bc5)
+
+Before `1ea1bc5`, a `pdt search` filter that combined `name` with `subject`, `topic`, `available` or `text` matched nothing. The name predicate read a variable that those blocks reassigned. Every run log in `runs/` (Tasks 23, 51 and 53) was checked on 2026-11-20 for search calls that combined `name` with any of those keys.
+
+There were none. `name` alone appears in 7 calls, which the bug doesn't affect. In Task 51, `catalog_sadness-1` combined `name` with `waves`, `wave` and `year`. Those keys didn't exist then, and the calls failed as unknown filter keys, independent of this bug. No score depended on the bug, so nothing is rescored and no rerun is needed.
