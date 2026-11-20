@@ -131,7 +131,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 32 — A CPS-ASEC slice
 
-`DONE (yellow)`. CPS ASEC 2019–2025 in `~/pdt-cps-asec`: 32 variables in household, family and person tables, 192 links by rule, data round-trip exact, `pdt check` 0 failures; terms wait for Allen; 6 proposals, 4 adopted. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
+`DONE (yellow)`. CPS ASEC 2019–2025 in `~/pdt-cps-asec`: 32 variables in household, family and person tables, 192 links by rule, data round-trip exact, `pdt check` 0 failures; terms decided by Allen (everything ships); 6 proposals, 4 adopted. Details: [`planning/tasks/task-32.md`](planning/tasks/task-32.md).
 
 ### Task 34 — release-diff
 
@@ -187,6 +187,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 ### Task 47 — Large sites: docs/ built for Pages
 
 `DOING (red)`. C8 checks `docs/` only where it exists; a GitHub Pages workflow in the template builds and deploys `docs/` without the data; a proposal for fewer site files on large releases. Details: [`planning/tasks/task-47.md`](planning/tasks/task-47.md).
+
+### Task 48 — What the codebooks trip over
+
+`DOING (yellow)`. A short, factual list of the failure modes we met parsing publishers' documentation, by format, with examples, detection and fixes, for data-dict item 8: [`planning/codebook_failure_modes.md`](planning/codebook_failure_modes.md). Details: [`planning/tasks/task-48.md`](planning/tasks/task-48.md).
 
 
 
