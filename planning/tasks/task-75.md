@@ -1,6 +1,6 @@
 # Task 75 — pdt-nsfg: every cycle and variable MarriageNSFG uses
 
-**Status:** `DOING (yellow)`: started 2026-11-20. Created by the coordinator, 2026-11-20, at Allen's request.
+**Status:** `DONE (yellow)` on 2026-11-20. Started 2026-11-20. Created by the coordinator, 2026-11-20, at Allen's request.
 
 ## Why
 
@@ -76,3 +76,62 @@ MarriageNSFG renames each cycle's weight to `finalwgt`, and the male `biokids` t
 - 1988 cmmarrhx from firstcm or currentcm.
 
 These stay in MarriageNSFG.
+
+### 2026-11-20: built
+
+`~/pdt-nsfg` 6715049. The repo is public on GitHub, so the coordinator reviews and pushes. `pdt check` gives 0 failures.
+
+| Release | Tables | Documentation | Rows (female / male) |
+|---|---|---|---|
+| 1982 | female | SAS setup (ICPSR style; record type 0 only) | 7,969 |
+| 1988 | female | SAS setup (fixed 3,553-byte records, no line breaks) | 8,450 |
+| 1995 | female | SAS setup | 10,847 |
+| 2002 | female, male | SAS setup (Input, ValueLabel, VarLabel) | 7,643 / 4,928 |
+| 2006-2010 | female, male | SAS setup | 12,279 / 10,403 |
+| 2011-2013 | female, male | SAS setup | 5,601 / 4,815 |
+| 2013-2015 | female, male | SAS setup | 5,699 / 4,506 |
+| 2015-2017 | female, male | SAS setup (PROC FORMAT and FORMAT commented out) | 5,554 / 4,540 |
+| 2017-2019 | + MarriageNSFG's variables | ICPSR section codebooks (+ D, G; male B, F, H) | 6,141 / 5,206 |
+| 2022-2023 | + MarriageNSFG's variables | NCHS codebooks | 5,586 / 4,371 |
+
+**Totals:**
+- 427 records;
+- 174 links between consecutive releases;
+- 51 inferred corrections;
+- 72 unresolved codes in the source records: 51 blanks, all classified by those corrections, and 21 undocumented 2002 codes;
+- 19 tables of common-format data, every round trip exact, 0.74 GB peak.
+
+Row counts are NCHS's sample sizes.
+
+**How the new releases are built** (build/sas_setup.py, build/build_slice.py, codebook_format `sas_setup`):
+- the setup program gives each record's label and value labels; no question text and no counts;
+- availability and counts come from the data (origin data_file);
+- missing codes are typed from the labels by a new rule, `nsfg_missing_from_setup_labels` ("Date refused", "DK, don't remember", NCHS's typo "Data refused"), so the earlier releases' rule and records don't change;
+- a quantity whose value labels cover only its special codes (1982 CMBIRTH: 9797, 9898, 9999) takes its valid range from the data; it isn't left with hundreds of unresolved codes;
+- a `$` column (2002 CASEID) is stored as text.
+
+**Findings:**
+- **1982 F22_1CM's columns.** The setup gives 622-628; the data puts it in 625-628. Fixed in slice.yaml `layout_fixes`, with the evidence there and in the record's notes. A candidate for an NCHS report (Allen decides).
+- **Blanks the setup programs don't label.** They're unresolved in the source records. 51 corrections (`confidence: inferred`, evidence: 2002's value labels and the 2017-2019 codebooks, which both label "." INAPPLICABLE) classify them `inap`.
+- **2002's undocumented codes.** The data has codes neither 2002 setup program nor the Stata .do defines: RWANT 8/9, TIMESMAR 98/99, the century months' 9997-9999. They stay unresolved; NCHS's 2002 codebook (not fetched) may define them.
+- **Links where documentation differs in kind.**
+  - 2015-2017 (setup: labels only) to 2017-2019 (codebook: question text, universe): 0 rule links. The rule compares what each side documents, and they document different things.
+  - The cycles from 2002 to 2015-2017 link well (28 to 40 per pair).
+  - 1982 to 1995 links only a few (labels reworded between ICPSR cycles). No links are relaxed to compensate.
+- **Spelling by release.** 2022-2023 spells MAR1DISS as `mar1diss`; names follow each release.
+
+### The switch, as a plan (for a later session in MarriageNSFG)
+
+Replace the per-cycle readers with one loader over pdt-nsfg's common-format files:
+
+1. **A loader.** `load(release, table)` reads `nsfg-<release>-<table>.parquet` (pdt.data.read), rebuilds the publisher's values (pdt.data.rebuild), and sets missing codes to NaN with pdt.data.recode by type (refused, dk, no_answer, inap). That is what the readers' `replace([9797, 9898, 9999], np.nan)` and `replace([7, 8, 9], ...)` do now.
+   - Unresolved codes (2002's 8/9, 98/99, 9997-9999) need an explicit decision in MarriageNSFG, as now. pdt warns when it meets them.
+   - For 1982-1995, rename NCHS's names to MarriageNSFG's (the inventory table above: FINALWT→finalwgt, R7_CM→cmintvw, …). For 2006 on, the weight renames stay.
+2. **What goes from MarriageNSFG:** the colspecs and fixed-width reading for 1982-1995; `read_stata_dct`, `read_resp` and the .dct files; `scripts/download_nsfg.py`'s NCHS fetches and the derived `1988FemRespDataLines.dat.gz`; the SAS7BDAT reads for 2022-2023.
+3. **What stays:** every harmonizing recode listed above (FMARITAL 3-6 → 2-5, marend01 orderings, +9000/+90000 month-unknown adjustments, ADDEXP/10, AGEBABY1/100, anycoll and bdegree, rwant from WANTKID2, invalid divorce dates, 1988 cmmarrhx), `clean_resp`, `digitize_resp`, and the validate_* functions. These are MarriageNSFG's analysis choices.
+4. **Prove it before switching:** for each cycle, compare the new loader's frame (after the same recodes) with the old reader's, column by column. Expected differences:
+   - none for values (pdt-nsfg's round trip is exact; 1982 F22_1CM uses the same 625-628 MarriageNSFG reads; 1995 BDAYCENM's leading 0 doesn't change the value);
+   - possibly NaN vs code where pdt types a code MarriageNSFG left as a number.
+5. **Then** the extracts MarriageNSFG publishes (FemMarriageData.parquet) can be rebuilt from pdt-nsfg's, with their checksums compared.
+
+**Runbook:** [`instructions/09-add-a-release.md`](../../instructions/09-add-a-release.md), for Task 76.

@@ -319,7 +319,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 75 — pdt-nsfg: every cycle and variable MarriageNSFG uses
 
-`DOING (yellow)`. Extend `~/pdt-nsfg` back to the female respondent files of 1982, 1988, 1995, 2002, 2006–2010, 2011–2013, 2013–2015 and 2015–2017, and the male files from 2002, with every variable MarriageNSFG reads, so MarriageNSFG could later read pdt-nsfg's data instead of its own readers. Write the "adding a release" runbook as you go. Details: [`planning/tasks/task-75.md`](planning/tasks/task-75.md).
+`DONE (yellow)`. Extended `~/pdt-nsfg` back to the female respondent files of 1982, 1988, 1995, 2002, 2006–2010, 2011–2013, 2013–2015 and 2015–2017, and the male files from 2002, with every variable MarriageNSFG reads, so MarriageNSFG could later read pdt-nsfg's data instead of its own readers. Write the "adding a release" runbook as you go. Result: 10 releases, 427 records, 174 links, 19 tables of data with exact round trips, `pdt check` 0 failures; runbook in `instructions/09-add-a-release.md`. Details: [`planning/tasks/task-75.md`](planning/tasks/task-75.md).
 
 ### Task 76 — pdt-nsfg: the release expected on 2026-12-01
 

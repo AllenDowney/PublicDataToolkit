@@ -12,6 +12,7 @@ For an agent (or a person) turning a public dataset into a repository that meets
 | 6 | [Links and corrections](06-links-and-corrections.md) | `links.jsonl`, `corrections.jsonl`, histories if the publisher has them |
 | 7 | [Generate the views](07-generate-views.md) | `agent/`, `docs/`, `export/` |
 | 8 | [Publish and check](08-publish-and-check.md) | `pdt check` passes; README and CLAUDE.md; a data release if the terms allow |
+| 9 | [Add a release](09-add-a-release.md) | A new cycle or year in an existing repo: sources, records, links to the previous release, data, check |
 
 The parsers for each kind of source are skills, in [`skills/`](../skills/): an upstream package, an HTML codebook, a PDF or text codebook, the data file's own labels, and release notes.
 
