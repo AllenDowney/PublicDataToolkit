@@ -31,3 +31,13 @@ Until this is done, don't run `make data` on the full pdt-gss.
   - **What went wrong first:** the first full-GSS attempt used 65,536-row chunks and needed several GB per row group across all columns, so the cap stopped it in pass 2. The second split each batch into 42 small chunks, was slow, and grew. Probes showed the reader, split and part writes each flat (250–750 MB). The fix was whole-batch splits, with part files in row groups aligned to the assembly.
   - **Also:** `read_sas` keeps system missing as `Code(".")` (purple); `read_sas_xport` is re-exported; `pyreadstat` is in the data extras. Tests are in `lib/tests/test_release_batched.py`.
   - **Still to come:** the full-GSS wall time and final peak; ATUS activity and summary; then the GSS rebuild.
+- 2026-11-20, orange: **pass 2 in Arrow, `029f131`.** The pandas pass 2 converted each row group of each batch to pandas, cast column by column through Python objects and converted back, then did it again to verify; the full GSS would have taken hours. Now a value column is cast only when its chunk's type differs, and a code column's indices are mapped to the whole column's categories with pyarrow. Files written by the old and new code are still identical on ANES, FARS and NSFG. The only differences are the `round_trip` marker, and NSFG 2022–2023's `"."` now recorded as a publisher token (the `read_sas` fix).
+- **ATUS, measured on a scratch copy** with yellow's streaming reader, under the 6 GB cap. Both had been killed at the cap before.
+
+  | Table | Size | Peak | Time |
+  |---|---|---|---|
+  | activity | 4,994,172 rows × 9 variables | 1.85 GB | 4 min 24 s |
+  | summary | 258,954 rows × 456 variables (2 column batches) | 1.06 GB | 11 min |
+- **Fixes from others:**
+  - A table with no records was skipped with an error; it's fixed in purple's `5017b96`, with a test.
+  - The replicate columns are also in `5017b96`.
