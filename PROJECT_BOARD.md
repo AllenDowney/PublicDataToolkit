@@ -274,7 +274,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 64 — A MEPS slice
 
-`DOING (blue)`. The Medical Expenditure Panel Survey, Household Component (AHRQ) in `~/pdt-meps`: the full-year consolidated file and the office-based visits file for recent years, linked on DUPERSID. Details: [`planning/tasks/task-64.md`](planning/tasks/task-64.md).
+`DONE (blue)`; terms pending Allen. MEPS-HC 2022–2024 in `~/pdt-meps`: consolidated (37 variables) and office-based visit files as tables on DUPERSID (247 records), reserved codes from AHRQ's tables, 164 links by AHRQ's naming convention; codebooks match the data; `pdt check` 0 failures. Details: [`planning/tasks/task-64.md`](planning/tasks/task-64.md).
 
 ### Task 65 — An NLSY slice
 
