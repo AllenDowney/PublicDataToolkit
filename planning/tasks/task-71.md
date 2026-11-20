@@ -44,3 +44,9 @@ So, to see what the check finds, a scratch script ran `check_data` with the mark
 **One finding, for the NLSY97 thread:** `person_year/CV_INCOME_FAMILY`, wave 2023, availability 5,955 but 5,957 non-missing values in the data. The build's note says n "counts values that aren't negative codes", so two negative values are probably valid incomes. On a rerun the file was being rebuilt (13:17), so the check skipped it as stale. The repos I built by hand (NSDUH, NHANES, MEPS, NCVS, HINTS) have no `data/processed/`, so their build reports still hold their count checks.
 
 GSS's full `pdt check` took 40 minutes, and the time went outside the data checks: its files were skipped as stale. Its C8 fails because the views generator changed.
+
+## Follow-up: a code's total when it has counts by wave (2026-11-20)
+
+Yellow found a false warning in pdt-nlsy97. CV_AGE_INT_DATE's code 29 is a labeled top code ("Age 29 or greater") only in 2008, so its `counts` are `[{2008: 35}]` and its `n` is 35. In the other years 29 is an ordinary age, so the whole file has 5,529 rows of 29.
+
+Since `n` is the sum of `counts`, a code with `counts` now has its total compared only with the rows in those waves. A code without `counts` is still compared with the whole file. Test: `test_total_of_a_code_with_counts_covers_only_those_waves`.

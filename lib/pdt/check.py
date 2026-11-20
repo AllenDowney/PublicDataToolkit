@@ -872,8 +872,8 @@ QUALIFIERS = {"form", "sample", "mode", "phase", "geography"}   # availability e
 def check_counts(name, frame, records, wave_column, result, data_waves=None, data_rows=None):
     """C5 counts (warns): the counts a record carries against the data. values[].n is the
     publisher's count of cases with that code in the release, and values[].counts its count in
-    each wave (n is their sum); availability[].n is the number of non-missing responses in that
-    wave. Counts by wave need the wave column.
+    each wave (n is their sum, so it's compared with the rows in those waves only); availability[].n
+    is the number of non-missing responses in that wave. Counts by wave need the wave column.
 
     A file that holds only some rows (data_rows) can't be compared with either. One that holds
     only some waves (data_waves) can't be compared with values[].n, which counts the whole
@@ -898,15 +898,23 @@ def check_counts(name, frame, records, wave_column, result, data_waves=None, dat
     qualified = 0
     for r in counted:
         values = r.get("values", [])
+        has_by_wave = waves is not None and any("counts" in v for v in values)
+        by_wave = code_counts(frame, r, waves) if has_by_wave else {}
         if data_waves is None and any("n" in v for v in values):
             got = code_counts(frame, r)
-            off = [f"{code_text(v['code'])} ({v.get('label', '')}): codebook {v['n']:,}, data "
-                   f"{got.get(code_text(v['code']), 0):,}"
-                   for v in values if "n" in v and got.get(code_text(v["code"]), 0) != v["n"]]
+
+            def total(v):
+                """Rows with the code: in the waves its counts list, when it has counts (NLSY97's
+                CV_AGE_INT_DATE 29 is a top code only in 2008, an ordinary age in other years)."""
+                if "counts" in v and waves is not None:
+                    return sum(by_wave.get((str(c["wave"]), code_text(v["code"])), 0) for c in v["counts"])
+                return got.get(code_text(v["code"]), 0)
+            off = [f"{code_text(v['code'])} ({v.get('label', '')}): codebook {v['n']:,}, data {total(v):,}"
+                   for v in values if "n" in v and total(v) != v["n"]]
             if off:
                 result.report("C5", f"warning: {name}/{r['name']}: code counts differ from the data: {listed(off)}")
-        if waves is not None and any("counts" in v for v in values):
-            got = code_counts(frame, r, waves)
+        if has_by_wave:
+            got = by_wave
             off = [f"{code_text(v['code'])} ({v.get('label', '')}) in {c['wave']}: codebook {c['n']:,}, data "
                    f"{got.get((str(c['wave']), code_text(v['code'])), 0):,}"
                    for v in values for c in v.get("counts", [])

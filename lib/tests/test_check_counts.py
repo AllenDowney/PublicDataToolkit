@@ -103,3 +103,13 @@ def test_counts_by_wave_compared_per_wave(tmp_path):
     result = run(make_data_repo(tmp_path / "c", crash=kept, tables=tables, crash_recs=recs))
     assert [m for m in reports(result, "C5: warning") if "by wave" in m] == [
         "C5: warning: r1/crash/LIGHT: code counts by wave differ from the data: 1 (Day) in 2021: codebook 0, data 1"]
+
+
+def test_total_of_a_code_with_counts_covers_only_those_waves(tmp_path):
+    # NLSY97 CV_AGE_INT_DATE 29: a labeled top code only in 2008 (counts [{2008: 35}], n 35), an
+    # ordinary age in other years. Here code 1 is counted only in 2020, where it occurs once.
+    recs = counted(light_n={1: 1, 2: 1, 9: 1})
+    for r in recs:
+        if r["name"] == "LIGHT":
+            r["values"][0]["counts"] = [{"wave": 2020, "n": 1}]
+    assert not counts_warnings(run(make_data_repo(tmp_path, crash_recs=recs)))
