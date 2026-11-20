@@ -278,7 +278,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 65 — An NLSY slice
 
-`DOING (yellow)`. The National Longitudinal Surveys of Youth 1979 or 1997 (BLS) in `~/pdt-nlsy`: a small panel extract, the first test of a panel's rounds as waves. Data come through BLS's Investigator tool, so the sources are probably manual. Record the terms for Allen. Memory cap applies. Details: [`planning/tasks/task-65.md`](planning/tasks/task-65.md).
+`DONE (yellow)`; terms pending Allen. NLSY97 1997–2023 (21 rounds) in `~/pdt-nlsy97`: 25 questions, one record per question across rounds (`source_columns`), long `person_year` table (188,664 rows) checked both ways against the wide file; `pdt check` 0 failures. Findings and proposals: [`planning/tasks/task-65.md`](planning/tasks/task-65.md).
 
 ### Task 66 — Two data-dict PRs: integer enums and typed missing codes
 
