@@ -250,7 +250,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 58 — Data builds that fit in memory
 
-`DOING (orange)`. The full-GSS `make data` loads 6,943 columns × 75,000 rows as one pandas object frame (`pdt.readers.read_stata`, then `pdt.data.split` and `write_release`), and needs 13–15 GB; it crashed every session twice on 2026-11-20. Read, split, write and round-trip check in column batches (a few hundred columns), building the parquet file with pyarrow, so peak memory stays under about 3 GB for the full GSS; the same for the other readers where it's easy. Measure the peak (`/usr/bin/time -v`) under the memory cap, and add a test that the build is batched. Then rerun the GSS rebuild. Details: [`planning/tasks/task-58.md`](planning/tasks/task-58.md).
+`DONE (orange)`. Batched data builds and checks: full GSS make data under 5 GB, pdt check under 1 GB; pdt-gss rebuilt (7656baf). Was: the full-GSS `make data` loads 6,943 columns × 75,000 rows as one pandas object frame (`pdt.readers.read_stata`, then `pdt.data.split` and `write_release`), and needs 13–15 GB; it crashed every session twice on 2026-11-20. Read, split, write and round-trip check in column batches (a few hundred columns), building the parquet file with pyarrow, so peak memory stays under about 3 GB for the full GSS; the same for the other readers where it's easy. Measure the peak (`/usr/bin/time -v`) under the memory cap, and add a test that the build is batched. Then rerun the GSS rebuild. Details: [`planning/tasks/task-58.md`](planning/tasks/task-58.md).
 
 ### Task 59 — A Cooperative Election Study slice
 

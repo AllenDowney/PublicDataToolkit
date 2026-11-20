@@ -1,6 +1,6 @@
 # Task 58 — Data builds that fit in memory
 
-**Status:** `DOING (orange)`, from 2026-11-20. Created by the coordinator.
+**Status:** `DONE (orange)`, 2026-11-20. Created by the coordinator.
 
 ## Why
 
@@ -65,3 +65,13 @@ Until this is done, don't run `make data` on the full pdt-gss.
 2. Test it, then run `pdt check` on pdt-gss under the cap.
 3. Commit pdt-gss: metadata/, build/, Makefile, README, scripts/build_data.py, agent/, export/.
 4. Tell the coordinator "gss done, <sha>, check 0", and tell green, who swaps in `scripts/extract.py`, and blue.
+
+## Done (orange, 2026-11-20)
+
+- **The blocker above:** `6a181dd` makes C3–C5 and C12 read through a `LazyFrame`: one column at a time, from one open `ParquetFile`.
+- **pdt-gss committed and clean:** `7656baf`, with the 12 code lists, data for 7224r3a only, and the views regenerated.
+- **`pdt check` on pdt-gss:** 0 failures, peak 0.98 GB, 41 minutes. 7224r3's data checks are noted as not run. 44 C5 warnings compare availability with the data.
+- **Follow-ups, not blockers:**
+  - Vectorize `pdt.data.split` and `rebuild`: about 53 minutes for `make data` on 7224r3a.
+  - Read columns in batches in the data checks: 41 minutes.
+  - Look into pass 2's 4.7 GB peak on the full GSS, under the cap but above the 3 GB target.
