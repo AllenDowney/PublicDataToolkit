@@ -4,9 +4,14 @@ Implemented: C1-C12. C3-C5 and C12 read the common-format files in
 data/processed/ (written by the repo's `make data`) and are skipped, with a
 notice, when they're absent or were built from other records. C8 compares each
 generated view's manifest with the current records.
+
+A check, or part of one, that doesn't run says so and why, rather than being silently
+absent (planning/daaf.md, from DAAF's data-ingest agent): `Result.skip`, or a report that
+says "skipped". `Result.not_run` lists them, and `pdt check` prints them as "not run".
 """
 
 import json
+import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,16 +23,28 @@ from .schemas import errors, validators
 README_SECTIONS = ["terms", "get the data", "metadata", "cite", "rebuild"]
 
 
+SKIPPED = re.compile(r"(^|: |, )skipped\b")
+
+
 @dataclass
 class Result:
     failures: list = field(default_factory=list)
     reports: list = field(default_factory=list)
+    not_run: list = field(default_factory=list)     # reports of checks, or parts, that didn't run
 
     def fail(self, check, message):
         self.failures.append(f"{check}: {message}")
 
     def report(self, check, message):
+        """A finding that isn't a failure. One that says "skipped" also goes in not_run."""
         self.reports.append(f"{check}: {message}")
+        if SKIPPED.search(message):
+            self.not_run.append(f"{check}: {message}")
+
+    def skip(self, check, message):
+        """A check, or part of one, that didn't run, and why: "<what>: not run, because <why>"."""
+        self.reports.append(f"{check}: {message}")
+        self.not_run.append(f"{check}: {message}")
 
     @property
     def ok(self):
@@ -473,6 +490,9 @@ def check_replicate_tables(repo, result):
 
 def check_corrections(repo, result):
     """C7: each correction's original value still appears in its target."""
+    if not repo.corrections:
+        result.skip("C7", "not run, because there are no corrections")
+        return
     lists = {cl["id"]: cl for cl in repo.code_lists}
     for c in repo.corrections:
         t = c["target"]
@@ -530,7 +550,7 @@ def check_terms(repo, result):
             result.report("C9", f"terms.{kind} is {terms.get(kind)}")
     tracked = tracked_files(repo.root)
     if tracked is None:
-        result.report("C9", "not a git repository; tracked files not checked")
+        result.skip("C9", "tracked files: not run, because this isn't a git repository")
         return
     problems = []
     for s in repo.sources.get("sources", []):
@@ -553,6 +573,8 @@ def check_extensions(repo, result):
     path = repo.root / "EXTENSIONS.md"
     doc = path.read_text() if path.exists() else ""
     keys = {f"{ns}.{k}" for r in repo.records for ns, d in r.get("extensions", {}).items() for k in d}
+    if not keys:
+        result.skip("C10", "not run, because no record has extensions")
     for key in sorted(keys):
         if f"`{key}`" not in doc:
             result.fail("C10", f"extension {key} isn't listed in EXTENSIONS.md")
@@ -764,7 +786,9 @@ def check_keys_in_data(release, tables, frames, result):
                     result.fail("C12", f"{name}: {dupes:,} duplicate keys ({', '.join(key)})")
         for ref in t.get("references", []):
             if ref.get("dataset") or ref.get("release", release) != release:
-                continue  # another dataset or release; not checked here
+                result.skip("C12", f"{name} -> {ref['table']}: not run, because the target is in another "
+                                   + ("dataset" if ref.get("dataset") else "release"))
+                continue
             if (release, ref["table"]) not in frames:
                 result.report("C12", f"{name} -> {ref['table']}: skipped, no data file for {ref['table']}")
                 continue
@@ -801,7 +825,7 @@ def check_rows(name, frame, rows, result):
     from .common_format import code_text
     col = rows["column"]
     if col not in frame:
-        result.report("C3", f"{name}: data_rows names {col}, which isn't in the data file; rows not checked")
+        result.skip("C3", f"{name}: data_rows names {col}, which isn't in the data file; rows not checked")
         return
     keep = {code_text(v) if not isinstance(v, str) else v for v in rows["in"]}
     cells = frame[col].map(lambda v: None if v is None or v != v else (v if isinstance(v, str) else code_text(v)))
@@ -821,6 +845,11 @@ def data_waves(repo, release, table):
 
 def check_data(repo, result):
     """C3, C4, C5 and C12, on the common-format files in data/processed/."""
+    if not any(r.get("availability") for r in repo.records):
+        result.skip("C5", "not run, because no record has availability")
+    if not any(t.get("key") or t.get("references") for r in repo.dataset.get("releases", [])
+               for t in r.get("tables") or []):
+        result.skip("C12", "not run, because no table declares a key or references")
     frames = load_data(repo, result)
     wave_column = ((repo.dataset.get("dimensions") or {}).get("wave") or {}).get("column")
     for (release, table), (frame, records) in frames.items():
@@ -890,17 +919,20 @@ def check_views(repo, result):
         rerun, expected = "run `make views`", generator
         if directory in ON_REQUEST:
             if not path.exists():
+                result.skip("C8", f"{directory}: not run, because it isn't exported here "
+                                  f"(made on request: `{ON_REQUEST[directory]}`)")
                 continue
             from .daaf import generator_hash as daaf_generator_hash
             expected = daaf_generator_hash()
             rerun = f"run `{ON_REQUEST[directory]}`"
         if directory == "docs/":
             if ignored:
-                result.report("C8", "docs/ is in .gitignore: built for GitHub Pages, not committed"
-                                    + ("" if (repo.root / "docs").exists() else "; not built here, so not checked"))
+                (result.report if (repo.root / "docs").exists() else result.skip)(
+                    "C8", "docs/ is in .gitignore: built for GitHub Pages, not committed"
+                    + ("" if (repo.root / "docs").exists() else "; not built here, so not checked"))
             if not (repo.root / "docs").exists():
                 if not ignored:
-                    result.report("C8", "docs/ doesn't exist here, so it isn't checked")
+                    result.skip("C8", "docs/ doesn't exist here, so it isn't checked")
                 continue
         if not path.exists():
             result.fail("C8", f"{directory} hasn't been generated; run `make views`")
@@ -935,6 +967,7 @@ def run(root, views=True):
     repo = Repo.load(root)
     for check in CHECKS:
         if check is check_views and not views:
+            result.not_run.append("C8: not run, because the caller asked for no view checks (views=False)")
             continue
         check(repo, result)
     return result

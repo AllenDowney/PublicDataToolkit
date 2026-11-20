@@ -125,8 +125,12 @@ def main(argv=None):
 
     if args.command == "check":
         result = run(args.path)
+        skipped = set(result.not_run)
         for line in result.reports:
-            print("report", line)
+            if line not in skipped:
+                print("report", line)
+        for line in result.not_run:
+            print("not run", line.replace("not run, because ", "because "))
         for line in result.failures:
             print("FAIL  ", line)
         print(f"\n{len(result.failures)} failure(s)")

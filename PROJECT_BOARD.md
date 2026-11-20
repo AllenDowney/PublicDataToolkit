@@ -296,3 +296,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 69 — Panel responses spread across rounds (NLSY)
 
 `TODO (yellow, after Task 65)`. In a panel like the NLSY, a given respondent isn't interviewed in every round, and many questions ask about the time "since the date of last interview", so the answer for a person at a given age, or about a given year, may be in any of several rounds. Investigate how NLS documents this and what practice it recommends, describe it in the metadata, and design (not yet build) a layer on top that answers "this question, for this person, at age A or in year Y". Details: [`planning/tasks/task-69.md`](planning/tasks/task-69.md).
+
+### Task 70 — `pdt check` says which checks didn't run, and why
+
+`DONE (purple)`. Each check, or part of one, that doesn't run is listed as "not run, because ..." (`Result.not_run`, printed by `pdt check`), not left silently absent: C5, C7, C8, C9, C10 and C12 when they don't apply, plus the data checks' existing skips. From DAAF's data-ingest agent ([`planning/daaf.md`](planning/daaf.md), step 3); the documented-frequency check is left for later. Details: [`planning/tasks/task-70.md`](planning/tasks/task-70.md).
