@@ -67,9 +67,17 @@ def natural(text):
 
 
 def release_order(dataset):
-    """Release ids oldest first: withdrawn and superseded before current, then by id in natural order."""
+    """Release ids oldest first: withdrawn and superseded before current, then by id in natural order.
+
+    When every release is a wave listed in `dimensions.wave.values`, that list gives the order
+    (Household Pulse: week01-week63, then cycle01-cycle09, which natural order would put first)."""
     releases = dataset.get("releases", [])
-    ranked = sorted(releases, key=lambda r: (STATUS_ORDER.get(r.get("status"), 3), natural(r["id"])))
+    waves = [str(w) for w in ((dataset.get("dimensions") or {}).get("wave") or {}).get("values") or []]
+    pos = {w: i for i, w in enumerate(waves)}
+    if releases and all(r["id"] in pos for r in releases):
+        ranked = sorted(releases, key=lambda r: (STATUS_ORDER.get(r.get("status"), 3), pos[r["id"]]))
+    else:
+        ranked = sorted(releases, key=lambda r: (STATUS_ORDER.get(r.get("status"), 3), natural(r["id"])))
     return [r["id"] for r in ranked]
 
 
@@ -548,8 +556,9 @@ def lineage_shards(repo, out, header):
         directory = out / "shards" / "table"
         directory.mkdir(parents=True, exist_ok=True)
         files = []
+        head = tokens(json.dumps({"shard": {**meta, **header}}, ensure_ascii=False))   # the header counts too
         for form, render in [("jsonl", lambda e: json.dumps(e, ensure_ascii=False)), ("txt", line)]:
-            parts = split(entries, render, MAX_TOKENS - 500)
+            parts = split(entries, render, MAX_TOKENS - 500 - head)
             for i, lines in enumerate(parts, 1):
                 part = {"part": i, "of": len(parts)} if len(parts) > 1 else {}
                 stem = name if len(parts) == 1 else f"{name}.part{i}"

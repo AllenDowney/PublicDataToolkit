@@ -42,3 +42,12 @@ def test_per_release_shards_by_default(tmp_path):
     manifest = views.build(root)
     assert sorted(s["filter"]["release"] for s in manifest["shards"] if s["kind"] == "table") == ["r1", "r2", "r3", "r4"]
     assert "--release-shards" not in (root / "agent" / "index.md").read_text()
+
+
+def test_release_order_follows_the_wave_values():
+    ds = {"releases": [{"id": i, "status": "current" if i == "cycle02" else "superseded"}
+                       for i in ["week01", "week02", "cycle01", "cycle02"]],
+          "dimensions": {"wave": {"label": "week", "values": ["week01", "week02", "cycle01", "cycle02"]}}}
+    assert views.release_order(ds) == ["week01", "week02", "cycle01", "cycle02"]
+    del ds["dimensions"]
+    assert views.release_order(ds) == ["cycle01", "week01", "week02", "cycle02"]      # natural order
