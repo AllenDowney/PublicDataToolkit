@@ -1,6 +1,6 @@
 # Task 46 — Who made the hand facts
 
-**Status:** `DOING (orange)`, from 2026-11-19.
+**Status:** `DONE (orange)`, 2026-11-20.
 
 A read-only audit, to prepare a decision for Allen. Many facts in the dataset repos have `origin: hand` with the author "Allen Downey", or "Claude (Task N) for Allen Downey", but most were made by agent threads in this project. Allen will decide how agent-made judgments are labeled: `origin: model` with `reviewed: false`, or `hand` with the agent as author.
 
@@ -41,3 +41,7 @@ The Chicago terms decision was recorded by the coordinator on Allen's direct ins
 ## Stopped here (orange, 2026-11-19)
 
 Every repo is fixed except pdt-brfss: green holds it and has the exact change (`author: Claude (PublicDataToolkit Task 30)`), which isn't confirmed yet. CPS's optional suffix change waits on yellow. The audit (`planning/attribution_audit.md`) is current. Task 46 can close when BRFSS is fixed.
+
+## Done (orange, 2026-11-20)
+
+Green fixed BRFSS (`e81369f`): 295 facts name Claude (Task 30). A final re-run of the inventory finds Allen named only on GSS `partyid`'s measure, his own decision, and on the 4 GSS corrections carried over from CultureWar.

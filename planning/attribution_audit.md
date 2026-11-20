@@ -93,7 +93,7 @@ After each change: rebuild, `make views`, `pdt check`.
 | pdt-nsfg | **done** by yellow, `cff7abd`: 2022-2023 `Claude (PublicDataToolkit Task 5)`; 2017-2019 `Claude (PublicDataToolkit Task 22)` |
 | the template | **done**, `8ec956a`: `build/slice.yaml` starts with `author:` empty, the stub's build stops until it's filled, and instructions 03 and 04 say so |
 | pdt-gss | **done** by blue (`bd67680`): `Claude (PublicDataToolkit Task 5)` (99 facts); `partyid`'s measure is Allen's (2 facts); the release-notes author is `Claude (PublicDataToolkit Task 21)`; the 4 corrections keep Allen (carried over) |
-| pdt-brfss | sent to green, before its first commit |
+| pdt-brfss | **done** by green, `e81369f`: `Claude (PublicDataToolkit Task 30)` (295 facts) |
 | pdt-cps-asec, pdt-yrbss | already name Claude; yellow drops " for Allen Downey" in CPS after the coordinator's terms edit; optional for YRBSS (purple) |
 
-Re-run of the inventory after these fixes: hand facts naming "Allen Downey" alone remain only in pdt-brfss (157, with green), and in pdt-gss's `partyid` measure, which is Allen's own decision.
+Final re-run of the inventory (2026-11-20): the only hand facts naming "Allen Downey" are pdt-gss's `partyid` measure (2 facts, one per release), which is Allen's own decision. The 4 GSS corrections, carried over, keep his name too.
