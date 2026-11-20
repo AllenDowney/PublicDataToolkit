@@ -1,6 +1,6 @@
 # Task 45 — A PISA slice
 
-**Status:** `DOING (purple)` — assigned by the coordinator on 2026-11-19.
+**Status:** `DONE (purple)`: assigned by the coordinator on 2026-11-19; done 2026-11-20.
 
 PISA is the OECD's Programme for International Student Assessment of 15-year-olds, every three years since 2000 (2022 was delayed a year by COVID). Twenge uses its student questionnaire on loneliness and belonging at school.
 
@@ -44,3 +44,53 @@ Stopped at the coordinator's request, at a safe point. Nothing is uncommitted, a
 - Refine the terms `notice` if the OECD's exact dataset citations turn up.
 - Ask Allen for the 2015 and 2022 technical reports, which would give the ST87→ST034 continuity and the Fay factor.
 - Then write up these proposals and report to the coordinator.
+
+### Resumed (purple, 2026-11-20): decisions on the proposals
+
+The coordinator's decisions (2026-11-20; standard `d04af94`):
+
+| Proposal | Decision | What pdt-pisa does |
+|---|---|---|
+| 1 `design.replicates` | accepted: `{variables \| prefix + n, method, fay_factor, note}` | `prefix: W_FSTURWT, n: 80, method: fay`; `fay_factor` only from a source in hand |
+| 2 plausible values | accepted: group kind `plausible_values` | the `pv-read` groups use it |
+| 3 codes that disagree | accepted: §4.2, the data file's codes, matched by label, noted in the origin | as built |
+| 4, 5, 8 | no change | |
+| 6 rescaled indices | accepted: link relation `rescaled`, only where a source says so | BELONG and ESCS linked only with a source |
+| 7 adaptation placeholders | declined for now; a note is enough | |
+| 9 `data_rows` | accepted: `data_rows: {column, in}` on a release or table | C3–C5 to read it (`lib/pdt/check.py`, with a test) |
+| 10 shared readers | accepted: `read_sav` in `pdt.readers`; `read_sas_input` takes text types from LENGTH | tests on a tiny generated .sav |
+
+**Source search (2026-11-20).**
+- **OECD hosts:**
+  - The OECD's 2012–2018 questionnaires and technical reports are on www.oecd.org and t4.oecd.org under the old `/pisa/` paths. urllib gets 403, and a headless browser gets Cloudflare's "Just a moment..." challenge, so I stopped there.
+  - OECD iLibrary (oecd-ilibrary.org, read.oecd-ilibrary.org) answers 403.
+  - search.oecd.org no longer resolves.
+  - webfs.oecd.org has no directory listing.
+- **NCES** (https://nces.ed.gov/surveys/pisa/questionnaire.asp) serves the US versions of every cycle's questionnaires to urllib: 2018 and 2015 as HTML, 2012 as three PDFs, one per rotated form (A, B, C). These are national (US) versions, not the international source versions:
+  - **2012:** the belonging question is on forms B and C only, printed with its international id (ST87, question Q40 on form B).
+  - **2015, 2018:** the question is printed with its id (ST034).
+
+### Done (purple, 2026-11-20)
+
+**Toolkit** (pytest: 217 passed, 1 skipped):
+- `3bd276c`: `pdt.readers.read_sav` (pyreadstat; user-missing codes kept as numbers, system missing as `Code(".")`; `rows=` keeps some rows). `parse_sas_input` now takes text columns from a LENGTH statement and matches labels ignoring case when that's unambiguous. Tests: `lib/tests/test_readers_pisa.py`, including a tiny generated .sav. Red agreed.
+- `a85d59a`: `data_rows` in `pdt check`, taken from the table, the release or the dataset.
+  - **C3:** fails on rows outside `data_rows`, reports kept codes with no rows, and reports when the column isn't in the file.
+  - **C5:** notes, without warning, a wave in availability that has no data in the kept rows.
+  - Tests are in `test_check_data.py`.
+
+**pdt-pisa** (`5cfe629`; `pdt check` 0 failures; every file round-trips exactly):
+- **Question text for 2012–2018** comes from NCES's US versions (5 new sources), each wording noted as the US version:
+  - 2015 and 2018: the ST034 battery.
+  - 2012: ST87Q01–09 from forms B and C (Q40 on B, Q54 on C, with ST87 printed above), so their availability is `{wave: 2012, form: B}` and `{wave: 2012, form: C}`. The 2012 file's `QuestID` is now a record, with `dimensions.form` mapping 1–3 and 5 to forms A–C and UH. The data agree: answers to ST87Q01 come from QuestID 2 and 3 only (9,305 and 9,077 in the kept rows).
+  - The 2015 US version lists the responses from "Strongly Disagree" to "Strongly Agree", the reverse of the data's codes. Its records' notes say so.
+- **New fields in `dataset.yaml`:**
+  - `design.replicates`: `{prefix: W_FSTURWT, n: 80, method: fay}`, and the 2012 release overrides it with `W_FSTR`. `fay_factor` is left out: no source here gives it.
+  - `data_rows`: `{column: CNT, in: [USA, GBR, DEU, JPN]}`. `build/slice.yaml` no longer lists the countries, and `scripts/build_data.py` reads `data_rows`.
+- **Groups:** the plausible-value groups are kind `plausible_values`.
+- **Links:** ESCS 2015→2018 and 2018→2022 are `rescaled`. The source is the OECD's data-files page (a new source, `pisa-data-files-page`), which lists "Rescaled indices of economic, social and cultural status (ESCS) for use with the PISA 2012, 2015 and 2018 datasets". BELONG stays unlinked, since no source here says it was rescaled.
+- **Readers:** the data are read with `pdt.readers.read_sav` and `read_sas_input`, so the local reader and the marked copy of the 2012 SAS program are gone.
+
+**Open:**
+- The NCES files' `redistribution` is `unknown`. NCES is a US federal agency, so they are probably public domain, but that's Allen's decision.
+- Still missing: the OECD's international 2012–2018 questionnaires and the technical reports, which would give Fay's factor, BELONG's rescaling, and whether ST87 continues as ST034. They are behind a bot check. Per the coordinator, ask Allen for them only if needed.
