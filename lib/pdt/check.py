@@ -620,11 +620,13 @@ def check_codes(name, frame, records, result):
                                     f"{listed(sorted(code_text(x) for x in extra))}")
 
 
-def check_availability(name, frame, records, wave_column, result, data_waves=None):
+def check_availability(name, frame, records, wave_column, result, data_waves=None, data_rows=None):
     """C5 (warns): the waves in each record's availability are the waves with non-missing values.
 
     With data_waves (the file holds only those waves; STANDARD.md §2.1), availability is
-    checked only for them.
+    checked only for them. With data_rows (the file holds only some rows of each wave, such
+    as some countries), a wave in availability with no values in the kept rows isn't a
+    warning, since the other rows may have them; it's reported as a note.
     """
     def kept(availability):
         waves = {str(a["wave"]) for a in availability}
@@ -646,8 +648,12 @@ def check_availability(name, frame, records, wave_column, result, data_waves=Non
         in_data = set(waves[has].dropna()) if waves is not None else (declared_all if has.any() else set())
         declared = kept(r["availability"])
         if empty := sorted(declared - in_data):
-            result.report("C5", f"warning: {name}/{r['name']}: waves in availability with no non-missing "
-                                f"values: {listed(empty)}")
+            if data_rows:
+                result.report("C5", f"{name}/{r['name']}: waves in availability with no non-missing values in "
+                                    f"the rows kept ({data_rows['column']} in data_rows): {listed(empty)}")
+            else:
+                result.report("C5", f"warning: {name}/{r['name']}: waves in availability with no non-missing "
+                                    f"values: {listed(empty)}")
         if undeclared := sorted(in_data - declared):
             result.report("C5", f"warning: {name}/{r['name']}: waves with non-missing values not in "
                                 f"availability: {listed(undeclared)}")
@@ -694,6 +700,31 @@ def check_keys_in_data(release, tables, frames, result):
                                    f"{unmatched:,} of {len(rows):,} rows without a match")
 
 
+def data_rows(repo, release, table):
+    """The rows a release's (or table's) data file keeps, {column, in}, or None for all.
+
+    A table's setting overrides its release's, which overrides the dataset's (STANDARD.md §2.1).
+    """
+    r = next((r for r in repo.dataset.get("releases", []) if r["id"] == release), {})
+    t = next((t for t in r.get("tables") or [] if t["id"] == table), {})
+    return t.get("data_rows") or r.get("data_rows") or repo.dataset.get("data_rows")
+
+
+def check_rows(name, frame, rows, result):
+    """C3 with data_rows: the file holds only the rows it says it keeps."""
+    from .common_format import code_text
+    col = rows["column"]
+    if col not in frame:
+        result.report("C3", f"{name}: data_rows names {col}, which isn't in the data file; rows not checked")
+        return
+    keep = {code_text(v) if not isinstance(v, str) else v for v in rows["in"]}
+    cells = frame[col].map(lambda v: None if v is None or v != v else (v if isinstance(v, str) else code_text(v)))
+    if outside := int((~cells.isin(keep)).sum()):
+        result.fail("C3", f"{name}: {outside:,} rows with {col} outside data_rows {listed(sorted(keep))}")
+    if absent := sorted(keep - set(cells.dropna())):
+        result.report("C3", f"{name}: data_rows keeps {col} {listed(absent)}, but the file has no such rows")
+
+
 def data_waves(repo, release, table):
     """The waves a release's (or table's) data file holds, as text, or None for all."""
     r = next((r for r in repo.dataset.get("releases", []) if r["id"] == release), {})
@@ -710,7 +741,10 @@ def check_data(repo, result):
         name = release + (f"/{table}" if table else "")
         check_coverage(name, frame, records, result)
         check_codes(name, frame, records, result)
-        check_availability(name, frame, records, wave_column, result, data_waves(repo, release, table))
+        rows = data_rows(repo, release, table)
+        if rows:
+            check_rows(name, frame, rows, result)
+        check_availability(name, frame, records, wave_column, result, data_waves(repo, release, table), rows)
     for r in repo.dataset.get("releases", []):
         check_keys_in_data(r["id"], r.get("tables") or [], frames, result)
 

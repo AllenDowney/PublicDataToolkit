@@ -237,3 +237,35 @@ def test_c2_target_columns_need_records(tmp_path):
     tables = [TABLES[0], dict(TABLES[1], references=[{"columns": ["PNO"], "table": "crash",
                                                       "target_columns": ["NOPE"]}])]
     assert any("target column NOPE" in f for f in failures(run(make_data_repo(tmp_path, tables=tables)), "C2"))
+
+
+def test_data_rows_checked_and_c5_notes_waves_without_kept_rows(tmp_path):
+    """A file that keeps only some rows of each wave (PISA's four countries): C3 checks it holds
+    only those rows, and C5 notes, without warning, a declared wave with no data among them."""
+    kept = CRASH[CRASH["ID"].isin([1, 2])]                       # both in 2020
+    tables = [dict(TABLES[0], data_rows={"column": "ID", "in": [1, 2]}), TABLES[1]]
+    result = run(make_data_repo(tmp_path, crash=kept, tables=tables))
+    assert not failures(result, "C3"), result.failures
+    c5 = [r for r in reports(result, "C5") if "crash" in r]
+    assert c5 and all(not r.startswith("C5: warning") for r in c5)
+    assert any("in the rows kept (ID in data_rows): 2021" in r for r in c5)
+    # Without data_rows the same file warns.
+    plain = run(make_data_repo(tmp_path / "b", crash=kept))
+    assert any(r.startswith("C5: warning: r1/crash/LIGHT") for r in reports(plain, "C5"))
+
+
+def test_data_rows_fails_on_rows_outside_and_reports_absent_ones(tmp_path):
+    tables = [dict(TABLES[0], data_rows={"column": "ID", "in": [1, 2, 8]}), TABLES[1]]
+    result = run(make_data_repo(tmp_path, tables=tables))
+    assert failures(result, "C3") == ["C3: r1/crash: 2 rows with ID outside data_rows 1, 2, 8"]
+    assert any("keeps ID 8, but the file has no such rows" in r for r in reports(result, "C3"))
+
+
+def test_data_rows_on_the_dataset_and_a_missing_column(tmp_path):
+    root = make_data_repo(tmp_path)
+    ds = yaml.safe_load((root / "dataset.yaml").read_text())
+    ds["data_rows"] = {"column": "PTYPE", "in": [1, 5]}           # person has it; crash doesn't
+    (root / "dataset.yaml").write_text(yaml.safe_dump(ds))
+    result = run(root)
+    assert not failures(result, "C3")
+    assert any("r1/crash: data_rows names PTYPE, which isn't in the data file" in r for r in reports(result, "C3"))
