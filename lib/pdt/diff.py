@@ -52,6 +52,7 @@ never writes into metadata/.
 import argparse
 import difflib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -89,10 +90,11 @@ def code_entry(v):
     return out
 
 
-def code_changes(a, b, omits=(False, False)):
+def code_changes(a, b, omits=(False, False), ignore=()):
     """Differences between two value lists, as a dict of lists.
 
-    omits: whether a's and b's documentation lists only codes that occur."""
+    omits: whether a's and b's documentation lists only codes that occur.
+    ignore: formatting markers to ignore in labels (pdt.compare)."""
     va = {code_key(v["code"]): v for v in a.get("values") or []}
     vb = {code_key(v["code"]): v for v in b.get("values") or []}
     out = {"added": [], "dropped": [], "in_other_range": [], "no_cases_in_other": [],
@@ -116,7 +118,7 @@ def code_changes(a, b, omits=(False, False)):
             else:
                 out[side].append(entry)
         else:
-            how = compare_text(x.get("label"), y.get("label"))
+            how = compare_text(x.get("label"), y.get("label"), ignore)
             if how != "same":
                 out["relabeled" if how == "changed" else "relabeled_text_only"].append(
                     {"code": y["code"], "from": x.get("label"), "to": y.get("label")})
@@ -169,16 +171,18 @@ def range_changed(a, b):
     return "observed" if observed else "documented"
 
 
-def compare_pair(a, b, omits=(False, False)):
-    """Every difference between two records of the same variable."""
+def compare_pair(a, b, omits=(False, False), ignore=()):
+    """Every difference between two records of the same variable.
+
+    ignore: a dataset's formatting markers, as regular expressions (pdt.compare)."""
     out = {}
     for field, getter in (("label", lambda r: r.get("label")), ("question", question),
                           ("universe", lambda r: r.get("universe")),
                           ("description", lambda r: r.get("description"))):
-        how = compare_text(getter(a), getter(b))
+        how = compare_text(getter(a), getter(b), ignore)
         if how != "same":
             out[field] = {"how": how, "from": getter(a), "to": getter(b)}
-    codes = code_changes(a, b, omits)
+    codes = code_changes(a, b, omits, ignore)
     if codes:
         out["codes"] = codes
     how = range_changed(a, b)
@@ -276,8 +280,11 @@ class Linked(dict):
         self.relations = {}
 
 
-def linked_pairs(repo, rel_a, rel_b, table, ra, rb):
-    """One-to-one pairs from the links between two releases, for one table."""
+def linked_pairs(repo, rel_a, rel_b, table, ra, rb, table_b=...):
+    """One-to-one pairs from the links between two releases, for one table in A and its
+    counterpart in B (the same table unless table_b is given: NHIS samadult -> adult)."""
+    if table_b is ...:
+        table_b = table
     out = Linked()
     for link in repo.links:
         f, t = link["from"], link["to"]
@@ -289,7 +296,7 @@ def linked_pairs(repo, rel_a, rel_b, table, ra, rb):
             a, b = t, f
         else:
             continue
-        if a.get("table") != table or b.get("table") != table:
+        if a.get("table") != table or b.get("table") != table_b:
             continue
         if a["name"] in ra and b["name"] in rb and a["name"] not in out and b["name"] not in out.values():
             out[a["name"]] = b["name"]
@@ -303,6 +310,50 @@ def comparable(rels):
     if len(out) > 1:
         out.discard("same_item")
     return out or {"same_item"}
+
+
+NO_TABLE = object()        # "no counterpart"; a release without tables has the table id None
+
+
+def table_pairs(repo, rel_a, rel_b, table_map=None):
+    """[(table in A, table in B)]: which table continues which; NO_TABLE where there's none.
+
+    In order: table_map (e.g. {"samadult": "adult"}); then the same id (None for a release
+    without tables); then the table in B that most of the table's one-to-one links go to.
+    Several tables can continue as one (NHIS 2018 -> 2019: samadult, person and family
+    became adult): table_map may repeat a target, and links may vote for a table already used."""
+    ta, tb = list(repo.tables.get(rel_a, {})), list(repo.tables.get(rel_b, {}))
+    table_map = dict(table_map or {})
+    out, used = {}, set()
+    for t in ta:
+        if t in table_map:
+            if table_map[t] not in tb:
+                raise SystemExit(f"--table-map: {rel_b} has no table {table_map[t]!r}; tables: {tb}")
+            out[t] = table_map[t]
+            used.add(table_map[t])
+    for t in ta:
+        if t not in out and t in tb and t not in used:
+            out[t] = t
+            used.add(t)
+    for t in ta:
+        if t in out:
+            continue
+        votes = {}
+        for link in repo.links:
+            if not PAIRING & set(link["relations"]):
+                continue
+            ends = [(e.get("release"), e.get("table")) for e in (link["from"], link["to"])]
+            if (rel_a, t) in ends:
+                for r, x in ends:
+                    if r == rel_b and x in tb:
+                        votes[x] = votes.get(x, 0) + 1
+        if votes:
+            target = max(sorted(votes, key=str), key=lambda x: votes[x])
+            out[t] = target
+            used.add(target)
+    pairs = [(t, out.get(t, NO_TABLE)) for t in ta]
+    pairs += [(NO_TABLE, x) for x in tb if x not in used]
+    return pairs
 
 
 def lists_only_occurring(repo, record):
@@ -353,51 +404,69 @@ def code_list_changes(repo, rel_a, rel_b):
     return out
 
 
-def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
-    """The full comparison, as a dict that serializes to JSON."""
+def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False, ignore=(), table_map=None):
+    """The full comparison, as a dict that serializes to JSON.
+
+    Tables are paired by table_pairs (same id, links, or table_map), so a redesign that
+    renames tables (NHIS samadult -> adult) is compared variable by variable."""
     for rel in (rel_a, rel_b):
         if rel not in repo.tables:
             raise SystemExit(f"no release {rel!r}; releases: {sorted(repo.tables)}")
-    tables = sorted(set(repo.tables[rel_a]) | set(repo.tables[rel_b]), key=str)
+    pairs_of_tables = table_pairs(repo, rel_a, rel_b, table_map)
     if table is not None:
-        tables = [table]
+        pairs_of_tables = [(x, y) for x, y in pairs_of_tables if table in (x, y)]
     periods = {r["id"]: r.get("reference_period") for r in repo.dataset.get("releases", [])}
     result = {"dataset": repo.dataset.get("id"), "from": rel_a, "to": rel_b, "tables": [],
               "reference_periods": {rel_a: periods.get(rel_a), rel_b: periods.get(rel_b)},
               "corrections": [c["id"] for c in repo.corrections],
               "rule": RULE, "rule_version": RULE_VERSION, "pdt_version": __version__,
               "omitted_codes_have_no_cases": omitted_codes_have_no_cases,
-              "code_lists": code_list_changes(repo, rel_a, rel_b)}
-    for tab in tables:
-        ra = {r["name"]: r for r in repo.tables[rel_a].get(tab, [])}
-        rb = {r["name"]: r for r in repo.tables[rel_b].get(tab, [])}
-        linked = linked_pairs(repo, rel_a, rel_b, tab, ra, rb)
-        pairs = list(linked.items())
-        paired_a, paired_b = {p[0] for p in pairs}, {p[1] for p in pairs}
+              "code_lists": code_list_changes(repo, rel_a, rel_b),
+              "ignore": [getattr(p, "pattern", p) for p in ignore]}
+    # First pass: pair variables within each table pair (links, then names). In a merge (several
+    # tables in A continuing as one in B), B's variables are claimed across all its pairs.
+    work, claimed = [], {}
+    for tab_a, tab_b in pairs_of_tables:
+        ra = {r["name"]: r for r in repo.tables[rel_a].get(tab_a, [])} if tab_a is not NO_TABLE else {}
+        rb = {r["name"]: r for r in repo.tables[rel_b].get(tab_b, [])} if tab_b is not NO_TABLE else {}
+        taken = claimed.setdefault(tab_b, set()) if tab_b is not NO_TABLE else set()
+        linked = linked_pairs(repo, rel_a, rel_b, tab_a, ra, rb, tab_b)
+        pairs = [(a, b) for a, b in linked.items() if b not in taken]
+        paired_a, paired_b = {p[0] for p in pairs}, {p[1] for p in pairs} | taken
         # then names, among the variables no link pairs; names that differ only in case match
         lower_b = {n.lower(): n for n in rb if n not in paired_b}
-        conflicts = []
         for n in ra:
             if n in paired_a:
                 continue
             m = n if (n in rb and n not in paired_b) else lower_b.get(n.lower())
-            if m is not None:
+            if m is not None and m not in paired_b:
                 pairs.append((n, m))
                 paired_a.add(n)
                 paired_b.add(m)
+        conflicts = []
         for n in sorted(set(ra) & set(rb)):
             if linked.get(n) != n and (n in linked or n in set(linked.values())):
                 conflicts.append({"name": n,
                                   "from_linked_to": linked.get(n) if n in linked else None,
                                   "to_linked_from": next((a for a, b in linked.items() if b == n), None)})
-        paired_a, paired_b = {p[0] for p in pairs}, {p[1] for p in pairs}
+        taken |= {b for _, b in pairs}
+        work.append((tab_a, tab_b, ra, rb, linked, pairs, conflicts))
+    # Second pass: B's leftovers, listed once per B table (with its first pair)
+    listed = set()
+    for tab_a, tab_b, ra, rb, linked, pairs, conflicts in work:
+        tab = tab_b if tab_b is not NO_TABLE else tab_a
+        paired_a = {p[0] for p in pairs}
         only_a = [ra[n] for n in ra if n not in paired_a]
-        only_b = [rb[n] for n in rb if n not in paired_b]
+        if tab_b is not NO_TABLE and tab_b not in listed:
+            only_b = [rb[n] for n in rb if n not in claimed.get(tab_b, set())]
+            listed.add(tab_b)
+        else:
+            only_b = []
         both = []
         for na, nb in pairs:
             omits = (omitted_codes_have_no_cases or lists_only_occurring(repo, ra[na]),
                      omitted_codes_have_no_cases or lists_only_occurring(repo, rb[nb]))
-            changes = compare_pair(ra[na], rb[nb], omits)
+            changes = compare_pair(ra[na], rb[nb], omits, ignore)
             entry = {"from": na, "to": nb, "paired_by": "link" if (na, nb) in linked.items() else "name",
                      "relations": relations(changes), "changes": changes}
             if entry["paired_by"] == "link":
@@ -406,17 +475,102 @@ def diff(repo, rel_a, rel_b, table=None, omitted_codes_have_no_cases=False):
             if na != nb and na.lower() == nb.lower():
                 entry["name_case_changed"] = True
             both.append(entry)
+        leftover_b = [rb[n] for n in rb if n not in claimed.get(tab_b, set())] if tab_b is not NO_TABLE else []
         result["tables"].append({
             "table": tab,
+            "from_table": tab_a if tab_a is not NO_TABLE else None,
+            "only_table": ("from" if tab_b is NO_TABLE else "to" if tab_a is NO_TABLE else None),
             "only_in_from": [r["name"] for r in only_a],
             "only_in_to": [r["name"] for r in only_b],
-            "rename_candidates": (renamed := rename_candidates(only_a, only_b)),
-            "merge_split_candidates": merge_split_candidates(only_a, only_b, ra, rb, renamed),
+            "rename_candidates": (renamed := rename_candidates(only_a, leftover_b)),
+            "merge_split_candidates": merge_split_candidates(only_a, leftover_b, ra, rb, renamed),
             "name_conflicts": conflicts,
             "in_both": both,
             "spans": {"from": waves_span(ra.values()), "to": waves_span(rb.values())},
         })
     return result
+
+
+# ---------------------------------------------------------------- over gaps
+
+def gaps(repo, releases=None, ignore=(), table_map=None, omitted_codes_have_no_cases=False):
+    """Each variable compared with the next release it appears in, where that skips releases.
+
+    Rotating content (NHIS: PHQ and GAD in 2019 and 2022, K6 in 2021 and 2024) is missed by
+    diffs of consecutive releases. A variable's next appearance is found by a one-to-one link
+    to a later release, else by the same name in the counterpart table (table_pairs) of the
+    nearest later release that has it. Pairs in consecutive releases are left to diff().
+    Returns [{from_release, to_release, skipped, table, from, to, paired_by, relations,
+    changes, link_relations?, link_agrees?}]."""
+    from .views import release_order
+    order = [r for r in release_order(repo.dataset) if releases is None or r in releases]
+    pos = {r: i for i, r in enumerate(order)}
+    records = {(rel, tab, rec["name"]): rec for rel in order for tab, recs in repo.tables.get(rel, {}).items()
+               for rec in recs}
+    nxt = {}                                      # node -> (later node, relations or None)
+    for link in repo.links:
+        if not PAIRING & set(link["relations"]):
+            continue
+        a = (link["from"].get("release"), link["from"].get("table"), link["from"]["name"])
+        b = (link["to"].get("release"), link["to"].get("table"), link["to"]["name"])
+        if a not in records or b not in records or a[0] == b[0]:
+            continue
+        a, b = (a, b) if pos[a[0]] < pos[b[0]] else (b, a)
+        if a not in nxt or pos[b[0]] < pos[nxt[a][0][0]]:
+            nxt[a] = (b, link["relations"])
+    linked_to = {b for b, _ in nxt.values()}
+    maps = {}
+    for i, rel in enumerate(order):
+        for later in order[i + 1:]:
+            maps[(rel, later)] = {x: y for x, y in table_pairs(repo, rel, later, table_map)
+                                  if x is not NO_TABLE and y is not NO_TABLE}
+    for node in records:
+        if node in nxt:
+            continue
+        rel, tab, name = node
+        for later in order[pos[rel] + 1:]:
+            target_tab = maps[(rel, later)].get(tab, NO_TABLE)
+            cand = (later, target_tab, name)
+            if target_tab is not NO_TABLE and cand in records:
+                if cand not in linked_to:
+                    nxt[node] = (cand, None)
+                break
+    out = []
+    for a, (b, link_rel) in sorted(nxt.items(), key=lambda kv: (pos[kv[0][0]], str(kv[0][1]), kv[0][2])):
+        if pos[b[0]] - pos[a[0]] < 2:
+            continue
+        omits = (omitted_codes_have_no_cases or lists_only_occurring(repo, records[a]),
+                 omitted_codes_have_no_cases or lists_only_occurring(repo, records[b]))
+        changes = compare_pair(records[a], records[b], omits, ignore)
+        entry = {"from_release": a[0], "to_release": b[0], "skipped": order[pos[a[0]] + 1:pos[b[0]]],
+                 "from_table": a[1], "table": b[1], "from": a[2], "to": b[2],
+                 "paired_by": "link" if link_rel else "name", "relations": relations(changes), "changes": changes}
+        if link_rel:
+            entry["link_relations"] = link_rel
+            entry["link_agrees"] = comparable(entry["relations"]) == comparable(link_rel)
+        out.append(entry)
+    return out
+
+
+def gaps_summary(dataset, entries):
+    lines = [f"{dataset}: variables whose next appearance skips releases ({len(entries)})"]
+    for e in entries:
+        where = (f"{e['from_table']}." if e["from_table"] else "") + e["from"]
+        to = (f"{e['table']}." if e["table"] else "") + e["to"]
+        link = (f"  [link: {', '.join(e['link_relations'])}{'' if e['link_agrees'] else '; differs'}]"
+                if e["paired_by"] == "link" else "  [by name]")
+        lines.append(f"  {where} {e['from_release']} \u2192 {to} {e['to_release']} (skips {', '.join(e['skipped'])}): "
+                     f"{', '.join(e['relations'])}{link}")
+        for field, v in e["changes"].items():
+            if field == "codes":
+                kinds = [k for k in v if k not in ("relabeled_text_only",)]
+                if kinds:
+                    lines.append(f"      codes: {', '.join(kinds)}")
+            elif isinstance(v, dict) and "how" in v and v["how"] != "changed":
+                continue
+            else:
+                lines.append(f"      {field}")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------- proposals
@@ -425,10 +579,12 @@ def proposed_links(result):
     out = []
     for t in result["tables"]:
         for e in t["in_both"]:
-            ref = lambda rel, name: {"release": rel, **({"table": t["table"]} if t["table"] else {}), "name": name}
+            def ref(rel, name, tab):
+                return {"release": rel, **({"table": tab} if tab else {}), "name": name}
             what = "; ".join(f"{k}: {v['how'] if isinstance(v, dict) and 'how' in v else ', '.join(v)}"
                              for k, v in e["changes"].items()) or "no differences in the records"
-            out.append({"from": ref(result["from"], e["from"]), "to": ref(result["to"], e["to"]),
+            out.append({"from": ref(result["from"], e["from"], t.get("from_table", t["table"])),
+                        "to": ref(result["to"], e["to"], t["table"]),
                         "relations": e["relations"],
                         "origin": {"origin": "rule", "rule": RULE, "rule_version": RULE_VERSION,
                                    "note": f"Proposed by pdt diff from the two releases' records ({what}). "
@@ -472,7 +628,7 @@ def proposed_history(table, name_a, name_b, rec_a, rec_b, span_a, span_b, releas
 def proposed_histories(repo, result):
     out = []
     for t in result["tables"]:
-        ra = {r["name"]: r for r in repo.tables[result["from"]].get(t["table"], [])}
+        ra = {r["name"]: r for r in repo.tables[result["from"]].get(t.get("from_table", t["table"]), [])}
         rb = {r["name"]: r for r in repo.tables[result["to"]].get(t["table"], [])}
         for e in t["in_both"]:
             codes = e["changes"].get("codes", {})
@@ -518,7 +674,15 @@ def summary(result):
         for e in both:
             key = ", ".join(e["relations"])
             rel_counts[key] = rel_counts.get(key, 0) + 1
-        head = f"\n[{t['table']}]" if t["table"] else ""
+        ta, tb = t.get("from_table", t["table"]), t["table"]
+        if t.get("only_table") == "from":
+            head = f"\n[{ta}: only in {result['from']}]"
+        elif t.get("only_table") == "to":
+            head = f"\n[{tb}: only in {result['to']}]"
+        elif ta != tb:
+            head = f"\n[{ta} \u2192 {tb}]"
+        else:
+            head = f"\n[{tb}]" if tb else ""
         by_link = [e for e in both if e["paired_by"] == "link"]
         disagree = [e for e in by_link if not e["link_agrees"]]
         lines.append(f"{head}\n  paired by link: {len(by_link)}  by name: {len(both) - len(by_link)}"
@@ -579,9 +743,17 @@ def summary(result):
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="pdt diff", description="Compare two releases' records.")
     parser.add_argument("path", help="the dataset repo")
-    parser.add_argument("release_a")
-    parser.add_argument("release_b")
-    parser.add_argument("--table", help="only this table")
+    parser.add_argument("release_a", nargs="?")
+    parser.add_argument("release_b", nargs="?")
+    parser.add_argument("--table", help="only this table (and its counterpart)")
+    parser.add_argument("--table-map", action="append", default=[], metavar="A=B",
+                        help="table A in the first release continues as table B (repeatable)")
+    parser.add_argument("--ignore", action="append", default=[], metavar="REGEX",
+                        help="a formatting marker to ignore in texts, e.g. '(?:^|(?<=\\s))\\*\\s' (repeatable)")
+    parser.add_argument("--gaps", action="store_true",
+                        help="compare each variable with the next release it appears in, where that skips "
+                             "releases (rotating content); no release arguments")
+    parser.add_argument("--releases", nargs="+", help="with --gaps: only these releases")
     parser.add_argument("--json", action="store_true", help="print the full comparison as JSON")
     parser.add_argument("--omitted-codes-have-no-cases", action="store_true",
                         help="treat every source as listing only codes that occur (overrides sources.yaml's "
@@ -590,7 +762,24 @@ def main(argv=None):
                         help="write proposed links.jsonl and histories.jsonl here, for review")
     args = parser.parse_args(argv)
     repo = Repo.load(args.path)
-    result = diff(repo, args.release_a, args.release_b, args.table, args.omitted_codes_have_no_cases)
+    table_map = {}
+    for item in args.table_map:
+        if "=" not in item:
+            parser.error(f"--table-map takes A=B, not {item!r}")
+        a, b = item.split("=", 1)
+        table_map[a] = b
+    ignore = [re.compile(p) for p in args.ignore]
+    if args.gaps:
+        if args.release_a or args.release_b:
+            parser.error("--gaps compares across all releases; use --releases to limit them")
+        entries = gaps(repo, args.releases, ignore, table_map, args.omitted_codes_have_no_cases)
+        print(json.dumps(entries, indent=1, ensure_ascii=False) if args.json
+              else gaps_summary(repo.dataset.get("id"), entries))
+        return 0
+    if not (args.release_a and args.release_b):
+        parser.error("give two releases, or --gaps")
+    result = diff(repo, args.release_a, args.release_b, args.table, args.omitted_codes_have_no_cases,
+                  ignore, table_map)
     print(json.dumps(result, indent=1, ensure_ascii=False) if args.json else summary(result))
     if args.proposals:
         n_links, n_hist = write_proposals(repo, result, args.proposals)

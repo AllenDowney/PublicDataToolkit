@@ -239,3 +239,74 @@ def test_observed_and_identifier_ranges(tmp_path):
     assert e["modyear"]["relations"] == ["same_item"] and e["modyear"]["changes"]["valid_range"]["how"] == "observed"
     assert e["case"]["changes"] == {}
     assert e["age"]["relations"] == ["codes_changed"]                      # top coding changed
+
+
+def tabled_repo(tmp_path, releases, tables_by_release, records, links=()):
+    """A repo whose releases have tables: tables_by_release {release: [table ids]}."""
+    dataset = dict(DATASET, releases=[
+        {"id": r, "label": r, "status": "current", "sources": ["cb"],
+         "tables": [{"id": t, "label": t, "sources": ["cb"]} for t in tables_by_release[r]]} for r in releases])
+    root = make_repo(tmp_path, dataset=dataset, variables=[], groups=[], corrections=[])
+    for (rel, tab), recs in records.items():
+        write_jsonl(root / "metadata" / "releases" / rel / tab / "variables.jsonl",
+                    [dict(r, release=rel) for r in recs])
+    write_jsonl(root / "metadata" / "links.jsonl", list(links))
+    return root
+
+
+def link(ra, ta, na, rb, tb, nb, rels):
+    return {"from": {"release": ra, "table": ta, "name": na}, "to": {"release": rb, "table": tb, "name": nb},
+            "relations": rels, "origin": PUB}
+
+
+def test_across_tables_by_links_and_by_map(tmp_path):
+    root = tabled_repo(tmp_path, ["2018", "2019"], {"2018": ["samadult", "person"], "2019": ["adult"]}, {
+        ("2018", "samadult"): [rec("2018", "DEP_1", "Depressed"), rec("2018", "WT", "Weight")],
+        ("2018", "person"): [rec("2018", "PHSTAT", "Health status", [V(1, "Excellent")])],
+        ("2019", "adult"): [rec("2019", "DEPFREQ_A", "Depressed"), rec("2019", "WT", "Weight"),
+                            rec("2019", "PHSTAT_A", "Health status", [V(1, "Excellent")])]},
+        [link("2018", "samadult", "DEP_1", "2019", "adult", "DEPFREQ_A", ["same_item", "renamed"])])
+    r = Repo.load(root)
+    assert diff.table_pairs(r, "2018", "2019")[0] == ("samadult", "adult")                    # by links
+    result = diff.diff(r, "2018", "2019")
+    sam = next(t for t in result["tables"] if t["from_table"] == "samadult")
+    assert sam["table"] == "adult" and {(e["from"], e["to"]) for e in sam["in_both"]} == {
+        ("DEP_1", "DEPFREQ_A"), ("WT", "WT")}
+    assert "[samadult → adult]" in diff.summary(result)
+    person = next(t for t in result["tables"] if t["from_table"] == "person")
+    assert person["only_table"] == "from"                                           # no links, no map
+    merged = diff.diff(r, "2018", "2019", table_map={"person": "adult"})
+    tabs = {t["from_table"]: t for t in merged["tables"]}
+    assert tabs["person"]["table"] == "adult"
+    assert [(c["from"], c["to"]) for c in tabs["person"]["rename_candidates"]] == [("PHSTAT", "PHSTAT_A")]
+    assert tabs["samadult"]["only_in_to"] == ["PHSTAT_A"] and tabs["person"]["only_in_to"] == []   # listed once
+    links = diff.proposed_links(merged)
+    assert {"release": "2018", "table": "samadult", "name": "DEP_1"} in [l["from"] for l in links]
+
+
+def test_gaps_follow_links_and_names(tmp_path):
+    years = ["2019", "2020", "2021", "2022"]
+    root = tabled_repo(tmp_path, years, {y: ["adult"] for y in years}, {
+        ("2019", "adult"): [rec("2019", "PHQ", "Depression", [V(1, "None")]), rec("2019", "SEX", "Sex")],
+        ("2020", "adult"): [rec("2020", "SEX", "Sex")],
+        ("2021", "adult"): [rec("2021", "SEX", "Sex"), rec("2021", "K6", "Distress")],
+        ("2022", "adult"): [rec("2022", "PHQ", "Depression", [V(1, "None"), V(2, "Mild")]),
+                            rec("2022", "SEX", "Sex"), rec("2022", "K6NEW", "* Distress")]},
+        [link("2021", "adult", "K6", "2022", "adult", "K6NEW", ["same_item", "renamed"])])
+    entries = diff.gaps(Repo.load(root))
+    assert [(e["from"], e["from_release"], e["to_release"], e["paired_by"]) for e in entries] == [
+        ("PHQ", "2019", "2022", "name")]                    # SEX is consecutive; K6 -> K6NEW skips nothing
+    assert entries[0]["skipped"] == ["2020", "2021"] and entries[0]["relations"] == ["codes_changed"]
+    assert "PHQ 2019 → adult.PHQ 2022 (skips 2020, 2021)" in diff.gaps_summary("x", entries)
+
+
+def test_cli_gaps_and_ignore(repo, capsys):
+    from pdt.cli import main
+    assert main(["diff", str(repo), "--gaps"]) == 0
+    assert "variables whose next appearance skips releases (0)" in capsys.readouterr().out
+    with pytest.raises(SystemExit):
+        main(["diff", str(repo), "r1"])
+    assert main(["diff", str(repo), "r1", "r2", "--ignore", r"Reported as\s*", "--json"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    light = next(e for e in result["tables"][0]["in_both"] if e["from"] == "light")
+    assert light["relations"] == ["same_item"] and result["ignore"] == [r"Reported as\s*"]

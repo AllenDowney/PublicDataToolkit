@@ -1,4 +1,4 @@
-"""Compare two texts from documentation: is a difference a change, or only how it's written?
+r"""Compare two texts from documentation: is a difference a change, or only how it's written?
 
     compare_text(a, b) -> "same" | "text_only" | "reference_only" | "changed"
 
@@ -11,7 +11,12 @@
   the questionnaire's layout. A parenthesized variable-type marker, "(RECODE)" as the
   NSFG's 2017-2019 labels have it, is removed too: the record's variable_type holds it.
 
-Neither is a change of meaning. Rules that write links (`same_item` vs `labels_changed`)
+A dataset can also name formatting markers to ignore, as regular expressions: NHIS's
+codebook prints "* " before interviewer instructions from 2022, unevenly
+("* Read if necessary: ..."). compare_text(a, b, ignore=[r"(?:^|(?<=\s))\*\s"]) removes them
+from both texts first, and a difference that disappears then is also `text_only`.
+
+None of these is a change of meaning. Rules that write links (`same_item` vs `labels_changed`)
 and `pdt diff` use these classes, so they agree on what counts as a change.
 """
 
@@ -35,12 +40,25 @@ def strip_refs(text):
     return norm(ITEM_REF.sub(" ", str(text or "")))
 
 
-def compare_text(a, b):
-    """'same'; 'text_only' (case, whitespace or dashes); 'reference_only' (item references); 'changed'."""
+def strip_markers(text, ignore):
+    """text with every match of the ignore patterns replaced by a space."""
+    text = str(text or "")
+    for pattern in ignore:
+        text = (pattern if hasattr(pattern, "sub") else re.compile(pattern)).sub(" ", text)
+    return text
+
+
+def compare_text(a, b, ignore=()):
+    """'same'; 'text_only' (case, whitespace, dashes, or ignored markers); 'reference_only'
+    (item references); 'changed'. ignore: regular expressions for a dataset's formatting markers."""
     if (a or "") == (b or ""):
         return "same"
     if norm(a) == norm(b):
         return "text_only"
+    if ignore:
+        a, b = strip_markers(a, ignore), strip_markers(b, ignore)
+        if norm(a) == norm(b):
+            return "text_only"
     return "reference_only" if strip_refs(a) == strip_refs(b) else "changed"
 
 

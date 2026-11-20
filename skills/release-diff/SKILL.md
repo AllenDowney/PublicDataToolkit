@@ -12,9 +12,18 @@ pdt diff . 2017 2024                          # a report, per table
 pdt diff . 2017 2024 --table person --json    # everything, as JSON
 pdt diff . 2017 2024 --proposals build/diff   # also proposed links and histories, for review
 pdt diff . 2017-2019 2022-2023 --omitted-codes-have-no-cases   # for codebooks that list only codes that occur
+pdt diff . 2021 2024 --ignore '(?:^|(?<=\s))\*\s'           # a formatting marker to ignore (NHIS's "* ")
+pdt diff . 2018 2019 --table-map person=adult --table-map family=adult   # tables merged in a redesign
+pdt diff . --gaps                                              # each variable vs. its next appearance, over gaps
 ```
 
 It reads the source records (corrections are listed, not applied) and never writes into `metadata/`.
+
+**Tables.** Each table in A is compared with its counterpart in B: the one named by `--table-map`, else the same id, else the table its links mostly go to (NHIS 2018 → 2019: `samadult` → `adult`, every name gaining `_A`). Several tables can continue as one; in that merge, B's unpaired variables are listed once.
+
+**Formatting markers.** When a codebook adds a marker unevenly (NHIS prints "* " before interviewer instructions from 2022), name it with `--ignore REGEX`: a difference that disappears without it is `text_only`, so the diff agrees with a link rule that ignores it too.
+
+**Rotating content.** `--gaps` follows each variable to the next release it appears in, by link or by name, and compares the pairs that skip releases (NHIS PHQ and GAD in 2019 and 2022, K6 in 2021 and 2024), which consecutive diffs never see.
 
 **Pairing.** Links already in `links.jsonl` between the two releases pair variables first; names pair the rest. A release that renumbers its items, as the YRBSS does (2021 q26 "Considered suicide" is 2023 q27), is compared item by item, and each linked pair says whether the link's relations match what the records show. Compare by name alone (no links yet) and you get wording changes and renames that aren't real: write the links first, then rerun.
 

@@ -38,3 +38,14 @@ def test_absent_by_chance():
     assert not absent_by_chance(2820, 6000, 5500)            # MARSTAT 6: a recoding
     assert not absent_by_chance(None, 10, 10) and not absent_by_chance(3, 0, 10)
     assert total_cases({"values": [{"n": 2}, {"n": 3}, {}]}) == 5
+
+
+def test_ignore_markers():
+    star = r"(?:^|(?<=\s))\*\s"
+    a = "Read if necessary: During the past 30 days, how often did you feel ...Hopeless? Read if necessary: Would you"
+    b = "* Read if necessary: During the past 30 days, how often did you feel ...Hopeless? * Read if necessary: Would you"
+    assert compare_text(a, b) == "changed"
+    assert compare_text(a, b, ignore=[star]) == "text_only"
+    assert compare_text("2 * 3 items", "2 3 items", ignore=[star]) == "text_only"     # a literal "* " goes too
+    assert compare_text("Read: Hopeless?", "* Read: Worthless?", ignore=[star]) == "changed"
+    assert compare_text("IC-9 Read", "* IC-7 Read", ignore=[star]) == "reference_only"
