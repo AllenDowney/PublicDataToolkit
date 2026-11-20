@@ -27,6 +27,8 @@ def main(argv=None):
     views = sub.add_parser("views", help="generate agent/, docs/ and export/ for a dataset repo")
     views.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
     views.add_argument("--only", choices=["agent", "site", "export"], help="generate just one of them")
+    views.add_argument("--toolkit-url", help="the toolkit linked from docs/about.html "
+                                             "(default: pdt.vocab.TOOLKIT_URL)")
     views.add_argument("--release-shards", type=int, default=12, metavar="N",
                        help="with more releases than N, agent table shards cover every release, one line per "
                             "variable, instead of one shard per release (default 12)")
@@ -83,7 +85,7 @@ def main(argv=None):
             print(f"agent/: {len(manifest['shards'])} shards, {n} files")
         if args.only in (None, "site"):
             from .site import build as build_site
-            manifest = build_site(args.path)
+            manifest = build_site(args.path, toolkit_url=args.toolkit_url)
             print(f"docs/: {len(manifest['files'])} files")
         if args.only in (None, "export"):
             from .export import build as build_export

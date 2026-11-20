@@ -41,7 +41,7 @@ KIND_TITLES = {
 # docs/ or export/ while the inputs stay the same, so each manifest records their hash and
 # pdt check (C8) compares it (STANDARD.md §7).
 GENERATOR_MODULES = ("views.py", "site.py", "export.py", "chains.py", "ranges.py", "search.py",
-                     "compare.py", "diff.py")
+                     "compare.py", "diff.py", "vocab.py")
 
 
 def generator_hash():
