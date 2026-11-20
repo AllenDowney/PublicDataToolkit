@@ -233,6 +233,31 @@
           "description": "The publisher's number for this item in the questionnaire, as printed (AD-7b, Q26, BC-6a). Per wording, since numbers change by wave.",
           "type": "string"
         },
+        "numbers": {
+          "description": "When one wording keeps its text but its item number changes by wave (YRBSS Q22 in 1999, Q26 in 2023): each number with the waves it applies to. Use instead of `number`.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "string"
+              },
+              "waves": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/wave"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "number",
+              "waves"
+            ],
+            "additionalProperties": false
+          }
+        },
         "stem": {
           "description": "Text shared by every item in a battery, when the publisher separates it.",
           "type": "string"
@@ -279,7 +304,13 @@
       "required": [
         "text"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "not": {
+        "required": [
+          "number",
+          "numbers"
+        ]
+      }
     },
     "value": {
       "type": "object",
