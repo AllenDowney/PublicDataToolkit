@@ -254,7 +254,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 59 — A Cooperative Election Study slice
 
-`DOING (red)`. The CES (Harvard Dataverse) in `~/pdt-ces`: the cumulative common-content file and two or three yearly files, linked by `derived_from` where the guide documents it, a second cumulative↔yearly case after the ANES. Record the Dataverse license and leave the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-59.md`, when you claim it.
+`DONE (red)`. The CES (Harvard Dataverse) in `~/pdt-ces`: the cumulative common-content file and two or three yearly files, linked by `derived_from` where the guide documents it, a second cumulative↔yearly case after the ANES. Record the Dataverse license and leave the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-59.md`, when you claim it.
 
 ### Task 60 — An NSDUH slice
 
