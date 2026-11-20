@@ -10,6 +10,7 @@ absent (planning/daaf.md, from DAAF's data-ingest agent): `Result.skip`, or a re
 says "skipped". `Result.not_run` lists them, and `pdt check` prints them as "not run".
 """
 
+import collections
 import json
 import re
 import subprocess
@@ -67,6 +68,7 @@ class Repo:
     derived: list
     code_lists: list = field(default_factory=list)
     stored: dict = field(default_factory=dict)   # tables as on disk, before code lists are expanded
+    _by_name: tuple = field(default=None, repr=False, compare=False)   # (shape of tables, name index)
 
     @classmethod
     def load(cls, root):
@@ -100,15 +102,23 @@ class Repo:
 
     def resolve(self, name, release=None, table=None):
         """Records matching a reference: [(release, table, record)]."""
-        out = []
-        for rel, ts in self.tables.items():
-            if release is not None and rel != release:
-                continue
-            for tab, recs in ts.items():
-                if table is not None and tab != table:
-                    continue
-                out += [(rel, tab, r) for r in recs if r["name"] == name]
-        return out
+        return [(rel, tab, r) for rel, tab, r in self.name_index().get(name, [])
+                if (release is None or rel == release) and (table is None or tab == table)]
+
+    def name_index(self):
+        """{name: [(release, table, record)]}, in the order of self.tables, built once and rebuilt
+        if the tables change shape. resolve() runs once per group member, link end and correction,
+        so a scan of every record each time is quadratic (GSS: 26,000 references, 14,000 records)."""
+        shape = (id(self.tables), tuple((rel, tab, id(recs), len(recs))
+                                        for rel, ts in self.tables.items() for tab, recs in ts.items()))
+        if self._by_name is None or self._by_name[0] != shape:
+            index = {}
+            for rel, ts in self.tables.items():
+                for tab, recs in ts.items():
+                    for r in recs:
+                        index.setdefault(r["name"], []).append((rel, tab, r))
+            self._by_name = (shape, index)
+        return self._by_name[1]
 
     @property
     def records(self):
@@ -228,7 +238,7 @@ def check_references(repo, result):
         for tab, recs in ts.items():
             where = f"release {release}" + (f", table {tab}" if tab else "")
             seen = [r["name"] for r in recs]
-            dupes = sorted({n for n in seen if seen.count(n) > 1})
+            dupes = sorted(n for n, k in collections.Counter(seen).items() if k > 1)
             if dupes:
                 result.fail("C2", f"duplicate names in {where}: {dupes}")
             reserved = sorted(n for n in seen if n.endswith("__code") or n == "_row")
@@ -244,7 +254,7 @@ def check_references(repo, result):
 
     for kind, items in [("group", repo.groups), ("correction", repo.corrections)]:
         ids = [x["id"] for x in items]
-        dupes = sorted({i for i in ids if ids.count(i) > 1})
+        dupes = sorted(i for i, k in collections.Counter(ids).items() if k > 1)
         if dupes:
             result.fail("C2", f"duplicate {kind} ids: {dupes}")
 

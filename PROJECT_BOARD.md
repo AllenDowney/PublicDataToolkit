@@ -304,3 +304,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 71 — `pdt check` compares codebook counts with the data
 
 `DONE (blue)`. C5 now also compares each code's `n` in `values`, and each wave's `n` in `availability`, with the data, at warn level. It honors `data_rows` and `data_waves`; counts it can't compare are listed as not run (Task 70). Run across 11 repos with data, with Task 58's round-trip gate bypassed in scratch: all match except one NLSY97 count off by 2. Details: [`planning/tasks/task-71.md`](planning/tasks/task-71.md).
+
+### Task 72 — Make `pdt check` fast on the full GSS
+
+`DONE (blue)`. Profiled on the full GSS: C1 resolved every schema `$ref` at each use, and C2's `Repo.resolve` scanned every record for each of 26,000 references. Schemas are now inlined once, and names indexed. Output is identical on four repos, and GSS takes 18–27 s, down from 76 s. The reported 40 minutes didn't reproduce. Details: [`planning/tasks/task-72.md`](planning/tasks/task-72.md).
