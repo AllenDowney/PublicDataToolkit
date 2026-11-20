@@ -1,6 +1,6 @@
 # Task 69 — Panel responses spread across rounds (NLSY)
 
-**Status:** `TODO (yellow, after Task 65)`. Created by the coordinator, 2026-11-20, at Allen's request.
+**Status:** `DOING (yellow)`: started 2026-11-20. Created by the coordinator, 2026-11-20, at Allen's request.
 
 ## The problem
 

@@ -295,7 +295,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 69 — Panel responses spread across rounds (NLSY)
 
-`TODO (yellow, after Task 65)`. In a panel like the NLSY, a given respondent isn't interviewed in every round, and many questions ask about the time "since the date of last interview", so the answer for a person at a given age, or about a given year, may be in any of several rounds. Investigate how NLS documents this and what practice it recommends, describe it in the metadata, and design (not yet build) a layer on top that answers "this question, for this person, at age A or in year Y". Details: [`planning/tasks/task-69.md`](planning/tasks/task-69.md).
+`DOING (yellow)`. In a panel like the NLSY, a given respondent isn't interviewed in every round, and many questions ask about the time "since the date of last interview", so the answer for a person at a given age, or about a given year, may be in any of several rounds. Investigate how NLS documents this and what practice it recommends, describe it in the metadata, and design (not yet build) a layer on top that answers "this question, for this person, at age A or in year Y". Details: [`planning/tasks/task-69.md`](planning/tasks/task-69.md).
 
 ### Task 70 — `pdt check` says which checks didn't run, and why
 
