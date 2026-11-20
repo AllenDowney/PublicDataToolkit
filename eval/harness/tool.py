@@ -2,7 +2,8 @@
 
 Usage (through the shims setup_run.py writes):
     read PATH [FIRST LAST]       a file under the sandbox, or lines FIRST..LAST; a directory is listed
-    search DATASET FILTER_JSON   pdt search on that dataset's repo
+    search DATASET FILTER_JSON [--names] [--limit N] [--offset N] [--release ID|all]
+                                 pdt search on that dataset's repo
     search catalog FILTER_JSON   pdt search --catalog across the repos (catalog questions)
 
 Configuration comes from the run's config.json, named by $EVAL_CONFIG:
@@ -73,19 +74,42 @@ def do_read(cfg, args):
     return emit(cfg, "read", args, "".join(lines))
 
 
+# pdt search's output options (Task 53), passed through as given.
+OPTIONS = {"--names": 0, "--limit": 1, "--offset": 1, "--release": 1}
+
+
+def split_options(rest):
+    """(options, error) from the arguments after DATASET FILTER_JSON."""
+    out, i = [], 0
+    while i < len(rest):
+        opt = rest[i]
+        if opt not in OPTIONS:
+            return None, f"unknown option {opt}; options: {', '.join(OPTIONS)}"
+        n = OPTIONS[opt]
+        if n and i + n >= len(rest):
+            return None, f"{opt} needs a value"
+        out += rest[i:i + 1 + n]
+        i += 1 + n
+    return out, None
+
+
 def do_search(cfg, args):
-    if len(args) == 2 and args[0] == "catalog" and cfg.get("catalog"):
+    opts, err = split_options(args[2:]) if len(args) >= 2 else ([], None)
+    if err:
+        return emit(cfg, "search", args, "error: " + err)
+    args = args[:2] + opts
+    if len(args) >= 2 and args[0] == "catalog" and cfg.get("catalog"):
         env = dict(os.environ, PYTHONPATH=cfg["pdt_lib"])
         proc = subprocess.run([cfg["python"], "-m", "pdt", "search", "--catalog", cfg["catalog"],
-                               "--filter", args[1]], capture_output=True, text=True, env=env)
+                               "--filter", args[1], *opts], capture_output=True, text=True, env=env)
         text = proc.stdout if proc.returncode == 0 else "error: " + proc.stderr.strip().splitlines()[-1]
         return emit(cfg, "search", args, text)
-    if len(args) != 2 or args[0] not in cfg["repos"]:
+    if len(args) < 2 or args[0] not in cfg["repos"]:
         return emit(cfg, "search", args,
                     f"usage: search DATASET FILTER_JSON; datasets: {', '.join(cfg['repos'])}")
     env = dict(os.environ, PYTHONPATH=cfg["pdt_lib"])
     proc = subprocess.run([cfg["python"], "-m", "pdt", "search", cfg["repos"][args[0]],
-                           "--filter", args[1]], capture_output=True, text=True, env=env)
+                           "--filter", args[1], *opts], capture_output=True, text=True, env=env)
     text = proc.stdout if proc.returncode == 0 else "error: " + proc.stderr.strip().splitlines()[-1]
     return emit(cfg, "search", args, text)
 

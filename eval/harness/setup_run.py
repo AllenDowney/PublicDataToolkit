@@ -54,8 +54,8 @@ QUESTIONS = {
 CATALOG_RULES = """- The catalog is in `{sandbox}/catalog/agent/`. Start with its `index.md`.
 - Read files ONLY with `{sandbox}/bin/read PATH [FIRST LAST]` (PATH relative to `{sandbox}`;
   FIRST and LAST are line numbers; a directory path lists it). Search ONLY with
-  `{sandbox}/bin/search catalog FILTER_JSON`, which runs `pdt search --catalog` across every
-  dataset in the catalog. Run them with the Bash tool. Don't use cat, grep, ls, the Read tool or
+  `{sandbox}/bin/search catalog FILTER_JSON [OPTIONS]`, which runs `pdt search --catalog` across
+  every dataset in the catalog; OPTIONS are `--names`, `--limit N` and `--offset N` (see index.md). Run them with the Bash tool. Don't use cat, grep, ls, the Read tool or
   any other way of looking at files, and don't look anywhere else on disk."""
 
 
@@ -70,7 +70,9 @@ PROMPT = """You are being evaluated on finding survey variables using generated 
 - The metadata is in `{sandbox}`, which holds {dirs}. Start with each `agent/SKILL.md`.
 - Read files ONLY with `{sandbox}/bin/read PATH [FIRST LAST]` (PATH relative to `{sandbox}`;
   FIRST and LAST are line numbers; a directory path lists it). Search ONLY with
-  `{sandbox}/bin/search DATASET FILTER_JSON`, where DATASET is one of {datasets}. Run them with
+  `{sandbox}/bin/search DATASET FILTER_JSON [OPTIONS]`, where DATASET is one of {datasets} and
+  OPTIONS are `pdt search`'s `--names`, `--limit N`, `--offset N` and `--release ID|all` (see
+  SKILL.md). Run them with
   the Bash tool. Don't use cat, grep, ls, the Read tool or any other way of looking at files, and
   don't look anywhere else on disk.
 - Everything these commands print counts against a budget of {budget:,} tokens (characters / 4).

@@ -138,3 +138,23 @@ Two are new:
 **Expected difficulty.**
 - The ballot question's line form alone is over 30,000 tokens, so an agent has to rely on `search`.
 - The catalog's own `index.md` uses "sad" and "depress" as its search example. That makes the catalog question easier than a cold one, as with the SKILL.md caveat in RESULTS.md.
+
+## Task 53: after the search fixes (written before any Task 53 run)
+
+**What changed.** Everything else is as in Task 51: the same Sonnet agents, two per question, the same budget and the same keys. The changes come from the Task 51 findings:
+- **Library.** PublicDataToolkit `3310e55`:
+  - `pdt search` defaults to the current release, with `--release all|ID`, `--names`, `--limit` and `--offset`;
+  - a `waves` filter;
+  - catalog search returns and filters waves;
+  - SKILL.md says to search first, gives index.md's size, and names the scale signatures.
+- **The copies.** Records are at the same commits as Task 51 (pdt-gss `cf22b43` and the rest). `agent/` in pdt-gss, pdt-anes-cdf and pdt-nsfg, and the catalog, are regenerated with `3310e55`. The copies' `COMMITS` file says so.
+- **The harness.** `search` passes `--names`, `--limit N`, `--offset N` and `--release ID|all` through to `pdt search`. The prompt's `search` line names them and points to SKILL.md, or to the catalog's index.md.
+
+**Questions.** `religion_full`, `gss_ballot_a_1988_full` and `catalog_sadness`, two runs each (`-3`, `-4`). The keys are those of `280dd86`, with `catalog_sadness` as fixed in `58e55f6`. `gss_spending_2024` isn't rerun.
+
+**Expected effects of the fixes:**
+- **Ballot:** the `available` search with `--names` is about 2,200 tokens, so a complete answer fits the budget.
+- **Religion:** a `subject` search for Religion is 405 rows in the current release.
+- **Catalog:** search now returns years.
+
+The key's hit/neutral boundary still decides recall for religion.
