@@ -12,7 +12,7 @@ A [Copier](https://copier.readthedocs.io/) template for starting a dataset repo 
 Install Copier in its own environment (`pip install copier`). Then copy from the toolkit's root, at a release tag, giving the toolkit by absolute path (or by URL, once the toolkit is published):
 
 ```bash
-copier copy --vcs-ref v0.2.0 /abs/path/to/PublicDataToolkit pdt-<dataset-id>
+copier copy --vcs-ref v0.2.1 /abs/path/to/PublicDataToolkit pdt-<dataset-id>
 ```
 
 It asks for the dataset id, title, publisher, terms URL, first release and first source. Copier records the path and the tag in `.copier-answers.yml`, and `copier update` needs both. A relative path breaks `copier update` from inside the new repo. Without `--vcs-ref`, Copier uses the latest tag.
