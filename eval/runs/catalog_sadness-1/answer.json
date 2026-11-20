@@ -1,0 +1,19 @@
+{"question": "catalog_sadness",
+ "label": "approximate",
+ "items": [
+  {"dataset": "yrbss", "table": "national", "name": "q26", "waves": [1999,2001,2003,2005,2007,2009,2011,2013,2015,2017,2019,2021,2023]},
+  {"dataset": "yrbss", "table": "national", "name": "qn26", "waves": [1999,2001,2003,2005,2007,2009,2011,2013,2015,2017,2019,2021,2023]},
+  {"dataset": "gss", "table": null, "name": "sad", "waves": [1996]},
+  {"dataset": "gss", "table": null, "name": "sadblue", "waves": [2004]},
+  {"dataset": "gss", "table": null, "name": "cesd1", "waves": [2016]},
+  {"dataset": "gss", "table": null, "name": "cesd5", "waves": [2016]},
+  {"dataset": "gss", "table": null, "name": "nocheer", "waves": []},
+  {"dataset": "gss", "table": null, "name": "hopeless", "waves": []},
+  {"dataset": "gss", "table": null, "name": "unhappy", "waves": []},
+  {"dataset": "gss", "table": null, "name": "hlthdep", "waves": []},
+  {"dataset": "gss", "table": null, "name": "feeldown", "waves": []},
+  {"dataset": "gss", "table": null, "name": "emoprobs", "waves": []}
+ ],
+ "sources": ["pdt search --catalog text filter [sad, hopeless, depress, feel down, feeling down]", "yrbss.txt lines 1-40", "gss.part13.txt lines 221-226", "gss.part2.txt lines 362-379"],
+ "notes": "Text search is always approximate. Waves for the last six GSS variables (nocheer, hopeless, unhappy, hlthdep, feeldown, emoprobs) were not read because of the token budget; they are listed as candidates with empty waves. yrbss year list for q26/qn26 is the 1999-2023 range expanded to the odd survey years. Excluded: brfss MENTHLTH (days mental health not good), ADDEPEV2/3 (told have depressive disorder), yrbss q84, and GSS help-seeking/treatment/vignette variables (down1, treat10, depress, etc.), which are not about the respondent's own sadness. cesd and sad appear to be single-wave items."
+}

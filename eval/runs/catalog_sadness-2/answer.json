@@ -1,0 +1,130 @@
+{
+ "question": "catalog_sadness",
+ "label": "approximate",
+ "items": [
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sad",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "shakeblu",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "nocheer",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "hopeless",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "wrthless",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "downblue",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "cesd1",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "cesd5",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "emoprobs",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sadblue",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "unhappy",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "hlthdep",
+   "waves": []
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "feeldown",
+   "waves": []
+  },
+  {
+   "dataset": "yrbss",
+   "table": "national",
+   "name": "q26",
+   "waves": [
+    1999,
+    2001,
+    2003,
+    2005,
+    2007,
+    2009,
+    2011,
+    2013,
+    2015,
+    2017,
+    2019,
+    2021,
+    2023
+   ]
+  },
+  {
+   "dataset": "yrbss",
+   "table": "national",
+   "name": "qn26",
+   "waves": [
+    1999,
+    2001,
+    2003,
+    2005,
+    2007,
+    2009,
+    2011,
+    2013,
+    2015,
+    2017,
+    2019,
+    2021,
+    2023
+   ]
+  }
+ ],
+ "sources": [
+  "catalog/agent/index.md",
+  "text searches over the catalog (sad, hopeless, down, blue, depress, unhappy)",
+  "catalog/agent/yrbss.txt lines for q26, qn26"
+ ],
+ "notes": "Text search is always approximate. GSS waves were NOT retrieved because of the read budget: waves lists are empty for gss variables, look them up in gss.part*.txt. YRBSS waves given as 1999-2023 as listed (odd years, assumed biennial). Excluded: BRFSS MENTHLTH (days of poor mental health) and ADDEPEV (told had depression), GSS emoprobs is borderline (emotional problems, included), wrthless is worthlessness (included as borderline). Other GSS hits (depression help, treatment, attitudes, vignettes) are not about the respondent's own feeling."
+}

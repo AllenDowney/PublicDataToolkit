@@ -1,0 +1,13 @@
+{"question": "religion_full",
+ "label": "approximate",
+ "items": [
+  {"dataset": "gss", "table": null, "name": "relig"},
+  {"dataset": "anes-cdf", "table": null, "name": "VCF0128"},
+  {"dataset": "anes-cdf", "table": null, "name": "VCF0130"},
+  {"dataset": "anes-cdf", "table": null, "name": "VCF0846"},
+  {"dataset": "anes-cdf", "table": null, "name": "VCF0847"},
+  {"dataset": "anes-cdf", "table": null, "name": "VCF0850"},
+  {"dataset": "nsfg", "table": "pregnancy", "name": "RELIGION"}
+ ],
+ "sources": ["anes-cdf/agent/shards/table/20260205.txt (full release, read by judgment)", "nsfg/agent/shards/table/2022-2023-pregnancy.txt", "gss/agent/index.md (output too large, mostly unseen)", "search gss {\"name\":\"relig\"}"],
+ "notes": "Budget was exhausted early because gss/agent/index.md was very large, so the GSS and most NSFG tables were not reviewed. GSS list is only the obvious name relig; many other GSS variables (attend, pray, bible, reliten, denom, etc.) were not checked. NSFG female/male tables and 2017-2019 tables were not read; only the 2022-2023 pregnancy RELIGION was seen. ANES list picked by reading the full 39-variable release. Label approximate because selection is by judgment and incomplete."}

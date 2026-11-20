@@ -1,0 +1,7 @@
+{"time": 1795189165.8377452, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 3934, "tokens": 983, "printed": true, "spent_after": 983}
+{"time": 1795189167.6792793, "call": "read", "args": ["gss/agent/index.md"], "chars": 126520, "tokens": 31630, "printed": true, "spent_after": 32613}
+{"time": 1795189171.5698416, "call": "search", "args": ["gss", "{\"available\":{\"wave\":2024},\"text\":\"too much\"}"], "chars": 7326, "tokens": 1831, "printed": true, "spent_after": 34444}
+{"time": 1795189177.9055457, "call": "search", "args": ["gss", "{\"available\":{\"wave\":2024},\"text\":\"too much\"}"], "chars": 7326, "tokens": 1831, "printed": true, "spent_after": 36275}
+{"time": 1795189183.982259, "call": "search", "args": ["gss", "{\"available\":{\"wave\":2024},\"text\":\"too little\"}"], "chars": 6814, "tokens": 1703, "printed": true, "spent_after": 37978}
+{"time": 1795189187.3719316, "call": "search", "args": ["gss", "{\"available\":{\"wave\":2024},\"text\":\"about the right amount\"}"], "chars": 6555, "tokens": 1638, "printed": true, "spent_after": 39616}
+{"time": 1795189190.3112986, "call": "search", "args": ["gss", "{\"available\":{\"wave\":2024},\"text\":\"spending\"}"], "chars": 6541, "tokens": 1635, "printed": false, "spent_after": 39616}

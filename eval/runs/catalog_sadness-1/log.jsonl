@@ -1,0 +1,84 @@
+{"time": 1795189165.8982878, "call": "read", "args": ["catalog/agent/index.md"], "chars": 3715, "tokens": 928, "printed": true, "spent_after": 928}
+{"time": 1795189172.0010743, "call": "search", "args": ["catalog", "{\"text\": [\"sad\", \"hopeless\", \"depress\", \"feel down\", \"feeling down\"]}"], "chars": 20736, "tokens": 5184, "printed": true, "spent_after": 6112}
+{"time": 1795189174.625294, "call": "read", "args": ["catalog/agent/yrbss.txt", "1", "12"], "chars": 1443, "tokens": 360, "printed": true, "spent_after": 6472}
+{"time": 1795189179.5386746, "call": "search", "args": ["catalog", "{\"name\":[\"sad\",\"nocheer\",\"hopeless\",\"cesd1\",\"cesd5\",\"sadblue\",\"unhappy\",\"hlthdep\",\"feeldown\",\"emoprobs\"]}"], "chars": 61, "tokens": 15, "printed": true, "spent_after": 6487}
+{"time": 1795189182.8143475, "call": "read", "args": ["catalog/agent/yrbss.txt", "13", "40"], "chars": 3021, "tokens": 755, "printed": true, "spent_after": 7242}
+{"time": 1795189187.1109412, "call": "search", "args": ["catalog", "{\"name\":\"sad\"}"], "chars": 1698, "tokens": 424, "printed": true, "spent_after": 7666}
+{"time": 1795189187.1754317, "call": "search", "args": ["catalog", "{\"text\":[\"sad\"]}", "--help"], "chars": 45, "tokens": 11, "printed": true, "spent_after": 7677}
+{"time": 1795189198.5836082, "call": "search", "args": ["catalog", "{\"name\":\"sad\",\"waves\":[1996]}"], "chars": 932, "tokens": 233, "printed": true, "spent_after": 7910}
+{"time": 1795189198.634881, "call": "read", "args": ["catalog/agent/gss.part1.txt", "1", "8"], "chars": 1136, "tokens": 284, "printed": true, "spent_after": 8194}
+{"time": 1795189204.6955495, "call": "search", "args": ["catalog", "{\"name\":\"sad\",\"wave\":1996}"], "chars": 914, "tokens": 228, "printed": true, "spent_after": 8422}
+{"time": 1795189207.7721832, "call": "search", "args": ["catalog", "{\"name\":\"sad\",\"year\":1996}"], "chars": 914, "tokens": 228, "printed": true, "spent_after": 8650}
+{"time": 1795189211.8525357, "call": "read", "args": ["catalog/agent/gss.part1.txt", "5", "5"], "chars": 171, "tokens": 42, "printed": true, "spent_after": 8692}
+{"time": 1795189211.903779, "call": "read", "args": ["catalog/agent/gss.part2.txt", "5", "5"], "chars": 138, "tokens": 34, "printed": true, "spent_after": 8726}
+{"time": 1795189211.9697838, "call": "read", "args": ["catalog/agent/gss.part3.txt", "5", "5"], "chars": 146, "tokens": 36, "printed": true, "spent_after": 8762}
+{"time": 1795189212.017364, "call": "read", "args": ["catalog/agent/gss.part4.txt", "5", "5"], "chars": 134, "tokens": 33, "printed": true, "spent_after": 8795}
+{"time": 1795189212.067127, "call": "read", "args": ["catalog/agent/gss.part5.txt", "5", "5"], "chars": 198, "tokens": 49, "printed": true, "spent_after": 8844}
+{"time": 1795189212.115797, "call": "read", "args": ["catalog/agent/gss.part6.txt", "5", "5"], "chars": 162, "tokens": 40, "printed": true, "spent_after": 8884}
+{"time": 1795189212.1668947, "call": "read", "args": ["catalog/agent/gss.part7.txt", "5", "5"], "chars": 230, "tokens": 57, "printed": true, "spent_after": 8941}
+{"time": 1795189212.2165575, "call": "read", "args": ["catalog/agent/gss.part8.txt", "5", "5"], "chars": 183, "tokens": 45, "printed": true, "spent_after": 8986}
+{"time": 1795189212.282928, "call": "read", "args": ["catalog/agent/gss.part9.txt", "5", "5"], "chars": 122, "tokens": 30, "printed": true, "spent_after": 9016}
+{"time": 1795189212.331625, "call": "read", "args": ["catalog/agent/gss.part10.txt", "5", "5"], "chars": 132, "tokens": 33, "printed": true, "spent_after": 9049}
+{"time": 1795189212.3769183, "call": "read", "args": ["catalog/agent/gss.part11.txt", "5", "5"], "chars": 229, "tokens": 57, "printed": true, "spent_after": 9106}
+{"time": 1795189212.42687, "call": "read", "args": ["catalog/agent/gss.part12.txt", "5", "5"], "chars": 214, "tokens": 53, "printed": true, "spent_after": 9159}
+{"time": 1795189212.482086, "call": "read", "args": ["catalog/agent/gss.part13.txt", "5", "5"], "chars": 157, "tokens": 39, "printed": true, "spent_after": 9198}
+{"time": 1795189212.544332, "call": "read", "args": ["catalog/agent/gss.part14.txt", "5", "5"], "chars": 184, "tokens": 46, "printed": true, "spent_after": 9244}
+{"time": 1795189212.5988762, "call": "read", "args": ["catalog/agent/gss.part15.txt", "5", "5"], "chars": 208, "tokens": 52, "printed": true, "spent_after": 9296}
+{"time": 1795189212.6483204, "call": "read", "args": ["catalog/agent/gss.part16.txt", "5", "5"], "chars": 200, "tokens": 50, "printed": true, "spent_after": 9346}
+{"time": 1795189218.637622, "call": "read", "args": ["catalog/agent/gss.part1.txt"], "chars": 76406, "tokens": 19101, "printed": true, "spent_after": 28447}
+{"time": 1795189218.6869252, "call": "read", "args": ["catalog/agent/gss.part2.txt"], "chars": 76317, "tokens": 19079, "printed": false, "spent_after": 28447}
+{"time": 1795189218.7426934, "call": "read", "args": ["catalog/agent/gss.part3.txt"], "chars": 76331, "tokens": 19082, "printed": false, "spent_after": 28447}
+{"time": 1795189218.7877188, "call": "read", "args": ["catalog/agent/gss.part4.txt"], "chars": 76381, "tokens": 19095, "printed": false, "spent_after": 28447}
+{"time": 1795189218.847654, "call": "read", "args": ["catalog/agent/gss.part5.txt"], "chars": 76305, "tokens": 19076, "printed": false, "spent_after": 28447}
+{"time": 1795189218.8931103, "call": "read", "args": ["catalog/agent/gss.part6.txt"], "chars": 76121, "tokens": 19030, "printed": false, "spent_after": 28447}
+{"time": 1795189218.957354, "call": "read", "args": ["catalog/agent/gss.part7.txt"], "chars": 76209, "tokens": 19052, "printed": false, "spent_after": 28447}
+{"time": 1795189219.0229504, "call": "read", "args": ["catalog/agent/gss.part8.txt"], "chars": 76330, "tokens": 19082, "printed": false, "spent_after": 28447}
+{"time": 1795189219.0860736, "call": "read", "args": ["catalog/agent/gss.part9.txt"], "chars": 76397, "tokens": 19099, "printed": false, "spent_after": 28447}
+{"time": 1795189219.1518645, "call": "read", "args": ["catalog/agent/gss.part10.txt"], "chars": 76247, "tokens": 19061, "printed": false, "spent_after": 28447}
+{"time": 1795189219.2154713, "call": "read", "args": ["catalog/agent/gss.part11.txt"], "chars": 76329, "tokens": 19082, "printed": false, "spent_after": 28447}
+{"time": 1795189219.2768958, "call": "read", "args": ["catalog/agent/gss.part12.txt"], "chars": 76241, "tokens": 19060, "printed": false, "spent_after": 28447}
+{"time": 1795189219.3407266, "call": "read", "args": ["catalog/agent/gss.part13.txt"], "chars": 76268, "tokens": 19067, "printed": false, "spent_after": 28447}
+{"time": 1795189219.4057715, "call": "read", "args": ["catalog/agent/gss.part14.txt"], "chars": 76184, "tokens": 19046, "printed": false, "spent_after": 28447}
+{"time": 1795189219.4691358, "call": "read", "args": ["catalog/agent/gss.part15.txt"], "chars": 76240, "tokens": 19060, "printed": false, "spent_after": 28447}
+{"time": 1795189219.5358086, "call": "read", "args": ["catalog/agent/gss.part16.txt"], "chars": 76365, "tokens": 19091, "printed": false, "spent_after": 28447}
+{"time": 1795189222.7098105, "call": "read", "args": ["catalog/agent/gss.part1.txt", "1", "600"], "chars": 76406, "tokens": 19101, "printed": false, "spent_after": 28447}
+{"time": 1795189222.7723362, "call": "read", "args": ["catalog/agent/gss.part2.txt", "1", "600"], "chars": 76317, "tokens": 19079, "printed": false, "spent_after": 28447}
+{"time": 1795189222.8350446, "call": "read", "args": ["catalog/agent/gss.part3.txt", "1", "600"], "chars": 76331, "tokens": 19082, "printed": false, "spent_after": 28447}
+{"time": 1795189222.896453, "call": "read", "args": ["catalog/agent/gss.part4.txt", "1", "600"], "chars": 76381, "tokens": 19095, "printed": false, "spent_after": 28447}
+{"time": 1795189222.959636, "call": "read", "args": ["catalog/agent/gss.part5.txt", "1", "600"], "chars": 76305, "tokens": 19076, "printed": false, "spent_after": 28447}
+{"time": 1795189223.0129585, "call": "read", "args": ["catalog/agent/gss.part6.txt", "1", "600"], "chars": 76121, "tokens": 19030, "printed": false, "spent_after": 28447}
+{"time": 1795189223.061611, "call": "read", "args": ["catalog/agent/gss.part7.txt", "1", "600"], "chars": 76209, "tokens": 19052, "printed": false, "spent_after": 28447}
+{"time": 1795189223.1129231, "call": "read", "args": ["catalog/agent/gss.part8.txt", "1", "600"], "chars": 76330, "tokens": 19082, "printed": false, "spent_after": 28447}
+{"time": 1795189223.1745825, "call": "read", "args": ["catalog/agent/gss.part9.txt", "1", "600"], "chars": 76397, "tokens": 19099, "printed": false, "spent_after": 28447}
+{"time": 1795189223.2260163, "call": "read", "args": ["catalog/agent/gss.part10.txt", "1", "600"], "chars": 76247, "tokens": 19061, "printed": false, "spent_after": 28447}
+{"time": 1795189223.2779975, "call": "read", "args": ["catalog/agent/gss.part11.txt", "1", "600"], "chars": 76329, "tokens": 19082, "printed": false, "spent_after": 28447}
+{"time": 1795189223.332393, "call": "read", "args": ["catalog/agent/gss.part12.txt", "1", "600"], "chars": 76241, "tokens": 19060, "printed": false, "spent_after": 28447}
+{"time": 1795189223.3869421, "call": "read", "args": ["catalog/agent/gss.part13.txt", "1", "600"], "chars": 76268, "tokens": 19067, "printed": false, "spent_after": 28447}
+{"time": 1795189223.4490228, "call": "read", "args": ["catalog/agent/gss.part14.txt", "1", "600"], "chars": 76184, "tokens": 19046, "printed": false, "spent_after": 28447}
+{"time": 1795189223.4924524, "call": "read", "args": ["catalog/agent/gss.part15.txt", "1", "600"], "chars": 76240, "tokens": 19060, "printed": false, "spent_after": 28447}
+{"time": 1795189223.554526, "call": "read", "args": ["catalog/agent/gss.part16.txt", "1", "600"], "chars": 76365, "tokens": 19091, "printed": false, "spent_after": 28447}
+{"time": 1795189226.0605607, "call": "read", "args": ["catalog/agent/gss.part13.txt", "1", "600"], "chars": 76268, "tokens": 19067, "printed": false, "spent_after": 28447}
+{"time": 1795189226.1089518, "call": "read", "args": ["catalog/agent/gss.part13.txt", "1", "600"], "chars": 76268, "tokens": 19067, "printed": false, "spent_after": 28447}
+{"time": 1795189228.0845041, "call": "read", "args": ["catalog/agent/gss.part13.txt", "1", "600"], "chars": 76268, "tokens": 19067, "printed": false, "spent_after": 28447}
+{"time": 1795189233.3950682, "call": "read", "args": ["catalog/agent/gss.part13.txt", "300", "300"], "chars": 200, "tokens": 50, "printed": true, "spent_after": 28497}
+{"time": 1795189233.4417045, "call": "read", "args": ["catalog/agent/gss.part13.txt", "380", "380"], "chars": 219, "tokens": 54, "printed": true, "spent_after": 28551}
+{"time": 1795189233.4891899, "call": "read", "args": ["catalog/agent/gss.part2.txt", "400", "400"], "chars": 164, "tokens": 41, "printed": true, "spent_after": 28592}
+{"time": 1795189233.53694, "call": "read", "args": ["catalog/agent/gss.part10.txt", "350", "350"], "chars": 223, "tokens": 55, "printed": true, "spent_after": 28647}
+{"time": 1795189233.5946426, "call": "read", "args": ["catalog/agent/gss.part7.txt", "150", "150"], "chars": 106, "tokens": 26, "printed": true, "spent_after": 28673}
+{"time": 1795189233.6386764, "call": "read", "args": ["catalog/agent/gss.part5.txt", "100", "100"], "chars": 173, "tokens": 43, "printed": true, "spent_after": 28716}
+{"time": 1795189233.6859875, "call": "read", "args": ["catalog/agent/gss.part15.txt", "100", "100"], "chars": 218, "tokens": 54, "printed": true, "spent_after": 28770}
+{"time": 1795189233.7330675, "call": "read", "args": ["catalog/agent/gss.part16.txt", "100", "100"], "chars": 168, "tokens": 42, "printed": true, "spent_after": 28812}
+{"time": 1795189236.369414, "call": "read", "args": ["catalog/agent/gss.part13.txt", "285", "285"], "chars": 58, "tokens": 14, "printed": true, "spent_after": 28826}
+{"time": 1795189236.417961, "call": "read", "args": ["catalog/agent/gss.part13.txt", "292", "292"], "chars": 207, "tokens": 51, "printed": true, "spent_after": 28877}
+{"time": 1795189238.4474504, "call": "read", "args": ["catalog/agent/gss.part13.txt", "270", "284"], "chars": 2099, "tokens": 524, "printed": true, "spent_after": 29401}
+{"time": 1795189240.7836766, "call": "read", "args": ["catalog/agent/gss.part13.txt", "200", "200"], "chars": 221, "tokens": 55, "printed": true, "spent_after": 29456}
+{"time": 1795189240.830367, "call": "read", "args": ["catalog/agent/gss.part13.txt", "230", "230"], "chars": 143, "tokens": 35, "printed": true, "spent_after": 29491}
+{"time": 1795189240.8787878, "call": "read", "args": ["catalog/agent/gss.part13.txt", "250", "250"], "chars": 166, "tokens": 41, "printed": true, "spent_after": 29532}
+{"time": 1795189242.829627, "call": "read", "args": ["catalog/agent/gss.part13.txt", "231", "249"], "chars": 2661, "tokens": 665, "printed": true, "spent_after": 30197}
+{"time": 1795189246.5146325, "call": "read", "args": ["catalog/agent/gss.part13.txt", "201", "214"], "chars": 2128, "tokens": 532, "printed": true, "spent_after": 30729}
+{"time": 1795189248.738678, "call": "read", "args": ["catalog/agent/gss.part13.txt", "215", "220"], "chars": 941, "tokens": 235, "printed": true, "spent_after": 30964}
+{"time": 1795189250.6452324, "call": "read", "args": ["catalog/agent/gss.part13.txt", "221", "226"], "chars": 1003, "tokens": 250, "printed": true, "spent_after": 31214}
+{"time": 1795189254.427151, "call": "read", "args": ["catalog/agent/gss.part2.txt", "380", "396"], "chars": 3128, "tokens": 782, "printed": true, "spent_after": 31996}
+{"time": 1795189256.9004638, "call": "read", "args": ["catalog/agent/gss.part2.txt", "362", "379"], "chars": 2817, "tokens": 704, "printed": true, "spent_after": 32700}
+{"time": 1795189260.1279275, "call": "read", "args": ["catalog/agent/gss.part10.txt", "325", "349"], "chars": 4273, "tokens": 1068, "printed": true, "spent_after": 33768}
+{"time": 1795189262.5064783, "call": "read", "args": ["catalog/agent/gss.part10.txt", "303", "324"], "chars": 3322, "tokens": 830, "printed": true, "spent_after": 34598}

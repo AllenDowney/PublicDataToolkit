@@ -1,0 +1,250 @@
+{
+ "question": "gss_ballot_a_1988_full",
+ "label": "approximate",
+ "items": [
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "year"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "id"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "wrkstat"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "hrs1"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "hrs2"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "evwork"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "occ"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "prestige"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "wrkslf"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "industry"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "occ80"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "prestg80"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "indus80"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "found"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "occ10"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "occindv"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "occstatus"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "occtag"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "prestg10"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "prestg105plus"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "indus10"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "indstatus"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "indtag"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "marital"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "agewed"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "divorce"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "widowed"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spwrksta"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sphrs1"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sphrs2"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spevwork"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spocc"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sppres"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spwrkslf"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spind"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spocc80"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sppres80"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spind80"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spocc10"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spoccindv"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spoccstatus"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spocctag"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sppres10"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "sppres105plus"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spind10"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spindstatus"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "spindtag"
+  },
+  {
+   "dataset": "gss",
+   "table": null,
+   "name": "paocc16"
+  }
+ ],
+ "sources": [
+  "bin/search gss {available:{wave:1988,form:A}} (labeled complete, count 1282, releases 7224r3, 7224r3a)"
+ ],
+ "notes": "The search returned 1282 variables, but my first call piped through head and burned most of the budget; the full output (31630 tokens) was then refused. Only the first 48 results were seen. This list is INCOMPLETE, so labeled approximate."
+}

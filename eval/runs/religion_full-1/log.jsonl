@@ -1,0 +1,15 @@
+{"time": 1795189166.2273614, "call": "read", "args": ["gss/agent/SKILL.md"], "chars": 3934, "tokens": 983, "printed": true, "spent_after": 983}
+{"time": 1795189166.3410354, "call": "read", "args": ["anes-cdf/agent/SKILL.md"], "chars": 3971, "tokens": 992, "printed": true, "spent_after": 1975}
+{"time": 1795189166.3939111, "call": "read", "args": ["nsfg/agent/SKILL.md"], "chars": 3957, "tokens": 989, "printed": true, "spent_after": 2964}
+{"time": 1795189169.6979072, "call": "read", "args": ["gss/agent/index.md"], "chars": 126520, "tokens": 31630, "printed": true, "spent_after": 34594}
+{"time": 1795189169.8062687, "call": "read", "args": ["anes-cdf/agent/index.md"], "chars": 4922, "tokens": 1230, "printed": true, "spent_after": 35824}
+{"time": 1795189169.89491, "call": "read", "args": ["nsfg/agent/index.md"], "chars": 5274, "tokens": 1318, "printed": true, "spent_after": 37142}
+{"time": 1795189173.8191092, "call": "read", "args": ["anes-cdf/agent/shards/table/20260205.txt"], "chars": 8395, "tokens": 2098, "printed": true, "spent_after": 39240}
+{"time": 1795189173.8853443, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-female.txt"], "chars": 4223, "tokens": 1055, "printed": false, "spent_after": 39240}
+{"time": 1795189173.950232, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-male.txt"], "chars": 3266, "tokens": 816, "printed": false, "spent_after": 39240}
+{"time": 1795189174.0159225, "call": "read", "args": ["nsfg/agent/shards/table/2022-2023-pregnancy.txt"], "chars": 2108, "tokens": 527, "printed": true, "spent_after": 39767}
+{"time": 1795189174.0799031, "call": "read", "args": ["nsfg/agent/shards/table/2017-2019-female.txt"], "chars": 3463, "tokens": 865, "printed": false, "spent_after": 39767}
+{"time": 1795189174.1267972, "call": "read", "args": ["nsfg/agent/shards/table/2017-2019-male.txt"], "chars": 2877, "tokens": 719, "printed": false, "spent_after": 39767}
+{"time": 1795189174.1886597, "call": "read", "args": ["nsfg/agent/shards/table/2017-2019-pregnancy.txt"], "chars": 1413, "tokens": 353, "printed": false, "spent_after": 39767}
+{"time": 1795189174.3047333, "call": "read", "args": ["gss/agent/index.md"], "chars": 126520, "tokens": 31630, "printed": false, "spent_after": 39767}
+{"time": 1795189180.502881, "call": "search", "args": ["gss", "{\"name\":\"relig\"}"], "chars": 434, "tokens": 108, "printed": true, "spent_after": 39875}

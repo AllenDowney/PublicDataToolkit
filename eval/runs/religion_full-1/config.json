@@ -1,0 +1,21 @@
+{
+ "run_id": "religion_full-1",
+ "question": "religion_full",
+ "commits": [
+  "pdt-anes-cdf 4027ba5",
+  "pdt-chicago-crimes 36e86e0",
+  "pdt-cps-asec ceb80de",
+  "pdt-fars 0791faa",
+  "pdt-gss cf22b43",
+  "pdt-nsfg 2f794be",
+  "pdt-yrbss 86494f6",
+  "pdt-catalog 2522621",
+  "pdt-brfss e81369f (committed after pre-registration, which used a working-tree copy)"
+ ],
+ "budget": 40000,
+ "corpus_tokens": {
+  "gss": 14625306,
+  "anes-cdf": 29412,
+  "nsfg": 49546
+ }
+}
