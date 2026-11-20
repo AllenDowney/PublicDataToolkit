@@ -97,6 +97,8 @@ def test_views_and_search_by_geography(tmp_path):
     found = search(idx, {"available": {"wave": 1988, "geography": "25"}})
     assert sorted(rec["name"] for _, _, rec in found.matches) == ["alcday", "q1"]   # q1: everywhere
     assert found.label == "complete"
+    both = search(idx, {"available": {"wave": 1988, "geography": "25"}, "name": "alcday"})
+    assert [rec["name"] for _, _, rec in both.matches] == ["alcday"]
     with pytest.raises(ValueError):
         search(idx, {"available": {"wave": 1988, "county": "1"}})
 

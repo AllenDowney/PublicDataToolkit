@@ -273,7 +273,7 @@ def search(index, filt):
 
     if "name" in filt:
         want = filt["name"].lower()
-        preds.append(lambda r, t, rec: rec["name"].lower() == want)
+        preds.append(lambda r, t, rec, want=want: rec["name"].lower() == want)
 
     for key in ("group", "subject"):
         if key not in filt:
@@ -363,7 +363,7 @@ def search(index, filt):
         want = filt["text"].lower()
         labels.append("approximate")
         notes.append("text search")
-        preds.append(lambda r, t, rec: want in " ".join(
+        preds.append(lambda r, t, rec, want=want: want in " ".join(
             [rec["name"], rec.get("label") or "", question_text(rec)]).lower())
 
     matches = [(r, t, rec) for r, t, rec in scope if all(p(r, t, rec) for p in preds)]

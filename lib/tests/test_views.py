@@ -270,6 +270,7 @@ def test_available_filter(tmp_path):
     assert full.label == "complete_by_rule" and full.rule_versions == {"avail_rule": "2"}
     only = search(idx, {"available": {"wave": 1988, "form": "A"}, "name": "q1"})
     assert only.label == "complete_by_rule"           # the label covers the whole scope
+    assert names(only) == ["q1"]                      # name and available together (Task 67)
     (tmp_path / "b").mkdir()
     no_rule = make_repo(tmp_path / "b", variables=variables[:3], groups=[], corrections=[])
     result = search(index_of(no_rule), {"available": {"wave": 1988}})
