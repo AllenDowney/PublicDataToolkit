@@ -96,3 +96,8 @@ standard_version:
   type: str
   help: "The version of the standard this repo meets"
   default: "0.1"
+
+copyright_holder:
+  type: str
+  help: "Who holds the copyright on this repo's code and metadata (the LICENSE names them)"
+  default: "Allen Downey"

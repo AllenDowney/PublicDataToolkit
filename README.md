@@ -32,4 +32,4 @@ The approach generalizes work on the GSS and ANES in [CultureWar](https://github
 
 ## License
 
-MIT. Datasets built with these instructions keep their publishers' terms.
+Code (lib/, schema/, scripts) is under the MIT License ([`LICENSE`](LICENSE)). The standard, the instructions, the skills and the planning documents are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Each dataset repository has the same split, and keeps its publisher's terms for the publisher's files.
