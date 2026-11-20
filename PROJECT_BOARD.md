@@ -238,6 +238,6 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 - **Drafts of emails** go outside every repo (`~/pdt-private/`). **The web:** on a 403, try a headless browser, and stop at a bot check.
 - **Environment:** the `CultureWar` conda env; R, DuckDB and Polars are in `pdt-xlang`.
 
-### Task 54 — An ATUS slice
+### Task 56 — An ATUS slice
 
-`DOING (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2023: the respondent file, the activity summary and the activity file's codes. The activity codes are the first real test of shared code lists (`metadata/code_lists.jsonl`, STANDARD.md §4.5). Details: [`planning/tasks/task-54.md`](planning/tasks/task-54.md).
+`DOING (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2023: the respondent file, the activity summary and the activity file's codes. The activity codes are the first real test of shared code lists (`metadata/code_lists.jsonl`, STANDARD.md §4.5). Blocked on bls.gov downloads. Details: [`planning/tasks/task-56.md`](planning/tasks/task-56.md).
