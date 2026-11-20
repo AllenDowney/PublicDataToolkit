@@ -1,10 +1,10 @@
 # The PublicDataToolkit standard
 
-**Version 0.1, draft, 2026-11-19.** Written for the snake_case spike (Task 5 on the [project board](PROJECT_BOARD.md)) and expected to change once the GSS, ANES and MTF slices test it. The parts most likely to change are listed in §10.
+**Version 0.2, draft, 2026-11-20.** Tested so far on about twenty public datasets, and expected to change as more test it. The parts most likely to change are listed in §10.
 
 This file says what a finished dataset repository must contain. An agent building or improving a dataset repo reads this file, follows [`instructions/`](instructions/README.md), and finishes when `pdt check` passes (§9). The JSON Schemas in [`schema/`](schema/) are the exact form of the records described here. Where this file and a schema disagree, fix whichever one is wrong; don't work around it.
 
-The reasoning behind the standard is in [`planning/plan.md`](planning/plan.md) §3–4 and in §2 and §5 of the [earlier plan](planning/survey_metadata_packages_plan.md).
+The reasoning behind the standard is in [`PROPOSAL.md`](PROPOSAL.md).
 
 ## 1. What a dataset repository is
 
@@ -160,7 +160,7 @@ Each variable record has `provenance.record`, the origin of the record as a whol
 | `upstream_package` | read from a third-party package that redistributes the publisher's documentation (gssrdoc) | `source` |
 | `data_file` | read from the data file's own metadata: Stata or SPSS labels, extended missing values | `source` |
 | `rule` | computed by a named rule from other fields | `rule`; `rule_version` |
-| `hand` | a judgment entered through a hand-written build input, by a person or an agent. `author` names who made it: a person, or the agent and its task ("Claude (PublicDataToolkit Task 35)"), never a person who didn't make or check it | `author`, `date` |
+| `hand` | a judgment entered through a hand-written build input, by a person or an agent. `author` names who made it: a person, or the agent and the work it was doing ("Claude (PublicDataToolkit Task 35)", naming the task in the toolkit's planning files), never a person who didn't make or check it | `author`, `date` |
 | `model` | drafted by an LLM | `model`, `date`, `reviewed`; `prompt_version` when there is one |
 
 ## 4. Variable records
@@ -465,4 +465,4 @@ The spike should try to break these:
 - **Tables** (§2.1) were added for the NSFG and FARS and are tested only on toy data so far. Code-list tables (Chicago's IUCR) work for joins in the data; their codes as metadata are shared code lists (§4.5).
 - **Shared code lists** (§4.5) are new, with two uses so far, Chicago's IUCR codes and the GSS occupation lists. Lists shared *across* datasets, such as FIPS state codes or Census occupation codes used by several repos, are out of scope: each dataset keeps its own list (FARS and BRFSS use different subsets of the state codes).
 
-Record what breaks, and why, on the [project board](PROJECT_BOARD.md) under Task 5.
+Report what breaks, and why, as an issue (a standard proposal) on this repository.
