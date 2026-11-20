@@ -202,6 +202,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DONE (red)`. Read only. Toolkit: clean except §5's history (a verified rewrite plan); 7 dataset repos ready, nsfg after a terms confirmation, brfss and nhis not yet; commands in order. [`planning/publish_checklist.md`](planning/publish_checklist.md). Details: [`planning/tasks/task-52.md`](planning/tasks/task-52.md).
 
+### Task 53 — Search fixes from the full-GSS eval
+
+`DOING (blue)`. `pdt search` defaults to the current release, with `--names` and paging; catalog search returns and filters waves; SKILL.md points agents to exact searches first; then three eval questions rerun. Details: [`planning/tasks/task-53.md`](planning/tasks/task-53.md).
+
 
 
 
