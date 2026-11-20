@@ -90,6 +90,8 @@ datasets:
   - '2024'
   - '2017'
 - id: gss
+  repo: https://github.com/AllenDowney/pdt-gss
+  site: https://allendowney.github.io/pdt-gss/
   title: General Social Survey
   publisher: NORC at the University of Chicago
   kind: survey
