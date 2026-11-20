@@ -258,7 +258,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 60 — An NSDUH slice
 
-`DOING (blue)`. The National Survey on Drug Use and Health (SAMHSA) in `~/pdt-nsduh`: annual public-use files, recent years, with substance use, mental health and the design variables. SAMHSA's terms recorded for Allen to decide. Details: [`planning/tasks/task-60.md`](planning/tasks/task-60.md).
+`DONE (blue)`; terms pending Allen. NSDUH 2023–2025 public use files in `~/pdt-nsduh`: 43–47 variables per year (design, substance use, mental health), 86 links from SAMHSA's comparability chart; codebook counts match the data exactly; `pdt check` 0 failures. Details: [`planning/tasks/task-60.md`](planning/tasks/task-60.md).
 
 ### Task 61 — An NHANES slice
 
