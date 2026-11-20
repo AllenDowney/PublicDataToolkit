@@ -1,0 +1,21 @@
+{
+ "run": "gss_spending_2024-4",
+ "question": "gss_spending_2024",
+ "answered": true,
+ "key_hits": 27,
+ "reported": 27,
+ "found": 27,
+ "recall": 1.0,
+ "precision": 1.0,
+ "misses": [],
+ "false_positives": [],
+ "tokens_read": 1517,
+ "corpus_tokens": 14625651,
+ "effort": 0.0,
+ "calls": 2,
+ "searches": 1,
+ "refused": 0,
+ "label": "complete_by_rule",
+ "expected_label": "complete_by_rule",
+ "label_ok": true
+}

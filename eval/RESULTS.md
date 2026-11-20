@@ -143,4 +143,14 @@ Both catalog runs got every hit's years right (`waves_exact` 1.0). None of the s
 ### Next
 
 - Topic recall in the GSS is now limited by the publisher's subject list. A topic annotation for religion, or a battery or section group for the belief modules, would let a search reach the other 37 items. That's §7.5's with/without-annotations comparison, which this setup can now run.
-- `gss_spending_2024` wasn't rerun. SKILL.md now names `spending_3` and says what it gives, so a rerun would test whether the label problem (finding 3 of Task 51) is gone.
+
+### `gss_spending_2024` rerun
+
+Added at the coordinator's request, under the protocol addendum (`5e88f50`) and the same setup.
+
+| Run | Recall | Precision | Tokens read | Calls | Label | Expected | Label ok |
+|---|---|---|---|---|---|---|---|
+| `gss_spending_2024-3` | 1.0 | 1.0 | 1,517 | 2 | `complete_by_rule` | `complete_by_rule` | yes |
+| `gss_spending_2024-4` | 1.0 | 1.0 | 1,517 | 2 | `complete_by_rule` | `complete_by_rule` | yes |
+
+Both agents read SKILL.md and ran one search, `{"derived": {"scale_signature": "spending_3"}, "available": {"wave": 2024}}` with `--names`, and reported its 27 names under its label. In Task 51, both agents found the same 27 items with text searches and labeled them `approximate`. Naming the dataset's signatures in SKILL.md closed Task 51's finding 3. Neither agent piped output or wrote outside the Write tool.
