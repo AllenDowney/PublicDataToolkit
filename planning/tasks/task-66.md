@@ -231,3 +231,7 @@ The record fields don't change. The mapping from our type names to data-dict's i
 1. Approve the plan, or choose between A and B for PR 1 first.
 2. If approved: fork tidyverse/data-dict, open PR 1 as a draft with the spec text only, and ask Hadley for a yes on the wording. Outward-facing, so Allen's call.
 3. Installing Rust here to implement and test after sign-off (about 1 GB), under the memory cap.
+
+## Progress
+
+- 2026-11-20: Allen approved the plan with form B. PR 1's spec text is drafted locally in `~/data-dict` on branch `value-labels` (commit `113b002`: `site/spec.md` gains a "Value labels" subsection and the `labels` entries; `site/dev-validation.md` gains S37). The PR description is outside the repo for Allen to read. Nothing forked, pushed or opened; Rust not installed.
