@@ -237,6 +237,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 - **Report** to the coordinator with SendMessage (find it with ListAgents): questions, proposals for the standard, record changes that need the views regenerated, and a short report when a task is done.
 - **Drafts of emails** go outside every repo (`~/pdt-private/`). **The web:** on a 403, try a headless browser, and stop at a bot check.
 - **Environment:** the `CultureWar` conda env; R, DuckDB and Polars are in `pdt-xlang`.
+- **Memory cap:** the machine has 31 GB, shared by every thread, and two uncapped jobs crashed all sessions on 2026-11-20 (the full-GSS `make data`, 13–15 GB each). Run anything that reads data or runs for long (`make data`, `make build`, `make check` on data, `pdt package`, readers, eval runs) under a cap: `systemd-run --user --scope -p MemoryMax=6G -p MemorySwapMax=0 --quiet <command>`. A job over the cap is killed by itself, exit 137; then make it use less memory (read columns or rows in batches), don't raise the cap. Don't run `make data` on the full pdt-gss until the reader works in batches (Task 58).
 
 ### Task 56 — An ATUS slice
 
