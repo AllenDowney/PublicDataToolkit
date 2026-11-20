@@ -28,7 +28,7 @@ A read-only review (Task 52, 2026-11-20) of what's ready to publish, what to fix
 
 **Every dataset repo needs a LICENSE** (decided: MIT for code, CC BY 4.0 for metadata, documents and views):
 - **By `copier update` after the v0.2.0 tag** (made from the template; they also get the README's License section): pdt-chicago-crimes, pdt-yrbss, pdt-cps-asec, pdt-pisa, pdt-nhis, and pdt-brfss when it's ready.
-- **By hand** (not made from the template): pdt-gss, pdt-anes-cdf, pdt-nsfg, pdt-fars. Render the template's `LICENSE.jinja` with `copyright_holder` "Allen Downey", and add a License section to each README (step 4b).
+- **By hand** (not made from the template): pdt-gss, pdt-anes-cdf, pdt-nsfg, pdt-fars. Render the template's `LICENSE.jinja` with `copyright_holder` "Allen Downey", and add a License section to each README (step 4b). **Done 2026-11-20 for anes-cdf (f13c989), nsfg (c72c70b) and fars (87f5f4e); gss waits for orange's rebuild.**
 
 ## The toolkit
 
@@ -173,10 +173,10 @@ done
 for r in chicago-crimes yrbss cps-asec pisa nhis; do (cd ~/pdt-$r && copier update --vcs-ref v0.2.0 && git status); done
 ```
 
-**4b. LICENSE in the four repos not made from the template.** The toolkit commit 19f0e6e must be in the clone you run this from:
+**4b. LICENSE in the four repos not made from the template.** **Done locally (2026-11-20, red) for pdt-anes-cdf (f13c989), pdt-nsfg (c72c70b) and pdt-fars (87f5f4e):** LICENSE rendered with "Allen Downey", the template's License section appended to each README, `pdt views` and `pdt check` run (0 failures; the views didn't change), committed, not pushed. **Still to do: pdt-gss**, after orange commits its rebuild:
 
 ```bash
-for r in gss anes-cdf nsfg fars; do
+for r in gss; do
   sed 's/{{ copyright_holder }}/Allen Downey/' ~/PublicDataToolkit/templates/template/LICENSE.jinja > ~/pdt-$r/LICENSE
   # add the README's License section by hand, as in templates/template/README.md.jinja
   (cd ~/pdt-$r && git add LICENSE && git commit -m "LICENSE: MIT for code, CC BY 4.0 for metadata and views" -- LICENSE)
