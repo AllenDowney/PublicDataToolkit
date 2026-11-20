@@ -250,3 +250,31 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 58 — Data builds that fit in memory
 
 `TODO (orange)`. The full-GSS `make data` loads 6,943 columns × 75,000 rows as one pandas object frame (`pdt.readers.read_stata`, then `pdt.data.split` and `write_release`), and needs 13–15 GB; it crashed every session twice on 2026-11-20. Read, split, write and round-trip check in column batches (a few hundred columns), building the parquet file with pyarrow, so peak memory stays under about 3 GB for the full GSS; the same for the other readers where it's easy. Measure the peak (`/usr/bin/time -v`) under the memory cap, and add a test that the build is batched. Then rerun the GSS rebuild. Details: [`planning/tasks/task-58.md`](planning/tasks/task-58.md).
+
+### Task 59 — A Cooperative Election Study slice
+
+`TODO`. The CES (Harvard Dataverse) in `~/pdt-ces`: the cumulative common-content file and two or three yearly files, linked by `derived_from` where the guide documents it, a second cumulative↔yearly case after the ANES. Record the Dataverse license and leave the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-59.md`, when you claim it.
+
+### Task 60 — An NSDUH slice
+
+`TODO`. The National Survey on Drug Use and Health (SAMHSA) in `~/pdt-nsduh`: annual public-use files, recent years, with substance use, mental health and the design variables. Close to Monitoring the Future in content. Record SAMHSA's terms and leave the decision for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-60.md`, when you claim it.
+
+### Task 61 — An NHANES slice
+
+`TODO`. The National Health and Nutrition Examination Survey (NCHS) in `~/pdt-nhanes`: two or three cycles, several linked files per cycle (demographics, a questionnaire, an exam and a lab file) joined on SEQN. The strongest test so far of tables and references. Same NCHS agreement as the NSFG and NHIS. Memory cap applies. Take the next task file, `planning/tasks/task-61.md`, when you claim it.
+
+### Task 62 — An NCVS slice, metadata only
+
+`TODO`. The National Crime Victimization Survey (BJS, through ICPSR/NACJD) in `~/pdt-ncvs`: household, person and incident tables for a few years. ICPSR doesn't allow redistribution, so this tests the metadata-only path: no data ships, and a download script fetches the files. Record the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-62.md`, when you claim it.
+
+### Task 63 — A HINTS slice
+
+`TODO`. The Health Information National Trends Survey (NCI) in `~/pdt-hints`: a few cycles, with replicate weights (`design.replicates`). Record the terms for Allen; download needs registration, so the sources may be manual. Memory cap applies. Take the next task file, `planning/tasks/task-63.md`, when you claim it.
+
+### Task 64 — A MEPS slice
+
+`TODO`. The Medical Expenditure Panel Survey, Household Component (AHRQ) in `~/pdt-meps`: a full-year consolidated file and one event file for two or three years, with a panel's linking ids. Record the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-64.md`, when you claim it.
+
+### Task 65 — An NLSY slice
+
+`TODO`. The National Longitudinal Surveys of Youth 1979 or 1997 (BLS) in `~/pdt-nlsy`: a small panel extract, the first test of a panel's rounds as waves. Data come through BLS's Investigator tool, so the sources are probably manual. Record the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-65.md`, when you claim it.
