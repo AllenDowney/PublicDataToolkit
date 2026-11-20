@@ -60,6 +60,7 @@ from . import __version__
 from .check import Repo
 from .compare import absent_by_chance, compare_text, norm, total_cases
 from .ranges import bounds, comparable as comparable_ranges, in_valid_range, valid_ranges, without_notes
+from .universe import universe_at, universe_text
 
 RULE = "release_diff"
 RULE_VERSION = "0.1"
@@ -175,7 +176,7 @@ def compare_pair(a, b, omits=(False, False), ignore=()):
     ignore: a dataset's formatting markers, as regular expressions (pdt.compare)."""
     out = {}
     for field, getter in (("label", lambda r: r.get("label")), ("question", question),
-                          ("universe", lambda r: r.get("universe")),
+                          ("universe", lambda r: universe_text(r.get("universe")) or None),
                           ("description", lambda r: r.get("description"))):
         how = compare_text(getter(a), getter(b), ignore)
         if how != "same":
@@ -739,6 +740,94 @@ def summary(result):
     return "\n".join(lines)
 
 
+# ---------------------------------------------------------------- within one release, across waves
+
+def _at(entries, wave):
+    """The entry of a by-wave list (questions) that applies to a wave: one listing it, else one without waves."""
+    plain = None
+    for e in entries:
+        ws = e.get("waves")
+        if not ws:
+            plain = plain or e
+        elif any(str(w) == str(wave) for w in ws):
+            return e
+    return plain
+
+
+def _codes_in_use(rec, wave):
+    """Codes whose counts list this wave, or whose waves {from, to} include it, or (with neither) every code."""
+    out = set()
+    for v in rec.get("values") or []:
+        if v.get("counts") is not None:
+            if any(str(c["wave"]) == str(wave) for c in v["counts"]):
+                out.add(v["code"])
+        elif v.get("waves"):
+            lo, hi = v["waves"].get("from"), v["waves"].get("to")
+            if (lo is None or str(lo) <= str(wave)) and (hi is None or str(wave) <= str(hi)):
+                out.add(v["code"])
+        else:
+            out.add(v["code"])
+    return out
+
+
+def wave_changes(rec, ignore=()):
+    """Changes between consecutive waves inside one record (STANDARD.md §4.1: questions[].waves,
+    a universe by wave, values[].counts or values[].waves): [{from, to, changes}]."""
+    waves = [a["wave"] for a in rec.get("availability") or []]
+    seen, ordered = set(), []
+    for w in waves:
+        if w not in seen:
+            seen.add(w)
+            ordered.append(w)
+    out = []
+    for w0, w1 in zip(ordered, ordered[1:]):
+        changes = {}
+        q0, q1 = _at(rec.get("questions") or [], w0), _at(rec.get("questions") or [], w1)
+        t0, t1 = (q0 or {}).get("text"), (q1 or {}).get("text")
+        how = compare_text(t0, t1, ignore)
+        if how != "same":
+            changes["question"] = {"how": how, "from": t0, "to": t1}
+        u0, u1 = universe_at(rec.get("universe"), w0), universe_at(rec.get("universe"), w1)
+        how = compare_text(u0, u1, ignore)
+        if how != "same":
+            changes["universe"] = {"how": how, "from": u0, "to": u1}
+        c0, c1 = _codes_in_use(rec, w0), _codes_in_use(rec, w1)
+        if c0 != c1:
+            changes["codes"] = {"added": sorted(c1 - c0, key=str), "dropped": sorted(c0 - c1, key=str)}
+        if changes:
+            out.append({"from": w0, "to": w1, "changes": changes})
+    return out
+
+
+def wave_diff(repo, release, table=None, ignore=()):
+    """For every record of a release that spans waves: its changes between consecutive waves."""
+    out = []
+    for tab, recs in repo.tables.get(release, {}).items():
+        if table and tab != table:
+            continue
+        for rec in recs:
+            changes = wave_changes(rec, ignore)
+            if changes:
+                out.append({"table": tab, "name": rec["name"], "changes": changes})
+    return out
+
+
+def wave_summary(dataset_id, release, entries):
+    lines = [f"{dataset_id}: changes between waves inside the records of release {release}", ""]
+    if not entries:
+        lines.append("No record changes between waves.")
+    for e in entries:
+        lines.append(f"{(e['table'] + '/') if e['table'] else ''}{e['name']}")
+        for c in e["changes"]:
+            for field, d in c["changes"].items():
+                if field == "codes":
+                    detail = "; ".join(f"{k} {d[k]}" for k in ("added", "dropped") if d[k])
+                else:
+                    detail = f"{d['how']}: {d['from']!r} -> {d['to']!r}"
+                lines.append(f"  {c['from']} -> {c['to']}: {field} {detail}")
+    return "\n".join(lines)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="pdt diff", description="Compare two releases' records.")
     parser.add_argument("path", help="the dataset repo")
@@ -753,6 +842,9 @@ def main(argv=None):
                         help="compare each variable with the next release it appears in, where that skips "
                              "releases (rotating content); no release arguments")
     parser.add_argument("--releases", nargs="+", help="with --gaps: only these releases")
+    parser.add_argument("--waves", action="store_true",
+                        help="compare consecutive waves inside each record of one release (wording, universe, "
+                             "codes in use by wave); give one release")
     parser.add_argument("--json", action="store_true", help="print the full comparison as JSON")
     parser.add_argument("--omitted-codes-have-no-cases", action="store_true",
                         help="treat every source as listing only codes that occur (overrides sources.yaml's "
@@ -775,8 +867,15 @@ def main(argv=None):
         print(json.dumps(entries, indent=1, ensure_ascii=False) if args.json
               else gaps_summary(repo.dataset.get("id"), entries))
         return 0
+    if args.waves:
+        if not args.release_a or args.release_b:
+            parser.error("--waves compares waves inside one release; give one release")
+        entries = wave_diff(repo, args.release_a, args.table, ignore)
+        print(json.dumps(entries, indent=1, ensure_ascii=False) if args.json
+              else wave_summary(repo.dataset.get("id"), args.release_a, entries))
+        return 0
     if not (args.release_a and args.release_b):
-        parser.error("give two releases, or --gaps")
+        parser.error("give two releases, or --gaps, or one release with --waves")
     result = diff(repo, args.release_a, args.release_b, args.table, args.omitted_codes_have_no_cases,
                   ignore, table_map)
     print(json.dumps(result, indent=1, ensure_ascii=False) if args.json else summary(result))

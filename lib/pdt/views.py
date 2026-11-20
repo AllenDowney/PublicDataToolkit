@@ -55,11 +55,17 @@ def generator_hash():
     return h.hexdigest()
 
 
+# A dataset repo's own advice for agents, copied into agent/SKILL.md under "About this dataset":
+# how the publisher's data work (NLSY97: answers spread across rounds), not analysis choices.
+AGENT_NOTES = "AGENT_NOTES.md"
+
+
 def inputs_hash(root):
-    """SHA-256 over dataset.yaml and everything under metadata/."""
+    """SHA-256 over dataset.yaml, AGENT_NOTES.md when there is one, and everything under metadata/."""
     root = Path(root)
     h = hashlib.sha256()
-    paths = [root / "dataset.yaml"] + sorted(p for p in (root / "metadata").rglob("*") if p.is_file())
+    notes = [root / AGENT_NOTES] if (root / AGENT_NOTES).exists() else []
+    paths = [root / "dataset.yaml"] + notes + sorted(p for p in (root / "metadata").rglob("*") if p.is_file())
     for p in paths:
         h.update(str(p.relative_to(root)).encode() + b"\0")
         h.update(p.read_bytes() + b"\0")
@@ -872,6 +878,12 @@ def render_skill(repo, header, index_tokens=None, signatures=()):
     current = default_releases(ds)
     releases_note = f" ({', '.join(f'`{r}`' for r in current)})" if current else ""
     signatures_note = (f"; this dataset has {', '.join(f'`{v}`' for v in signatures)}" if signatures else "")
-    return SKILL.format(generated=GENERATED.format(**header), title=ds.get("title", ds.get("id")),
+    text = SKILL.format(generated=GENERATED.format(**header), title=ds.get("title", ds.get("id")),
                         id=ds.get("id"), case_note=case_note, index_note=index_note,
                         releases_note=releases_note, signatures_note=signatures_note)
+    notes = Path(repo.root) / AGENT_NOTES
+    if notes.exists():
+        body = notes.read_text().strip()
+        body = re.sub(r"^#\s.*\n+", "", body)  # the file's own title; SKILL.md gives the heading
+        text += f"\n## About this dataset\n\nFrom the repo's `{AGENT_NOTES}`.\n\n{body}\n"
+    return text

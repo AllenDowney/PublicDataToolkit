@@ -410,3 +410,16 @@ def test_c8_docs_only_where_it_exists(repo_dir):
     assert [f for f in c8(check(repo_dir)) if "docs/" in f]                  # present, so checked, and stale
     shutil.rmtree(repo_dir / "docs")
     assert c8(check(repo_dir)) == []
+
+
+def test_agent_notes_go_into_skill(tmp_path):
+    from pdt import views
+    from test_check import make_repo
+    root = make_repo(tmp_path)
+    before = views.inputs_hash(root)
+    (root / "AGENT_NOTES.md").write_text("# Notes\n\nAnswers for a year can be in a later round.\n")
+    assert views.inputs_hash(root) != before
+    views.build(root)
+    skill = (root / "agent" / "SKILL.md").read_text()
+    assert "## About this dataset" in skill and "Answers for a year can be in a later round." in skill
+    assert "# Notes" not in skill

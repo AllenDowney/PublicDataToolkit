@@ -37,6 +37,7 @@ from .common_format import CODE_SUFFIX, PROCESSED, ROW, code_text, file_name
 from .ranges import span, valid_ranges
 from .search import Index
 from .views import generator_hash, inputs_hash, origin_text, sort_key, wave_summary, when_text
+from .universe import universe_text
 
 DIRECTORY = Path("export") / "data-dict"
 SPEC_VERSION = "0.1.0"
@@ -290,7 +291,7 @@ class Exporter:
         for field in ("universe", "notes"):
             value = rec.get(field)
             if value:
-                value = " ".join(value) if isinstance(value, list) else value
+                value = universe_text(value) if field == "universe" else (" ".join(value) if isinstance(value, list) else value)
                 details.append(f"{field.capitalize()}: {value}")
         if rec.get("availability"):
             details.append("Available: " + wave_summary(rec, self.waves[rel]))

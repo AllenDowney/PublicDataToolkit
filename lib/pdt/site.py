@@ -26,6 +26,7 @@ from .search import Index
 from .ranges import notes as range_notes, range_text, valid_ranges
 from .views import (AVAIL_DIMS, generator_hash, inputs_hash, natural, origin_text, release_order, sort_key, wave_list,
                     wave_summary, when_text)
+from .universe import universe_by_wave, universe_text
 
 DIRECTORY = "docs"
 
@@ -391,9 +392,16 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                           + (f", {esc(rest)}" if rest else "")))
         body.append(dl(facts))
 
-        for field, heading in (("description", "Description"), ("universe", "Universe")):
-            if rec.get(field):
-                body.append(f"<h2>{heading}{mark(applied, '/' + field)}</h2>{text_block(rec[field])}")
+        if rec.get("description"):
+            body.append(f"<h2>Description{mark(applied, '/description')}</h2>{text_block(rec['description'])}")
+        if rec.get("universe"):
+            parts = universe_by_wave(rec["universe"])
+            if len(parts) == 1 and parts[0][1] is None:
+                body.append(f"<h2>Universe{mark(applied, '/universe')}</h2>{text_block(parts[0][0])}")
+            else:  # a universe by wave (STANDARD.md §4.1)
+                body.append(f"<h2>Universe{mark(applied, '/universe')}</h2>")
+                body.append(table([self.dim_label("wave").capitalize() + "s", "Universe"],
+                                  [[esc(", ".join(map(str, w or []))), esc(t)] for t, w in parts]))
 
         if rec.get("questions"):
             body.append("<h2>Question</h2>")
@@ -551,7 +559,9 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                 parts = []
                 for field in ("label", "question", "universe", "description"):
                     if field in real:
-                        parts.append((field.capitalize(), text_block(real[field]["from"] or "")))
+                        before = real[field]["from"]
+                        before = universe_text(before) if field == "universe" else before
+                        parts.append((field.capitalize(), text_block(before or "")))
                 if rec.get("values") or current.get("values"):
                     diff_items = code_diff(rec.get("values") or [], current.get("values") or [])
                     if diff_items != ["order or other code fields changed"]:

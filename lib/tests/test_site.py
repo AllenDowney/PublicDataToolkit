@@ -260,3 +260,12 @@ def test_code_of_links_column_and_code(tmp_path):
     codes = read(root, "variables/TRCODEP.html")
     assert 'id="code-010101"' in codes
     assert 'Column: <a href="../variables/t010101.html">t010101</a>' in codes
+
+
+def test_universe_by_wave_is_a_table(tmp_path):
+    rec = dict(VARIABLES[0], universe=[{"text": "All", "waves": [1997]},
+                                       {"text": "Not yet answered as of the last interview", "waves": [1998, 1999]}])
+    root = make_repo(tmp_path, variables=[rec, VARIABLES[1]])
+    site.build(root)
+    page = read(root, "variables/q1.html")
+    assert "<h2>Universe" in page and "1998, 1999" in page and "Not yet answered" in page

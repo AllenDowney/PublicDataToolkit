@@ -134,3 +134,11 @@ def test_data_dict_validates_spec_and_data(repo_dir):
         result = subprocess.run([DATA_DICT, level, "--json", str(out / "r1.yaml")], capture_output=True, text=True)
         report = json.loads(result.stdout)
         assert report["status"] == "ok", (level, report["problems"])
+
+
+def test_universe_by_wave_in_export(tmp_path):
+    rec = dict(VARIABLES[0], universe=[{"text": "All", "waves": [1997]}, {"text": "Some", "waves": [1998]}])
+    root = make_repo(tmp_path, variables=[rec, VARIABLES[1]])
+    export.build(root)
+    text = (root / "export" / "data-dict" / "r1.yaml").read_text()
+    assert "Universe: All (1997); Some (1998)" in " ".join(text.split())
