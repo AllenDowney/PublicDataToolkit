@@ -205,7 +205,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 53 — Search fixes from the full-GSS eval
 
-`DOING (blue)`. `pdt search` defaults to the current release, with `--names` and paging; catalog search returns and filters waves; SKILL.md points agents to exact searches first; then three eval questions rerun. Details: [`planning/tasks/task-53.md`](planning/tasks/task-53.md).
+`DONE (blue)`. `pdt search` defaults to the current release, with `--names` and paging; catalog search returns and filters waves; SKILL.md points agents to exact searches first. Reruns: ballot A 1988 and catalog sadness recall 1.0; religion 0.86 and 0.18. Details: [`planning/tasks/task-53.md`](planning/tasks/task-53.md).
 ### Task 54 — Comparing releases: ignored markers, across tables, over gaps
 
 `DONE (red)`. `pdt diff --ignore` (NHIS's "* ": the three variables now agree with their links), across tables (samadult → adult, merges by `--table-map`) and `--gaps` (14 NHIS gap pairs, all agreeing with the links). Details: [`planning/tasks/task-54.md`](planning/tasks/task-54.md).
