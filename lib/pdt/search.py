@@ -11,6 +11,8 @@ A filter is a dict; every key given must match (AND):
     derived          {property: value}, e.g. {"scale_signature": "yes_no"}
     available        {"wave": W, "form": F}, form optional: an availability entry for wave W
                      with form F or with no form (no form means everyone in that wave)
+    waves            W, [W, ...] or {"from": A, "to": B}: an availability entry for any of
+                     those waves (any form); labeled like `available`
     field            {"pointer": "/measure", "equals": "categorical"}
     text             a substring of the name, label or question text, case-insensitive
 
@@ -21,6 +23,11 @@ doesn't choose it:
     complete_by_rule  also derived properties or rule-made groups (rule versions listed)
     approximate       text search, annotations, or model-made facts
 
+`pdt search` on the command line scopes a filter without `release` to the dataset's
+current releases (default_releases), so a superseded release doesn't double every
+result; `--release all` searches every release. `--names`, `--limit` and `--offset`
+shorten the output (Result.to_dict); the total count is always given.
+
 A publisher's subject lists are groups of kind `subject` (STANDARD.md §5.1), so a
 subject filter is `complete` with respect to the publisher's list and the records in
 scope. Topic annotations are never more than `approximate`.
@@ -30,6 +37,39 @@ from dataclasses import dataclass, field
 
 LABELS = ["complete", "complete_by_rule", "approximate"]
 SOURCE_ORIGINS = {"publisher", "upstream_package", "data_file", "hand"}
+
+
+def default_releases(dataset):
+    """The releases a search covers when the filter names none: the current ones, else all."""
+    releases = dataset.get("releases", [])
+    current = [r["id"] for r in releases if r.get("status") == "current"]
+    return current or [r["id"] for r in releases]
+
+
+def wave_matcher(spec):
+    """A predicate on a wave for the `waves` filter: W, [W, ...] or {"from": A, "to": B}."""
+    if isinstance(spec, dict):
+        if set(spec) - {"from", "to"} or not spec:
+            raise ValueError('waves takes W, [W, ...] or {"from": A, "to": B}')
+        lo, hi = spec.get("from"), spec.get("to")
+
+        def in_range(w):
+            try:
+                x = float(str(w)[:4]) if not isinstance(w, (int, float)) else float(w)
+            except ValueError:
+                return False
+            return (lo is None or x >= float(lo)) and (hi is None or x <= float(hi))
+        return in_range
+    wanted = {str(w) for w in (spec if isinstance(spec, list) else [spec])}
+    return lambda w: str(w) in wanted
+
+
+def page(items, limit=None, offset=0):
+    """items[offset:offset+limit], and a description of the page for the output."""
+    offset = max(offset or 0, 0)
+    shown = items[offset:offset + limit] if limit is not None else items[offset:]
+    return shown, {"offset": offset, "limit": limit, "returned": len(shown),
+                   "more": offset + len(shown) < len(items)}
 
 
 def worst(*labels):
@@ -179,25 +219,39 @@ class Result:
     notes: list
     matches: list           # [(release, table, record)]
 
-    def to_dict(self):
-        return {
+    def to_dict(self, names=False, limit=None, offset=0, scope_note=None):
+        """The result as JSON. names: just the variable names; limit/offset: one page.
+
+        `count` is always the total number of matches, whatever is shown.
+        """
+        rows = self.matches
+        shown, pg = page(rows, limit, offset)
+        out = {
             "completeness": self.label,
             "filter": self.filter,
             "releases": self.releases,
             "tables": self.tables,
             "n_in_scope": self.n_in_scope,
             "rule_versions": self.rule_versions,
-            "notes": self.notes,
-            "count": len(self.matches),
-            "results": [{"release": r, "table": t, "name": rec["name"], "label": rec.get("label")}
-                        for r, t, rec in self.matches],
+            "notes": self.notes + ([scope_note] if scope_note else []),
+            "count": len(rows),
         }
+        if limit is not None or offset:
+            out["page"] = pg
+        if names:
+            several = len(self.releases) > 1
+            out["names"] = [(f"{r}:" if several else "") + (f"{t}." if t else "") + rec["name"]
+                            for r, t, rec in shown]
+            return out
+        out["results"] = [{"release": r, "table": t, "name": rec["name"], "label": rec.get("label")}
+                          for r, t, rec in shown]
+        return out
 
 
 def search(index, filt):
     """Apply a filter to an Index and return a labeled Result."""
     unknown = set(filt) - {"release", "table", "name", "group", "subject", "topic", "derived",
-                         "available", "field", "text"}
+                         "available", "waves", "field", "text"}
     if unknown:
         raise ValueError(f"unknown filter keys: {sorted(unknown)}")
 
@@ -269,6 +323,15 @@ def search(index, filt):
         def available_pred(r, t, rec, want=want):
             return any(available_matches(a, want) for a in rec.get("availability") or [])
         preds.append(available_pred)
+
+    if "waves" in filt:
+        in_waves = wave_matcher(filt["waves"])
+        for r, t, rec in scope:
+            label, rule = origin_label(field_origin(rec, "/availability"))
+            labels.append(label)
+            if rule:
+                rules.update(rule)
+        preds.append(lambda r, t, rec: any(in_waves(a.get("wave")) for a in rec.get("availability") or []))
 
     if "field" in filt:
         pointer, value = filt["field"]["pointer"], filt["field"]["equals"]

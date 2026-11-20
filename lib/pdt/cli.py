@@ -1,4 +1,4 @@
-"""Command line: `pdt check [PATH]`, `pdt views [PATH] [--only agent|site|export]`, `pdt search PATH --filter JSON`, `pdt search --catalog PATHS --filter JSON`,
+"""Command line: `pdt check [PATH]`, `pdt views [PATH] [--only agent|site|export]`, `pdt search PATH --filter JSON [--release ID|all] [--names] [--limit N --offset N]`, `pdt search --catalog PATHS --filter JSON`,
 `pdt catalog PATHS --out DIR`."""
 
 import argparse
@@ -7,6 +7,15 @@ import sys
 
 from . import __version__
 from .check import run
+
+
+def dumps(result):
+    """JSON with one key per line, but a `names` list on a single line, to keep it short."""
+    names = result.pop("names", None)
+    text = json.dumps(result, indent=1, ensure_ascii=False)
+    if names is None:
+        return text
+    return text[:-2] + ',\n "names": ' + json.dumps(names, ensure_ascii=False) + "\n}"
 
 
 def main(argv=None):
@@ -24,6 +33,11 @@ def main(argv=None):
     search.add_argument("--catalog", action="store_true",
                         help="search across every included dataset repo (see pdt catalog)")
     search.add_argument("--all-releases", action="store_true", help="with --catalog: superseded releases too")
+    search.add_argument("--release", help="releases to search: an id, ids separated by commas, or `all`; "
+                                          "default: the current release(s)")
+    search.add_argument("--names", action="store_true", help="print only the names of the matches")
+    search.add_argument("--limit", type=int, help="print at most this many matches (the total is always given)")
+    search.add_argument("--offset", type=int, default=0, help="skip this many matches first")
     cat = sub.add_parser("catalog", help="build a catalog across dataset repos (see pdt catalog -h)", add_help=False)
     cat.add_argument("rest", nargs=argparse.REMAINDER)
     dif = sub.add_parser("diff", help="compare two releases' records (see pdt diff -h)", add_help=False)
@@ -71,17 +85,32 @@ def main(argv=None):
         return catalog_main(args.rest)
     if args.command == "search" and args.catalog:
         from .catalog import search_catalog
-        result = search_catalog(args.path, json.loads(args.filter), args.all_releases)
-        print(json.dumps(result, indent=1, ensure_ascii=False))
+        all_releases = args.all_releases or args.release == "all"
+        result = search_catalog(args.path, json.loads(args.filter), all_releases,
+                                names=args.names, limit=args.limit, offset=args.offset)
+        print(dumps(result))
         return 0
     if args.command == "search":
         if len(args.path) != 1:
             parser.error("search takes one repo; use --catalog to search several")
         args.path = args.path[0]
         from .check import Repo
-        from .search import Index, search as run_search
-        result = run_search(Index.from_repo(Repo.load(args.path)), json.loads(args.filter))
-        print(json.dumps(result.to_dict(), indent=1, ensure_ascii=False))
+        from .search import Index, default_releases, search as run_search
+        repo = Repo.load(args.path)
+        filt, note = json.loads(args.filter), None
+        if args.release and "release" in filt:
+            parser.error("give the release in --release or in the filter, not both")
+        if args.release and args.release != "all":
+            filt["release"] = args.release.split(",")
+        elif not args.release and "release" not in filt:
+            scope = default_releases(repo.dataset)
+            if len(scope) < len(repo.dataset.get("releases", [])):
+                filt["release"] = scope
+                note = (f"scope: the current release ({', '.join(scope)}) by default; "
+                        "--release all searches every release")
+        result = run_search(Index.from_repo(repo), filt)
+        print(dumps(result.to_dict(names=args.names, limit=args.limit, offset=args.offset,
+                                   scope_note=note)))
         return 0
 
     if args.command == "check":

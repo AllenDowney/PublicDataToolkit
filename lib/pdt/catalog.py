@@ -53,7 +53,7 @@ import yaml
 from . import __version__
 from .check import Repo
 from . import chains as chains_mod
-from .search import Index, question_text, search, worst
+from .search import Index, page, question_text, search, worst
 from .views import MAX_TOKENS, inputs_hash, line_question, runs, sort_key, split, tokens, wave_list
 
 QUESTION_CHARS = 160
@@ -239,7 +239,11 @@ def render_index(m):
             "always `approximate`. Subjects, groups and scale signatures are each dataset's own, so a "
             "subject filter finds only datasets whose publisher uses that subject.", "",
             "A concept can have different names in different datasets (\"sad or hopeless\" vs "
-            "\"depressed\"; MARSTAT vs marital), so search for several terms and read the lines.", ""]
+            "\"depressed\"; MARSTAT vs marital), so search for several terms and read the lines.", "",
+            "Every dataset, variable and result in a search's output carries the waves its matches were "
+            "asked in. A `waves` filter (a wave, a list, or `{\"from\": A, \"to\": B}`) keeps the variables "
+            "asked in any of them. `--names` prints one line per variable, with its waves; `--limit N "
+            "--offset M` prints one page. The header always gives the total counts.", ""]
     if m["left_out"]:
         out += ["## Left out", "", "| Repo | Why |", "|---|---|"]
         out += [f"| `{x['path']}` | {x['reason']} |" for x in m["left_out"]]
@@ -290,10 +294,21 @@ For agents: <a href="agent/index.md">agent/index.md</a>, and one line per variab
 
 # ---------------------------------------------------------------- search
 
-def search_catalog(paths, filt, all_releases=False):
-    """Run a filter in every included repo. Returns a dict like pdt search's, across datasets."""
+def record_waves(rec):
+    return sorted({a["wave"] for a in rec.get("availability") or [] if "wave" in a}, key=sort_key)
+
+
+def search_catalog(paths, filt, all_releases=False, names=False, limit=None, offset=0):
+    """Run a filter in every included repo. Returns a dict like pdt search's, across datasets.
+
+    Each dataset's part, each result and each variable carry the waves their matches were
+    asked in. A `waves` filter (W, [W, ...] or {"from": A, "to": B}) keeps the variables
+    asked in any of those waves. names, limit and offset shorten the output as in pdt search;
+    the counts are always the totals.
+    """
     included, left_out = load(paths)
     labels, parts, notes, results, variables, in_scope = [], [], [], [], [], 0
+    ds_waves = {}   # dataset -> every wave of its releases in scope, so runs of waves are right
     filt = dict(filt)
     fields = filt.pop("text_in", ["name", "label", "question"])
     unknown = set(fields) - {"name", "label", "question"}
@@ -322,27 +337,48 @@ def search_catalog(paths, filt, all_releases=False):
         except ValueError as e:
             notes.append(f"{ds['id']}: {e}; no match there")
             continue
-        chains, order = chains_mod.build(repo, f["release"] if isinstance(f["release"], list) else [f["release"]])
+        in_scope_releases = f["release"] if isinstance(f["release"], list) else [f["release"]]
+        chains, order = chains_mod.build(repo, in_scope_releases)
+        by_release = release_waves(repo)
+        ds_waves[ds["id"]] = sorted({w for r in in_scope_releases for w in by_release.get(r, [])}, key=sort_key)
         by_member = {m: c for c in chains for m in c.members}
         labels.append(result_label)
         in_scope += n_scope
         parts.append({"dataset": ds["id"], "completeness": result_label, "count": len(matches),
-                      "n_in_scope": n_scope, "rule_versions": rule_versions})
+                      "n_in_scope": n_scope, "rule_versions": rule_versions,
+                      "waves": sorted({w for _, _, rec in matches for w in record_waves(rec)}, key=sort_key)})
         results += [{"dataset": ds["id"], "release": rel, "table": tab, "name": rec["name"],
-                     "label": rec.get("label"), "variable": by_member[(rel, tab, rec["name"])].id}
+                     "label": rec.get("label"), "waves": record_waves(rec),
+                     "variable": by_member[(rel, tab, rec["name"])].id}
                     for rel, tab, rec in matches]
         seen = {}
         for rel, tab, rec in matches:
             c = by_member[(rel, tab, rec["name"])]
-            seen.setdefault(c.id, {"dataset": ds["id"], "id": c.id, "table": c.table,
+            v = seen.setdefault(c.id, {"dataset": ds["id"], "id": c.id, "table": c.table,
                                    "names": chains_mod.names_text(c, order), "label": rec.get("label"),
+                                   "waves": [],
                                    "related": [{"relations": rels, "direction": d,
                                                 "names": chains_mod.names_text(o, order), "id": o.id}
                                                for rels, o, d in c.related]})
+            v["waves"] = sorted(set(v["waves"]) | set(record_waves(rec)), key=sort_key)
         variables += list(seen.values())
-    return {"completeness": worst(*labels) if labels else "complete", "filter": filt,
-            "datasets": parts, "n_in_scope": in_scope, "notes": notes, "count": len(results),
-            "variables": variables, "variable_count": len(variables), "results": results, "left_out": [{"path": str(p), "reason": r} for p, r in left_out]}
+    out = {"completeness": worst(*labels) if labels else "complete", "filter": filt,
+           "datasets": parts, "n_in_scope": in_scope, "notes": notes, "count": len(results),
+           "variable_count": len(variables)}
+    shown, pg = page(variables, limit, offset)
+    if limit is not None or offset:
+        out["page"] = pg
+    if names:
+        # One entry per variable: dataset, table and names, with the waves it was asked in.
+        out["names"] = [f"{v['dataset']}:" + (f"{v['table']}." if v["table"] else "") + v["names"]
+                        + " " + waves_text(v["waves"], ds_waves[v["dataset"]])
+                        for v in shown]
+    else:
+        out["variables"] = shown
+        out["results"] = [r for r in results if any(r["variable"] == v["id"] and r["dataset"] == v["dataset"]
+                                                    for v in shown)]
+    out["left_out"] = [{"path": str(p), "reason": r} for p, r in left_out]
+    return out
 
 
 def main(argv=None):

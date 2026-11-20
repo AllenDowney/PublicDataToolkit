@@ -476,7 +476,8 @@ def build(root, out=None):
     if across:
         index_text += render_across(across)
     (out / "index.md").write_text(index_text)
-    (out / "SKILL.md").write_text(render_skill(repo, header))
+    signatures = sorted({d["value"] for d in index.derived if d["property"] == "scale_signature"})
+    (out / "SKILL.md").write_text(render_skill(repo, header, tokens(index_text), signatures))
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n")
     return manifest
 
@@ -653,12 +654,16 @@ question text, codes and missing codes, and see which waves and forms asked them
 
 ## Steps
 
-1. Read `index.md`. It lists every shard with its size and the completeness label it supports.
-2. Pick the shard that matches the question: a publisher subject, a group (battery, section),
+1. If you can run `pdt search` (below), search first: a subject, a scale signature or an
+   `available` filter gives an exact, labeled list without reading any shard. Add `--names`
+   when a result may be long.
+2. Read `index.md` for the shards, their sizes and the labels they support.{index_note}
+3. Pick the shard that matches the question: a publisher subject, a group (battery, section),
    a scale signature, or the release/table shard for everything. Read its `.txt` form first.
-3. For codes, missing codes, full question text and per-wave availability, read the same
+   A release shard of a large dataset is far bigger than any one answer needs.
+4. For codes, missing codes, full question text and per-wave availability, read the same
    variables in the shard's `.jsonl` form.
-4. Answer with the completeness label (below), and cite the shard and filter you used.
+5. Answer with the completeness label (below), and cite the shard and filter you used.
 
 ## Completeness labels
 
@@ -689,8 +694,23 @@ same variables, report the stronger label (`complete`, then `complete_by_rule`, 
 
 If the shared library is installed, `pdt search PATH --filter '<json>'` runs a filter and
 prints a labeled result, e.g. `--filter '{{"subject": "Abortion"}}'`. Filter keys: `release`,
-`table`, `name`, `group`, `subject`, `topic`, `derived`, `available`, `field`, `text`.
-Several keys in one filter must all match.
+`table`, `name`, `group`, `subject`, `topic`, `derived`, `available`, `waves`, `field`, `text`.
+Several keys in one filter must all match. `waves` (a wave, a list, or
+`{{"from": A, "to": B}}`) keeps variables asked in any of those waves.
+
+A filter without `release` searches the current release{releases_note}; `--release all`
+searches every release, so a variable kept across releases appears once per release.
+`--names` prints only the names (one line, after the header); `--limit N --offset M` prints
+one page. The header always gives the total `count`, the scope and the label, so a short
+page of a `complete` result is still `complete`, provided you read every page.
+
+Scale signatures name a response format by rule{signatures_note}. Searching by one gives a
+`complete_by_rule` list, and combining it with `available` or `waves` keeps that label:
+
+    pdt search PATH --filter '{{"derived": {{"scale_signature": "yes_no"}}, "available": {{"wave": 2024}}}}'
+
+Finding the same variables by text search or by reading gives the same list but is
+`approximate`.
 
 For a question about when or to whom a variable was asked ("every item on form A in 1988",
 "thermometers asked in 1978"), use `available`, not your own reading of the shards:
@@ -714,9 +734,22 @@ the selection; if you can't run `pdt search`, say so and label it `approximate`.
 """
 
 
-def render_skill(repo, header):
+# index.md is "large" above this many tokens: SKILL.md then says to search before reading it.
+LARGE_INDEX = 5000
+
+
+def render_skill(repo, header, index_tokens=None, signatures=()):
     ds = repo.dataset
     naming = ds.get("naming", {})
     case_note = f" ({naming['case']}case in this dataset)" if naming.get("case") else ""
+    index_note = ""
+    if index_tokens and index_tokens > LARGE_INDEX:
+        index_note = (f"\n   **It is about {index_tokens:,} tokens here,** so read it in parts (its first lines\n"
+                      "   list the shards by kind), or search first and read only what you need.")
+    from .search import default_releases
+    current = default_releases(ds)
+    releases_note = f" ({', '.join(f'`{r}`' for r in current)})" if current else ""
+    signatures_note = (f"; this dataset has {', '.join(f'`{v}`' for v in signatures)}" if signatures else "")
     return SKILL.format(generated=GENERATED.format(**header), title=ds.get("title", ds.get("id")),
-                        id=ds.get("id"), case_note=case_note)
+                        id=ds.get("id"), case_note=case_note, index_note=index_note,
+                        releases_note=releases_note, signatures_note=signatures_note)
