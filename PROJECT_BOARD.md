@@ -278,7 +278,8 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 65 — An NLSY slice
 
-`TODO`. The National Longitudinal Surveys of Youth 1979 or 1997 (BLS) in `~/pdt-nlsy`: a small panel extract, the first test of a panel's rounds as waves. Data come through BLS's Investigator tool, so the sources are probably manual. Record the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-65.md`, when you claim it.
+`DOING (yellow)`. The National Longitudinal Surveys of Youth 1979 or 1997 (BLS) in `~/pdt-nlsy`: a small panel extract, the first test of a panel's rounds as waves. Data come through BLS's Investigator tool, so the sources are probably manual. Record the terms for Allen. Memory cap applies. Details: [`planning/tasks/task-65.md`](planning/tasks/task-65.md).
+
 ### Task 66 — Two data-dict PRs: integer enums and typed missing codes
 
 `DOING (red)`. Hadley offered to review a PR for data-dict#9. Clone tidyverse/data-dict locally, read its spec, validator and tests, and plan the PR(s) for integer enums with labels and typed missing codes, plus how our exporter would use them. Plan only; nothing forked, pushed or opened. Details: [`planning/tasks/task-66.md`](planning/tasks/task-66.md).
