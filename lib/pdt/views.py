@@ -82,17 +82,21 @@ def default_scope(dataset):
     return current or None
 
 
-def shard_specs(repo, index):
+RELEASE_SHARDS = 12   # more releases than this: table shards across releases (`pdt views --release-shards`)
+
+
+def shard_specs(repo, index, per_release=True):
     """Every shard to write: [(kind, slug, title, basis, filter)].
 
-    Release and table shards cover each release. Group, subject, scale and topic shards
-    cover the current release(s) when the repo has several, so a variable appears once.
+    Release and table shards cover each release (unless per_release is False: then the table
+    shards across releases replace them; `lineage_shards`). Group, subject, scale and topic
+    shards cover the current release(s) when the repo has several, so a variable appears once.
     """
     specs = []
     scope = default_scope(repo.dataset)
     scoped = (lambda f: {"release": scope if len(scope) > 1 else scope[0], **f}) if scope else (lambda f: f)
     note = f" in the current release ({', '.join(scope)})" if scope else ""
-    for r in repo.dataset.get("releases", []):
+    for r in repo.dataset.get("releases", []) if per_release else []:
         tables = [t["id"] for t in r.get("tables") or []]
         if tables:
             for t in tables:
@@ -394,8 +398,11 @@ def split(items, render, budget_tokens):
 
 # ---------------------------------------------------------------- build
 
-def build(root, out=None):
-    """Write agent/ for the dataset repo at root. Returns the manifest."""
+def build(root, out=None, release_shards=RELEASE_SHARDS):
+    """Write agent/ for the dataset repo at root. Returns the manifest.
+
+    release_shards: with more releases than this, the table shards cover every release, one line
+    per variable lineage (`lineage_shards`), instead of one shard per release and table."""
     root = Path(root)
     out = Path(out) if out else root / "agent"
     repo = Repo.load(root)
@@ -430,7 +437,8 @@ def build(root, out=None):
 
     header = {"pdt_version": __version__, "inputs_sha256": digest}
     shards = []
-    for kind, name, title, basis, filt in shard_specs(repo, index):
+    per_release = len(repo.tables) <= release_shards
+    for kind, name, title, basis, filt in shard_specs(repo, index, per_release):
         result = search(index, filt)
         meta = {
             "kind": kind,
@@ -467,12 +475,15 @@ def build(root, out=None):
                               "variables": len(lines), "tokens": tokens(text)})
         shards.append({**meta, "files": files})
 
+    if not per_release:
+        shards = lineage_shards(repo, out, header) + shards
     manifest = {**header, "dataset": repo.dataset.get("id"), "max_tokens": MAX_TOKENS,
-                "shards": shards}
+                "shards": shards, "release_shards": release_shards}
     across = write_across_releases(repo, out, header) if len(repo.tables) > 1 else []
     if across:
         manifest["across_releases"] = across
-    index_text = render_index(repo, index, shards, header, ctx["waves"])
+    index_text = render_index(repo, index, shards, header, ctx["waves"],
+                              None if per_release else release_shards)
     if across:
         index_text += render_across(across)
     (out / "index.md").write_text(index_text)
@@ -480,6 +491,79 @@ def build(root, out=None):
     (out / "SKILL.md").write_text(render_skill(repo, header, tokens(index_text), signatures))
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, ensure_ascii=False) + "\n")
     return manifest
+
+
+def lineage_shards(repo, out, header):
+    """Table shards across releases: one per table, one line (and one JSONL entry) per variable
+    lineage (pdt.chains): its runs of releases with the same meaning, and the change between runs.
+
+    `ANXIOUS | week01–week33: ANXIOUS → [wording_changed, labels_changed] week34–cycle09: ANXIOUS |
+    Frequency of anxiety over previous 2 weeks | Over the last 2 weeks, how often ...`"""
+    from . import chains as chains_mod
+    chains, order = chains_mod.build(repo)
+    lineages = chains_mod.lineages(chains, order)
+    by_table = {}
+    for lineage in lineages:
+        by_table.setdefault(lineage.latest.table, []).append(lineage)
+    records = {(r, t, rec["name"]): rec for r, ts in repo.tables.items() for t, recs in ts.items() for rec in recs}
+
+    def entry(lineage):
+        runs, changes = [], []
+        for chain in lineage.chains:
+            into = lineage.changes(chain)
+            for link, earlier in into:
+                changes.append({"at": chain.members[0][0], "from": earlier.last[2], "to": chain.members[0][2],
+                                "relations": link["relations"]})
+            rec = records[chain.last]
+            q = " ".join((rec.get("questions") or [{}])[0].get("text", "").split())
+            runs.append({"releases": chains_mod.span([m[0] for m in chain.members], order),
+                         "names": chains_mod.names_text(chain, order), "label": rec.get("label"),
+                         "changed_by": sorted({r for link, _ in into for r in link["relations"]}),
+                         "question": q[:200] + ("..." if len(q) > 200 else "")})
+        return {"name": lineage.latest.last[2], "table": lineage.latest.table, "runs": runs, "changes": changes}
+
+    def line(e):
+        parts = []
+        for i, run in enumerate(e["runs"]):
+            if i:
+                parts.append(f"→ [{', '.join(run['changed_by']) or 'related'}] ")
+            parts.append(f"{run['releases']}: {run['names'].split(' ')[0]} ")
+        last = e["runs"][-1]
+        q = last["question"][:120] + ("..." if len(last["question"]) > 120 else "")
+        return f"{e['name']} | {''.join(parts).strip()} | {last['label'] or ''} | {q}"
+
+    shards = []
+    for table, group in sorted(by_table.items(), key=lambda kv: str(kv[0])):
+        entries = [entry(l) for l in group]
+        name = slug(table or "all")
+        meta = {"kind": "table", "title": f"Table {table}, every release" if table else "Every release",
+                "basis": "every variable in the table across every release, one line per variable: its runs of "
+                         "releases with the same meaning and the links that change it (pdt.chains)",
+                "full_records": sorted({f"metadata/releases/{r}/{t}/variables.jsonl" if t else
+                                        f"metadata/releases/{r}/variables.jsonl"
+                                        for l in group for r, t, _ in l.members}),
+                "completeness": "complete", "filter": {"table": table, "release": "all"},
+                "releases": order, "n_in_scope": sum(len(l.members) for l in group), "rule_versions": {},
+                "notes": [], "count": len(entries)}
+        directory = out / "shards" / "table"
+        directory.mkdir(parents=True, exist_ok=True)
+        files = []
+        for form, render in [("jsonl", lambda e: json.dumps(e, ensure_ascii=False)), ("txt", line)]:
+            parts = split(entries, render, MAX_TOKENS - 500)
+            for i, lines in enumerate(parts, 1):
+                part = {"part": i, "of": len(parts)} if len(parts) > 1 else {}
+                stem = name if len(parts) == 1 else f"{name}.part{i}"
+                path = directory / f"{stem}.{form}"
+                if form == "jsonl":
+                    text = "\n".join([json.dumps({"shard": {**meta, **part, **header}}, ensure_ascii=False)]
+                                     + lines) + "\n"
+                else:
+                    text = txt_header(meta, part, header) + "\n".join(lines) + "\n"
+                path.write_text(text)
+                files.append({"path": str(path.relative_to(out)), "form": form, "variables": len(lines),
+                              "tokens": tokens(text)})
+        shards.append({**meta, "files": files})
+    return shards
 
 
 def full_records(repo, result):
@@ -555,7 +639,7 @@ GENERATED = ("<!-- Generated by pdt {pdt_version} from inputs sha256:{inputs_sha
              "Do not edit; run `make views`. -->\n\n")
 
 
-def render_index(repo, index, shards, header, waves):
+def render_index(repo, index, shards, header, waves, release_shards=None):
     ds = repo.dataset
     terms = ds.get("terms", {})
     dims = ds.get("dimensions", {})
@@ -625,6 +709,13 @@ def render_index(repo, index, shards, header, waves):
                "are: " + "; ".join(f"`{rel}`: {wave_list(ws)}" for rel, ws in waves.items()) + ". "
                "A trailing `*` on a name means a field "
                "was corrected.\n")
+    if release_shards is not None:
+        out.append(f"This dataset has {len(repo.tables)} releases, more than {release_shards} (the views option "
+                   "`--release-shards`), so its table shards cover every release: one line per variable, giving "
+                   "its runs of releases with the same meaning and, between runs, the link that changed it "
+                   "(`week01–week33: ANXIOUS → [wording_changed] week34–cycle09: ANXIOUS`). To read one "
+                   "release, filter the full records (`metadata/releases/<release>/`), or regenerate the views "
+                   "with a larger `--release-shards`.\n")
     out.append("`SKILL.md` says how to label an answer drawn from these files.\n")
 
     for kind, title in KIND_TITLES.items():

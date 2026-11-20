@@ -6,9 +6,14 @@ relations say it continued with the same meaning: `same_item`, `renamed`,
 are one chain, shown as "ADDEPEV2 2011-2018 -> ADDEPEV3 2019-2023".
 
 A link that says the meaning changed (`codes_changed`, `wording_changed`,
-`universe_changed`) doesn't join chains. It relates them, so a view can show them
-together, with the relation. Links that aren't one to one (`derived_from`, `split_from`,
-`merged_into`) and links within one release are left out.
+`universe_changed`, `range_changed`) doesn't join chains. It relates them, so a view can
+show them together, with the relation. Links that aren't one to one (`derived_from`,
+`split_from`, `merged_into`) and links within one release are left out.
+
+A lineage is the chains that such links relate: one variable over its whole history,
+runs of releases with the same meaning and the changes between them (Household Pulse
+ANXIOUS: weeks 1-33, then the reference period changed to two weeks). The site gives
+each lineage one page (`lineages`).
 """
 
 from dataclasses import dataclass, field
@@ -16,7 +21,7 @@ from dataclasses import dataclass, field
 from .views import release_order
 
 SAME_MEANING = {"same_item", "renamed", "labels_changed", "data_revised"}
-CHANGED_MEANING = {"codes_changed", "wording_changed", "universe_changed"}
+CHANGED_MEANING = {"codes_changed", "wording_changed", "universe_changed", "range_changed"}
 NOT_ONE_TO_ONE = {"derived_from", "split_from", "merged_into"}
 
 
@@ -24,6 +29,7 @@ NOT_ONE_TO_ONE = {"derived_from", "split_from", "merged_into"}
 class Chain:
     members: list                       # [(release, table, name)], oldest release first
     related: list = field(default_factory=list)     # [(relations, other Chain, "to" or "from")]
+    links: list = field(default_factory=list)       # [(link, other Chain, "to" or "from")], as related
 
     @property
     def table(self):
@@ -98,7 +104,7 @@ def build(repo, releases=None):
             if ra != rb:
                 parent[rb] = ra
         else:
-            related.append((sorted(rels), a, b))
+            related.append((sorted(rels), a, b, link))
 
     pos = {r: i for i, r in enumerate(order)}
     groups = {}
@@ -110,12 +116,14 @@ def build(repo, releases=None):
         chain = Chain(members)
         for n in members:
             chains[n] = chain
-    for rels, a, b in related:
+    for rels, a, b, link in related:
         ca, cb = chains[a], chains[b]
         if ca is not cb:
             older, newer = (ca, cb) if pos[a[0]] <= pos[b[0]] else (cb, ca)
             older.related.append((rels, newer, "to"))
             newer.related.append((rels, older, "from"))
+            older.links.append((link, newer, "to"))
+            newer.links.append((link, older, "from"))
     unique = list({id(c): c for c in chains.values()}.values())
     unique.sort(key=lambda c: (pos[c.members[0][0]], str(c.table), c.members[0][2]))
     return unique, order
@@ -141,4 +149,52 @@ def ordered_with_related(chains):
             place(chain, None)
     for chain in chains:                       # a cycle of relations, if any
         place(chain, None)
+    return out
+
+
+@dataclass
+class Lineage:
+    """Chains related by one-to-one links that change the meaning: a variable's whole history."""
+    chains: list                       # oldest first (by first release, then name)
+    order: list                        # every release, oldest first
+
+    @property
+    def latest(self):
+        """The chain that ends in the latest release (the page takes its name)."""
+        pos = {r: i for i, r in enumerate(self.order)}
+        return max(self.chains, key=lambda c: (pos[c.last[0]], pos[c.members[0][0]]))
+
+    @property
+    def members(self):
+        return [m for c in self.chains for m in c.members]
+
+    def changes(self, chain):
+        """[(link, earlier Chain)] for the links into chain from earlier chains of this lineage."""
+        return [(link, other) for link, other, d in chain.links if d == "from"]
+
+
+def lineages(chains, order):
+    """Group chains into lineages: chains joined, directly or not, by `related` links."""
+    parent = {id(c): id(c) for c in chains}
+    by_id = {id(c): c for c in chains}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    for c in chains:
+        for _, other, _ in c.related:
+            if id(other) in parent:
+                a, b = find(id(c)), find(id(other))
+                if a != b:
+                    parent[b] = a
+    pos = {r: i for i, r in enumerate(order)}
+    groups = {}
+    for c in chains:
+        groups.setdefault(find(id(c)), []).append(by_id[id(c)])
+    out = [Lineage(sorted(g, key=lambda c: (pos[c.members[0][0]], c.members[0][2])), order)
+           for g in groups.values()]
+    out.sort(key=lambda l: (pos[l.chains[0].members[0][0]], str(l.chains[0].table), l.chains[0].members[0][2]))
     return out

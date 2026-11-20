@@ -27,6 +27,9 @@ def main(argv=None):
     views = sub.add_parser("views", help="generate agent/, docs/ and export/ for a dataset repo")
     views.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
     views.add_argument("--only", choices=["agent", "site", "export"], help="generate just one of them")
+    views.add_argument("--release-shards", type=int, default=12, metavar="N",
+                       help="with more releases than N, agent table shards cover every release, one line per "
+                            "variable, instead of one shard per release (default 12)")
     search = sub.add_parser("search", help="search a dataset repo's records; prints a labeled result")
     search.add_argument("path", nargs="+", help="the dataset repo; with --catalog, repos or directories holding them")
     search.add_argument("--filter", required=True, help='a JSON filter, e.g. \'{"topic": "Abortion"}\'')
@@ -68,7 +71,7 @@ def main(argv=None):
     if args.command == "views":
         if args.only in (None, "agent"):
             from .views import build
-            manifest = build(args.path)
+            manifest = build(args.path, release_shards=args.release_shards)
             n = sum(len(s["files"]) for s in manifest["shards"])
             print(f"agent/: {len(manifest['shards'])} shards, {n} files")
         if args.only in (None, "site"):

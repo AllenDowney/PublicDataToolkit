@@ -75,11 +75,13 @@ class Site:
                 if line.strip():
                     h = json.loads(line)
                     self.histories[(h.get("table"), h["name"])] = h
-        # One page per variable across releases (pdt.chains): records joined by links that keep
-        # the meaning. A page is named after the variable's latest name; when two chains end in
-        # the same name, the one ending in the older release gets "@<release>".
+        # One page per variable across releases: a lineage (pdt.chains), the runs of records joined
+        # by links that keep the meaning, and the one-to-one links that change it between runs. A
+        # page is named after the lineage's latest name; when two lineages end in the same name,
+        # the one ending in the older release gets "@<release>". Other names get an alias page.
         from . import chains as chains_mod
         self.chains, self.order = chains_mod.build(self.repo)
+        self.lineages = chains_mod.lineages(self.chains, self.order)
         self.records = {(rel, tab, rec["name"]): rec for rel, tab, rec in self.index.entries}
         # code_of (STANDARD.md §4.1): (code list, code) -> the variables that stand for that code,
         # and code list -> the variables whose values come from it, for links both ways.
@@ -92,17 +94,28 @@ class Site:
             if rec.get("code_list"):
                 self.uses_list.setdefault(rec["code_list"], []).append((rel, tab, name))
         pos = {r: i for i, r in enumerate(self.order)}
-        self.page_of, self.chain_of, taken = {}, {}, set()
-        for chain in sorted(self.chains, key=lambda c: -pos[c.last[0]]):
-            rel, tab, name = chain.last
+        self.page_of, self.chain_of, self.lineage_page, taken = {}, {}, {}, set()
+        for lineage in sorted(self.lineages, key=lambda l: -pos[l.latest.last[0]]):
+            rel, tab, name = lineage.latest.last
             stem = "/".join(["variables"] + ([tab] if tab else []))
             path = f"{stem}/{file_name(name)}"
             if path.lower() in taken:
                 path = f"{stem}/{file_name(f'{name}@{rel}')}"
             taken.add(path.lower())
-            for m in chain.members:
-                self.page_of[m] = path
-                self.chain_of[m] = chain
+            self.lineage_page[id(lineage)] = path
+            for chain in lineage.chains:
+                for m in chain.members:
+                    self.page_of[m] = path
+                    self.chain_of[m] = chain
+        # Alias pages: a lineage's other names (ADDEPEV2 for ADDEPEV3), where no page has the name.
+        self.aliases = {}
+        for lineage in self.lineages:
+            target = self.lineage_page[id(lineage)]
+            for _, tab, name in lineage.members:
+                stem = "/".join(["variables"] + ([tab] if tab else []))
+                path = f"{stem}/{file_name(name)}"
+                if path.lower() not in taken and path not in self.aliases:
+                    self.aliases[path] = target
         self.signature = {}
         for d in self.repo.derived:
             for rel, tab, rec in self.index.entries:
@@ -179,12 +192,13 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         for r in self.ds.get("releases", []):
             for tab, recs in self.repo.tables.get(r["id"], {}).items():
                 self.release_page(r, tab, recs)
-        for chain in self.chains:
-            self.variable_page(chain)
+        for lineage in self.lineages:
+            self.variable_page(lineage)
+        for path, target in sorted(self.aliases.items()):
+            self.alias_page(path, target)
         for g in self.repo.groups:
             self.group_page(g)
-        releases = release_order(self.ds)
-        for old, new in zip(releases, releases[1:]):
+        for old, new in self.changed_pairs():
             self.changes_page(old, new)
         self.search_index()
         manifest = {"pdt_version": __version__, "inputs_sha256": self.digest,
@@ -248,9 +262,14 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
 
         releases = release_order(ds)
         if len(releases) > 1:
+            changed = self.changed_pairs()
             body.append("<h2>Changes between releases</h2><ul>" + "".join(
                 f"<li>{self.link(here, f'changes/{a}--{b}.html', f'{a} → {b}')}</li>"
-                for a, b in zip(releases, releases[1:])) + "</ul>")
+                for a, b in changed) + "</ul>")
+            same = [(a, b) for a, b in zip(releases, releases[1:]) if (a, b) not in changed]
+            if same:
+                body.append("<p>No variable changed between: " + esc(", ".join(f"{a} → {b}" for a, b in same))
+                            + ".</p>")
         body.append('<script src="search-index.js"></script>\n<script>' + SEARCH_JS + "</script>")
         self.page(here, ds.get("title", ds.get("id")), "\n".join(body))
 
@@ -341,7 +360,8 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         return '<br><span class="origin">Column: ' + ", ".join(
             self.link(here, self.var_path(rel, tab, name), name) for rel, tab, name in found) + "</span>"
 
-    def variable_page(self, chain):
+    def variable_page(self, lineage):
+        chain = lineage.latest
         rel, tab, name = chain.last
         rec = self.records[chain.last]
         here = self.var_path(rel, tab, rec["name"])
@@ -469,11 +489,10 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                 f"<li>{self.link(here, self.group_path(g['id']), g.get('label') or g['id'])} "
                 f"({esc(g['kind'])})</li>" for g in groups) + "</ul>")
 
-        if len(chain.members) > 1 or chain.related:
-            body.append(self.releases_section(here, chain))
+        if len(lineage.members) > 1:
+            body.append(self.lineage_section(here, lineage))
 
-        related_pages = {self.page_of[o.last] for _, o, _ in chain.related}
-        links = [x for m in chain.members for x in self.links_for(*m, here=here, skip=related_pages)]
+        links = [x for m in lineage.members for x in self.links_for(*m, here=here)]
         if links:
             body.append("<h2>Other links</h2><ul>" + "".join(dict.fromkeys(links)) + "</ul>")
 
@@ -545,23 +564,97 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
                         parts.append((field.replace("_", " ").capitalize(), esc(real[field].get("from"))))
                 details.append(f"<details><summary>{esc(rel)}: {esc(name)}, what differs from "
                                f"{esc(cur_rel)}</summary>" + dl(parts) + "</details>")
-        out = ["<h2>Releases</h2>"]
+        out = []
         if len(chain.members) > 1:
-            out += ["<p>This variable in each release, joined by the links between releases. "
-                    f"The record above is {esc(cur_rel)}'s; the rest list only what differs.</p>",
-                    table(["Release", "Name", self.dim_label("wave") + "s", "Differs from " + cur_rel], rows)]
+            out += [table(["Release", "Name", self.dim_label("wave") + "s", "Differs from " + cur_rel], rows)]
             out += details
-        if chain.related:
-            items = []
-            for rels, other, direction in chain.related:
-                o_rel, o_tab, o_name = other.last
-                text = names_text(other, self.order)
-                where = "later" if direction == "to" else "earlier"
-                items.append(f"<li>{self.link(here, self.page_of[other.last], text)} ({where}): "
-                             f"{esc(', '.join(rels))}</li>")
-            out.append("<h3>Related variables</h3><p>Links say the meaning changed between these, "
-                       "so each has its own page.</p><ul>" + "".join(items) + "</ul>")
         return "\n".join(out)
+
+    def lineage_section(self, here, lineage):
+        """The variable's runs: releases with the same meaning, oldest first, and the change
+        between runs (the link's relations and evidence). The record above is the latest run's."""
+        from .chains import names_text, span
+        latest = lineage.latest
+        out = ["<h2>Releases</h2>"]
+        if len(lineage.chains) == 1:
+            out.append("<p>This variable in each release, joined by the links between releases. "
+                       f"The record above is {esc(latest.last[0])}'s; the rest list only what differs.</p>")
+            out.append(self.releases_section(here, latest))
+            return "\n".join(out)
+        out.append(f"<p>This variable runs over {len(lineage.chains)} spans of releases. Within a span "
+                   "the links say the meaning stayed the same; between spans, a link says what changed. "
+                   f"The record above is {esc(latest.last[0])}'s.</p>")
+        for chain in lineage.chains:
+            for link, earlier in lineage.changes(chain):
+                out.append(self.change_between(link, earlier, chain))
+            rels = [m[0] for m in chain.members]
+            heading = f"{span(rels, self.order)}: {names_text(chain, self.order)}"
+            out.append(f'<h3 class="run">{esc(heading)}' + (" (current)" if chain is latest else "") + "</h3>")
+            if chain is not latest:
+                rec = self.records[chain.last]
+                if rec.get("label"):
+                    out.append(f'<p class="label">{esc(rec["label"])}</p>')
+                for q in rec.get("questions") or []:
+                    out.append(text_block(q.get("text", "")))
+                if rec.get("values"):
+                    out.append('<p class="origin">Codes: ' + esc("; ".join(
+                        f"{v.get('code')} {v.get('label') or ''}".strip() for v in rec["values"])) + "</p>")
+                if valid_ranges(rec):
+                    out.append('<p class="origin">Valid range: ' + esc("; ".join(
+                        range_text(r) for r in valid_ranges(rec))) + "</p>")
+            out.append(self.releases_section(here, chain))
+        return "\n".join(out)
+
+    def change_between(self, link, earlier, later):
+        """One change between runs: the link's relations, origin, note and evidence."""
+        rel_a, _, name_a = earlier.last
+        rel_b, _, name_b = later.members[0]
+        ev = "".join(f"<li>{esc(e.get('citation'))}"
+                     + (f' — <a href="{esc(e["url"])}">{esc(e["url"])}</a>' if e.get("url") else "")
+                     + (f'<blockquote>{esc(e["quote"])}</blockquote>' if e.get("quote") else "")
+                     + "</li>" for e in link.get("evidence", []))
+        parts = [f'<div class="change"><p><strong>Changed</strong> from {esc(rel_a)} ({esc(name_a)}) to '
+                 f"{esc(rel_b)} ({esc(name_b)}): {esc(', '.join(link['relations']))} "
+                 f'<span class="origin">{esc(origin_text(link["origin"]))}</span></p>']
+        if link.get("note"):
+            parts.append(f"<p>{esc(link['note'])}</p>")
+        if ev:
+            parts.append(f"<ul>{ev}</ul>")
+        return "".join(parts) + "</div>"
+
+    def alias_page(self, path, target):
+        """A page at an older name that sends the reader to the variable's page."""
+        depth = path.count("/")
+        href = "../" * depth + target
+        name = path.rsplit("/", 1)[-1].removesuffix(".html")
+        self.write(path, f"""<!-- Generated by pdt {__version__} from inputs sha256:{self.digest}. Do not edit; run `make views`. -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url={href}">
+<title>{esc(name)}</title><link rel="canonical" href="{href}"></head>
+<body><p>{esc(name)} is an earlier name of this variable: <a href="{href}">{esc(target)}</a>.</p></body></html>
+""")
+
+    def changed_pairs(self):
+        """Adjacent releases with any difference: a variable added, removed or changed."""
+        if not hasattr(self, "_changed_pairs"):
+            releases = release_order(self.ds)
+            self._changed_pairs = [(a, b) for a, b in zip(releases, releases[1:]) if any(self.changes(a, b))]
+        return self._changed_pairs
+
+    def changes(self, old, new):
+        """(added, removed, changed) between two releases, by name and table."""
+        def records(rel):
+            return {(t, rec["name"]): rec for r, t, rec in self.index.entries if r == rel}
+        a, b = records(old), records(new)
+        added = sorted(set(b) - set(a), key=str)
+        removed = sorted(set(a) - set(b), key=str)
+        changed = []
+        for k in sorted(set(a) & set(b), key=str):
+            fields = [f for f in ("label", "questions", "values", "universe", "description")
+                      if a[k].get(f) != b[k].get(f)]
+            if fields:
+                changed.append((k, fields))
+        return added, removed, changed
 
     def availability_table(self, rec, all_waves):
         """Waves down, forms (and other dimensions) across; cells hold n when known.
@@ -668,14 +761,7 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         def records(rel):
             return {(t, rec["name"]): rec for r, t, rec in self.index.entries if r == rel}
         a, b = records(old), records(new)
-        added = sorted(set(b) - set(a), key=str)
-        removed = sorted(set(a) - set(b), key=str)
-        changed = []
-        for k in sorted(set(a) & set(b), key=str):
-            fields = [f for f in ("label", "questions", "values", "universe", "description")
-                      if a[k].get(f) != b[k].get(f)]
-            if fields:
-                changed.append((k, fields))
+        added, removed, changed = self.changes(old, new)
         def name(rel, k):
             t, n = k
             return self.link(here, self.var_path(rel, t, n), (f"{t}." if t else "") + n)
@@ -709,11 +795,13 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
         """One row per variable page: its latest name, label, releases and question text."""
         from .chains import names_text
         rows = []
-        for chain in self.chains:
+        for lineage in self.lineages:
+            chain = lineage.latest
             rel, tab, name = chain.last
             rec = self.records[chain.last]
             q = " ".join(q.get("text", "") for q in rec.get("questions") or [])
-            names = names_text(chain, self.order) if len(self.order) > 1 else rel
+            names = ("; ".join(names_text(c, self.order) for c in lineage.chains)
+                     if len(self.order) > 1 else rel)
             rows.append([name, rec.get("label") or "", (f"{tab}: " if tab else "") + names,
                          self.var_path(rel, tab, name), " ".join(q.split())[:400]])
         self.write("search-index.js", "window.PDT_INDEX = " + json.dumps(rows, ensure_ascii=False) + ";\n")

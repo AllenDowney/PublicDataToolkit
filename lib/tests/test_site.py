@@ -198,23 +198,48 @@ def test_cases_column_when_n_present(tmp_path):
     assert "<th>Cases</th>" not in read(root, "variables/q2.html")
 
 
-def test_change_of_meaning_is_a_separate_cross_linked_page(tmp_path):
+def test_change_of_meaning_is_one_page_with_runs(tmp_path):
+    """A variable whose meaning changed is one page (a lineage): a section per run of releases,
+    the change between them with the link's relations and evidence, and an alias for an old name."""
     dataset = dict(DATASET, releases=[
         {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
-        {"id": "r2", "label": "R2", "status": "current", "sources": ["cb"]}])
+        {"id": "r2", "label": "R2", "status": "superseded", "sources": ["cb"]},
+        {"id": "r3", "label": "R3", "status": "current", "sources": ["cb"]}])
     root = make_repo(tmp_path, dataset=dataset, variables=[dict(VARIABLES[0], release="r1")], groups=[],
                      corrections=[])
     write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl",
                 [dict(VARIABLES[0], release="r2", values=[{"code": 1, "label": "yes", "kind": "valid"}])])
+    write_jsonl(root / "metadata" / "releases" / "r3" / "variables.jsonl",
+                [dict(VARIABLES[0], release="r3", name="q1new", values=[{"code": 1, "label": "yes", "kind": "valid"}])])
     write_jsonl(root / "metadata" / "links.jsonl", [
         {"from": {"release": "r1", "name": "q1"}, "to": {"release": "r2", "name": "q1"},
-         "relations": ["codes_changed"], "origin": {"origin": "publisher", "source": "cb"}}])
+         "relations": ["same_item", "codes_changed"], "origin": {"origin": "publisher", "source": "cb"},
+         "evidence": [{"citation": "Release notes, p. 2", "quote": "Code 9 was dropped."}]},
+        {"from": {"release": "r2", "name": "q1"}, "to": {"release": "r3", "name": "q1new"},
+         "relations": ["same_item", "renamed"], "origin": {"origin": "publisher", "source": "cb"}}])
     manifest = site.build(root)
     pages = sorted(f for f in manifest["files"] if f.startswith("variables/"))
-    assert pages == ["variables/q1%40r1.html", "variables/q1.html"]                  # same name, two variables
-    new, old = read(root, "variables/q1.html"), read(root, "variables/q1%40r1.html")
-    assert "Related variables" in new and 'href="../variables/q1%40r1.html"' in new and "(earlier)" in new
-    assert 'href="../variables/q1.html"' in old and "(later)" in old and "codes_changed" in old
+    assert pages == ["variables/q1.html", "variables/q1new.html"]       # one page, and an alias for q1
+    page = read(root, "variables/q1new.html")
+    assert "runs over 2 spans" in page and "r1: q1" in page and "r2–r3: q1 r2 → q1new r3" in page
+    assert "same_item, codes_changed" in page and "Code 9 was dropped." in page and "Release notes, p. 2" in page
+    alias = read(root, "variables/q1.html")
+    assert 'http-equiv="refresh"' in alias and "q1new.html" in alias
+
+
+def test_change_pages_only_where_something_changed(tmp_path):
+    dataset = dict(DATASET, releases=[
+        {"id": "r1", "label": "R1", "status": "superseded", "sources": ["cb"]},
+        {"id": "r2", "label": "R2", "status": "superseded", "sources": ["cb"]},
+        {"id": "r3", "label": "R3", "status": "current", "sources": ["cb"]}])
+    root = make_repo(tmp_path, dataset=dataset, variables=[dict(VARIABLES[0], release="r1")], groups=[],
+                     corrections=[])
+    write_jsonl(root / "metadata" / "releases" / "r2" / "variables.jsonl", [dict(VARIABLES[0], release="r2")])
+    write_jsonl(root / "metadata" / "releases" / "r3" / "variables.jsonl",
+                [dict(VARIABLES[0], release="r3", label="Question one, revised")])
+    manifest = site.build(root)
+    assert sorted(f for f in manifest["files"] if f.startswith("changes/")) == ["changes/r2--r3.html"]
+    assert "No variable changed between: r1 → r2." in read(root, "index.html")
 
 
 def test_code_of_links_column_and_code(tmp_path):
