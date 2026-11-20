@@ -64,3 +64,19 @@ Asked by the coordinator after Task 67. `make views` and `make check`, under the
 | brfss, atus, nsduh | nothing to change: already generated with the current library |
 
 pdt-gss still needs `make views` when Task 58 frees it.
+
+## Template updates to v0.2.0 and v0.2.1 (2026-11-20)
+
+Asked by the coordinator before the dataset repos were pushed.
+
+**v0.2.0** (LICENSE, the README's License section, the `data` target, the Pages workflow) went into every repo made from the template. Conflicts were resolved by keeping the repo's own `build/`, `slice.yaml`, `scripts/build_data.py` and Makefile targets. The Makefile also gained `$(VIEWS_ARGS)` for the workflow and `export-daaf`. Where the README conflicted (chicago-crimes, cps-asec, yrbss), the install note and License section were added by hand.
+
+**v0.2.1** added the template's `scripts/extract.py` (toolkit 31fee4e). It is a wrapper for `pdt.extract` that reads `dataset.yaml` for the releases and tables. It refuses, and says how to fix it, when `data/processed/` is empty or a release or table is wrong. A template test covers it. The README install note names plain `scripts/extract.py` again; an interim fix, 4029258, had hedged it.
+
+| Repos | How | Result |
+|---|---|---|
+| atus, brfss, ces, chicago-crimes, hints, meps, nhanes, nhis, nlsy97, nsduh, pisa, yrbss | `copier update` to v0.2.0, then to v0.2.1 | check 0; pushed by the coordinator |
+| cps-asec | the same; its own wrapper replaced by the template's, its example moved to the README | check 0; pushed |
+| pulse, ncvs | `copier update` from v0.1.0 straight to v0.2.1, after purple and blue committed | check 0. pulse was pushed; ncvs stays local with no remote until ICPSR agrees on its terms |
+| anes-cdf, fars, nsfg | not made from the template: the script was copied in by hand, with the examples moved to the README | check 0; pushed |
+| gss | waiting: not made from the template, and orange's Task 58 work is uncommitted | to do: copy in `scripts/extract.py` from v0.2.1 and move its example (`--release 7224r3a --vars year,ballot,abany,age --waves 2000-2024 --missing dk=DK`) to the README, then `make views` |
