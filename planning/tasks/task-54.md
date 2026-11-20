@@ -1,6 +1,6 @@
 # Task 54 — Comparing releases: ignored markers, across tables, over gaps
 
-**Status:** `DOING (red)`
+**Status:** `DONE (red)` (see "Done" below)
 
 Yellow's library proposals from the NHIS slice ([`task-50.md`](task-50.md), "Proposals" 1–3).
 
@@ -41,3 +41,22 @@ All three are additive. The existing `pdt diff A B` output keeps its fields, and
   The data page is https://www.bls.gov/tus/data/datafiles-0323.htm. The refusal page says bot activity "that doesn't conform to BLS usage policy is prohibited". BLS's terms (https://www.bls.gov/bls/blsterms.htm) reserve "the right to block robots that do not contain information that can be used to contact the owner".
 - **What's needed:** a script would need contact information in its User-Agent. That means Allen's email, which I won't send without his explicit OK. The other way is for Allen to download the files in a browser.
 - **Nothing else has started:** no sources, no records.
+
+## Done (2026-11-20)
+
+**Status:** `DONE (red)`; committed locally, not pushed.
+
+**1. Ignore patterns** (`lib/pdt/compare.py`). `compare_text(a, b, ignore=())` replaces each match with a space in both texts. A difference that disappears only then is `text_only`. `compare_pair` and `code_changes` (value labels) pass `ignore` through. `pdt diff --ignore REGEX` (repeatable) passes it in, and the result records it.
+- On pdt-nhis 2021 → 2024: HOPELESS_A, EFFORT_A and WORTHLESS_A read `wording_changed` without `--ignore '(?:^|(?<=\s))\*\s'` and `same_item` with it, which matches yellow's links.
+
+**2. Across tables** (`lib/pdt/diff.py`). `table_pairs()` maps tables in this order: `--table-map A=B` (repeatable), the same id, then the table in B that most of the table's one-to-one links reach. Several tables can map to one (a merge). `diff()` pairs variables in two passes: links and names per table pair, then B's unpaired variables, listed once per B table. Result entries gain `from_table` and `only_table`; the report heads pairs "[samadult → adult]" and "[person: only in 2018]". Proposed links use each side's table.
+- On pdt-nhis 2018 → 2019: `samadult` → `adult` is found from yellow's three links, which now appear next to the 4 name-paired variables and the unlinked ones.
+- `person` and `family` have no links, so they need `--table-map person=adult --table-map family=adult`. With it, their rename candidates show: PHSTAT → PHSTAT_A (0.88), RAT_CAT5 → RATCAT_A.
+- The three linked pairs differ from their links. Yellow's links say only `renamed`; the records also show changed labels, wording and universes (SMKSTAT2 → SMKCIGST_A; DEP_1 → DEPFREQ_A; ANX_1 → ANXFREQ_A). That's for yellow to look at.
+
+**3. Over gaps.** `gaps()` and `pdt diff REPO --gaps [--releases ...]` follow each variable to its next appearance: by a one-to-one link to the nearest later release, else by the same name in the counterpart table. Only pairs that skip releases are compared and reported, with the releases skipped and, for links, whether the relations match.
+- On pdt-nhis (with `--ignore` for "* "), there are 14 gap pairs, among them PHQCAT_A and GADCAT_A 2019 → 2022, K6SPD_A 2021 → 2024, and DRKSTAT_A and SLPHOURS_A 2020 → 2022 → 2024. All 14 agree with yellow's links.
+
+**Tests:** `test_ignore_markers` (compare); `test_across_tables_by_links_and_by_map`, `test_gaps_follow_links_and_names`, `test_cli_gaps_and_ignore` (diff). pytest: 229 passing, 1 skipped. The `release-diff` skill documents the three options.
+
+**Proposed to the main thread:** a `dataset.yaml` field (for example `comparison.ignore: ["(?:^|(?<=\\s))\\*\\s"]`), so that a repo declares its markers once. Then `pdt diff` and a repo's link rule would read the same list, instead of the rule hard-coding it and diff taking it on the command line.
