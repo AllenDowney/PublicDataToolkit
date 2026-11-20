@@ -24,7 +24,8 @@ Rules (planning/tasks/task-68.md):
   advice words in everything else, and the tests use it.
 - Provenance: every file carries the generated header; the manifest records the inputs hash
   and this module's generator hash, which C8 compares where export/daaf/ exists.
-- On request only: `pdt export daaf --domain health`, not part of `pdt views`.
+- On request only: `pdt export daaf`, not part of `pdt views`. The skill name's prefix is
+  dataset.yaml's `domain`, or `--domain`.
 """
 
 import hashlib
@@ -129,13 +130,16 @@ def git_remote(root):
 
 
 class Exporter:
-    def __init__(self, root, out, domain, repo_url=None, today=None):
+    def __init__(self, root, out, domain=None, repo_url=None, today=None):
         self.root = Path(root)
         self.out = Path(out)
         self.repo = Repo.load(self.root)
         self.ds = self.repo.dataset
         check_terms(self.ds)
         self.id = self.ds["id"]
+        domain = domain or self.ds.get("domain")
+        if not domain:
+            raise ValueError("no domain: set `domain` in dataset.yaml (STANDARD.md §2.1), or pass --domain")
         self.name = f"{domain}-data-source-{self.id}"
         if not NAME_RE.match(self.name) or len(self.name) > 64:
             raise ValueError(f"skill name {self.name!r} isn't lowercase letters, digits and single hyphens, "
@@ -910,7 +914,7 @@ def wrap(text, width):
     return out
 
 
-def build(root, domain, out=None, repo_url=None, today=None):
+def build(root, domain=None, out=None, repo_url=None, today=None):
     root = Path(root)
     return Exporter(root, Path(out) if out else root / DIRECTORY, domain, repo_url, today).build()
 
@@ -930,8 +934,9 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog="pdt export daaf",
                                 description="Write export/daaf/<domain>-data-source-<id>/, a DAAF data-source skill")
     p.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
-    p.add_argument("--domain", required=True,
-                   help="the subject prefix of DAAF's skill name, as in education-data-source-ccd: e.g. health")
+    p.add_argument("--domain",
+                   help="the subject prefix of DAAF's skill name, as in education-data-source-ccd "
+                        "(default: dataset.yaml's `domain`)")
     p.add_argument("--out", help="where to write (default: <path>/export/daaf)")
     p.add_argument("--repo-url", help="the dataset repo's URL (default: its git remote origin)")
     p.add_argument("--date", help="skill-authored and skill-last-updated (default: today)")

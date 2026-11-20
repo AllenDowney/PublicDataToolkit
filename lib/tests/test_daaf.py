@@ -162,6 +162,18 @@ def test_refuses_to_overwrite_hand_made(repo_dir):
         export(repo_dir)
 
 
+def test_domain_from_dataset_yaml(tmp_path):
+    dataset = json.loads(json.dumps(DATASET))
+    root = make_repo(tmp_path, dataset=dataset)
+    with pytest.raises(ValueError, match="no domain"):
+        daaf.build(root)
+    dataset["domain"] = "health"
+    make_repo(tmp_path, dataset=dataset)
+    assert daaf.build(root, today="2026-11-20")["skill"] == "health-data-source-toy"
+    assert daaf.build(root, "social", today="2026-11-20")["skill"] == "social-data-source-toy"   # --domain overrides
+    assert not [f for f in run(root).failures if f.startswith("C1")]                       # the schema accepts it
+
+
 def test_cli(repo_dir, capsys):
     assert main(["export", "daaf", str(repo_dir), "--domain", "test", "--date", "2026-11-20"]) == 0
     assert f"{SKILL}/" in capsys.readouterr().out

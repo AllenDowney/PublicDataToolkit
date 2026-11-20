@@ -129,7 +129,8 @@ A file over 20,000 tokens splits into parts (`columns-01.md`, ...), with each pa
 - **Unjoined names:** in NHIS, names like `HHX` appear before and after 2019 with no link joining them. The pitfall says the records don't say whether they're the same item, rather than calling them different items.
 - **`--repo-url`:** without a git remote (none of the repos has one yet), the canonical source reads "the repository pdt-<id>". After publishing, `--repo-url` or the remote fills it in.
 
+**After acceptance (2026-11-20):** the coordinator added an optional `domain` to dataset.yaml (c430ad8). `pdt export daaf` takes it as the default, `--domain` overrides it, and the export fails, naming both, when neither is given. The template's `make export-daaf` passes `$(ARGS)`. pdt-nhis has `domain: health`, with its views and export regenerated (12faf75).
+
 **Next:**
 - A load test inside DAAF (Allen).
-- A `dataset.yaml` field for the domain, if the coordinator wants one.
 - Related Data Sources from the catalog: it now says the records relate no other dataset.

@@ -1,8 +1,6 @@
 PYTHON ?= python
 # A PublicDataToolkit checkout. Or `pip install -e $(PDT)` and run `pdt check`.
 PDT ?= ../PublicDataToolkit
-# The subject prefix of the DAAF skill name (make export-daaf): health, social, education, ...
-DAAF_DOMAIN ?=
 
 .PHONY: download build views check export-daaf
 
@@ -24,7 +22,6 @@ check:
 	PYTHONPATH=$(PDT)/lib $(PYTHON) -m pdt check .
 
 ## On request: export/daaf/, this dataset as a DAAF data-source skill (pdt export daaf).
-## DAAF_DOMAIN is the subject prefix of the skill's name, as in DAAF's education-data-source-ccd.
+## The skill's name starts with dataset.yaml's `domain`; ARGS="--domain health" overrides it.
 export-daaf:
-	@test -n "$(DAAF_DOMAIN)" || { echo "Set DAAF_DOMAIN, e.g. make export-daaf DAAF_DOMAIN=health"; exit 1; }
-	PYTHONPATH=$(PDT)/lib $(PYTHON) -m pdt export daaf . --domain $(DAAF_DOMAIN)
+	PYTHONPATH=$(PDT)/lib $(PYTHON) -m pdt export daaf . $(ARGS)
