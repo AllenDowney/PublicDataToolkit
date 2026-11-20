@@ -12,6 +12,8 @@ intro: |
   when it is.
 datasets:
 - id: atus
+  repo: https://github.com/AllenDowney/pdt-atus
+  site: https://allendowney.github.io/pdt-atus/
   title: American Time Use Survey (ATUS)
   publisher: U.S. Bureau of Labor Statistics (BLS)
   kind: survey
@@ -26,6 +28,8 @@ datasets:
   releases:
   - '20260205'
 - id: brfss
+  repo: https://github.com/AllenDowney/pdt-brfss
+  site: https://allendowney.github.io/pdt-brfss/
   title: Behavioral Risk Factor Surveillance System
   publisher: Centers for Disease Control and Prevention (CDC), Division of Population Health
   kind: survey
@@ -44,6 +48,8 @@ datasets:
   - '2022'
   - '2023'
 - id: ces
+  repo: https://github.com/AllenDowney/pdt-ces
+  site: https://allendowney.github.io/pdt-ces/
   title: Cooperative Election Study (CES)
   publisher: Cooperative Election Study (Harvard Dataverse)
   kind: survey
@@ -53,12 +59,16 @@ datasets:
   - '2022'
   - '2024'
 - id: chicago-crimes
+  repo: https://github.com/AllenDowney/pdt-chicago-crimes
+  site: https://allendowney.github.io/pdt-chicago-crimes/
   title: Crimes - 2001 to Present (City of Chicago)
   publisher: City of Chicago, Chicago Police Department
   kind: portal
   releases:
   - '20261119'
 - id: cps-asec
+  repo: https://github.com/AllenDowney/pdt-cps-asec
+  site: https://allendowney.github.io/pdt-cps-asec/
   title: Current Population Survey, Annual Social and Economic Supplement (CPS ASEC)
   publisher: U.S. Census Bureau (for the Bureau of Labor Statistics)
   kind: survey
@@ -87,6 +97,8 @@ datasets:
   - 7224r3a
   - 7224r3
 - id: hints
+  repo: https://github.com/AllenDowney/pdt-hints
+  site: https://allendowney.github.io/pdt-hints/
   title: Health Information National Trends Survey (HINTS)
   publisher: National Cancer Institute (NCI), National Institutes of Health
   kind: survey
@@ -172,6 +184,8 @@ datasets:
   - cycle08
   - cycle09
 - id: meps
+  repo: https://github.com/AllenDowney/pdt-meps
+  site: https://allendowney.github.io/pdt-meps/
   title: Medical Expenditure Panel Survey, Household Component (MEPS-HC)
   publisher: Agency for Healthcare Research and Quality (AHRQ)
   kind: survey
@@ -186,6 +200,8 @@ datasets:
   releases:
   - '2022'
 - id: nhanes
+  repo: https://github.com/AllenDowney/pdt-nhanes
+  site: https://allendowney.github.io/pdt-nhanes/
   title: National Health and Nutrition Examination Survey (NHANES)
   publisher: National Center for Health Statistics (NCHS), CDC
   kind: survey
@@ -194,6 +210,8 @@ datasets:
   - 2017-2020
   - 2021-2023
 - id: nhis
+  repo: https://github.com/AllenDowney/pdt-nhis
+  site: https://allendowney.github.io/pdt-nhis/
   title: National Health Interview Survey (NHIS)
   publisher: National Center for Health Statistics (NCHS), CDC
   kind: survey
@@ -208,6 +226,8 @@ datasets:
   - '2023'
   - '2024'
 - id: nlsy97
+  repo: https://github.com/AllenDowney/pdt-nlsy97
+  site: https://allendowney.github.io/pdt-nlsy97/
   title: National Longitudinal Survey of Youth 1997 (NLSY97)
   publisher: U.S. Bureau of Labor Statistics (BLS); produced and distributed by the Center for Human Resource Research (CHRR), The Ohio State University
   kind: survey
@@ -223,6 +243,8 @@ datasets:
   - 2022-2023
   - 2017-2019
 - id: nsduh
+  repo: https://github.com/AllenDowney/pdt-nsduh
+  site: https://allendowney.github.io/pdt-nsduh/
   title: National Survey on Drug Use and Health (NSDUH)
   publisher: Substance Abuse and Mental Health Services Administration (SAMHSA), Center for Behavioral Health Statistics and Quality
   kind: survey
@@ -231,6 +253,8 @@ datasets:
   - '2024'
   - '2025'
 - id: pisa
+  repo: https://github.com/AllenDowney/pdt-pisa
+  site: https://allendowney.github.io/pdt-pisa/
   title: Programme for International Student Assessment (PISA), student questionnaire
   publisher: Organisation for Economic Co-operation and Development (OECD)
   kind: survey
@@ -240,6 +264,8 @@ datasets:
   - '2018'
   - '2022'
 - id: yrbss
+  repo: https://github.com/AllenDowney/pdt-yrbss
+  site: https://allendowney.github.io/pdt-yrbss/
   title: Youth Risk Behavior Surveillance System (YRBSS) combined high school datasets
   publisher: Division of Adolescent and School Health, Centers for Disease Control and Prevention (CDC)
   kind: survey
