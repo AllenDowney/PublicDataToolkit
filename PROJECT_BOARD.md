@@ -262,7 +262,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 61 — An NHANES slice
 
-`DOING (blue)`. The National Health and Nutrition Examination Survey (NCHS) in `~/pdt-nhanes`: two or three cycles, several linked files per cycle (demographics, a questionnaire, an exam and a lab file) joined on SEQN, a test of tables and references. Details: [`planning/tasks/task-61.md`](planning/tasks/task-61.md).
+`DONE (blue)`; terms pending Allen. NHANES 2015-2016, 2017-March 2020 and 2021-2023 in `~/pdt-nhanes`: demographics, PHQ-9, body measures and glycohemoglobin as tables on SEQN (213 records); codebooks match the data exactly; keys and references hold; `pdt check` 0 failures. Details: [`planning/tasks/task-61.md`](planning/tasks/task-61.md).
 
 ### Task 62 — An NCVS slice, metadata only
 
