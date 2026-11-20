@@ -233,6 +233,7 @@ def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_
     import shutil
 
     import pyarrow as pa
+    import pyarrow.compute as pc
     import pyarrow.parquet as pq
 
     root = Path(root)
@@ -320,39 +321,63 @@ def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_
 
         files = {}
 
+        def template(b):
+            """Batch b's final columns, empty: from_pandas gives the arrow types and pandas metadata
+            write_one's from_pandas gives the whole column."""
+            cols = {}
+            for col in batches[b]["order"]:
+                if col == data.ROW:
+                    cols[col] = pd.Series([], dtype="int64")
+                elif col.endswith(data.CODE_SUFFIX):
+                    cols[col] = pd.Series(pd.Categorical([], categories=final[col]))
+                else:
+                    cols[col] = pd.Series([], dtype=final[col])
+            return pa.Table.from_pandas(pd.DataFrame(cols), preserve_index=False)
+
+        templates = [template(b) for b in range(len(batches))]
+
         def finished(b, g):
-            """Row group g of column batch b, with the whole column's dtypes and categories."""
-            info = batches[b]
+            """Row group g of column batch b, with the whole column's types and categories (in arrow:
+            a value column is cast only when its chunk's type differs, and a code column's indices
+            are mapped to the whole column's categories)."""
+            info, schema_b = batches[b], templates[b].schema
             part, k = divmod(g * rows, info["split_rows"])
             key = (b, part)
             if key not in files:
                 files.clear()     # one batch's file open at a time is enough
                 files[key] = pq.ParquetFile(work / f"{b:05d}-{part:06d}.parquet")
-            frame = files[key].read_row_group(k // rows).to_pandas()
-            out_cols = {}
-            for col in info["order"]:
-                if col == data.ROW:
-                    out_cols[col] = frame[col]
-                elif col.endswith(data.CODE_SUFFIX):
-                    cells = frame[col].astype(object) if col in frame else [None] * len(frame)
-                    out_cols[col] = pd.Series(pd.Categorical(cells, categories=final[col]), index=frame.index)
-                else:
-                    out_cols[col] = frame[col].astype(object).where(frame[col].notna(), None).astype(final[col])
-            return pa.Table.from_pandas(pd.DataFrame(out_cols, index=frame.index), preserve_index=False)
+            chunk = files[key].read_row_group(k // rows)
+            arrays = []
+            for field in schema_b:
+                col = field.name
+                arr = chunk.column(col).combine_chunks() if col in chunk.column_names else None
+                if col.endswith(data.CODE_SUFFIX):
+                    if arr is None:
+                        arr = pa.nulls(chunk.num_rows, field.type)
+                    else:
+                        if isinstance(arr, pa.ChunkedArray):
+                            arr = arr.combine_chunks()
+                        position = {text: n for n, text in enumerate(final[col])}
+                        mapping = pa.array([position[x] for x in arr.dictionary.to_pylist()],
+                                           type=field.type.index_type)
+                        arr = pa.DictionaryArray.from_arrays(pc.take(mapping, arr.indices),
+                                                             pa.array(final[col], type=field.type.value_type))
+                elif not arr.type.equals(field.type):
+                    arr = pc.cast(arr, field.type)      # e.g. a chunk of whole numbers in a Float64 column
+                arrays.append(arr)
+            return pa.Table.from_arrays(arrays, schema=schema_b)
 
         tokens = {n: tokens[n] for n in names if n in tokens}     # in column order, as split() lists them
         refusal = check_terms(repo.dataset, sources.get(source_id, {"id": source_id}))
         identity = release_identity(root, repo, release, table, source_id, sources, applied, refusal)
         identity["round_trip"] = ROUND_TRIP
-        first = [finished(b, 0) for b in range(len(batches))]
-        pandas_meta = json.loads(first[0].schema.metadata[b"pandas"])
-        pandas_meta["columns"] = [col for t in first for col in json.loads(t.schema.metadata[b"pandas"])["columns"]]
+        pandas_meta = json.loads(templates[0].schema.metadata[b"pandas"])
+        pandas_meta["columns"] = [col for t in templates for col in json.loads(t.schema.metadata[b"pandas"])["columns"]]
         pandas_meta["attributes"] = {"pdt_tokens": tokens}
         metadata = {b"pandas": json.dumps(pandas_meta).encode(),
                     data.META_KEY: json.dumps({**identity, "tokens": tokens,
                                                "pdt_version": data.__version__}).encode()}
-        schema = pa.schema([f for t in first for f in t.schema], metadata=metadata)
-        del first
+        schema = pa.schema([f for t in templates for f in t.schema], metadata=metadata)
         n_groups = max(1, -(-n_rows // rows))
         with pq.ParquetWriter(tmp, schema) as writer:
             for g in range(n_groups):
@@ -364,7 +389,10 @@ def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_
         for g in range(n_groups):
             for b in range(len(batches)):
                 part = finished(b, g)
-                if not written.read_row_group(g, columns=part.schema.names).to_pandas().equals(part.to_pandas()):
+                # compared as pandas frames: a dictionary read back from parquet may list only the
+                # categories that occur, and the pandas metadata restores the rest
+                back = written.read_row_group(g, columns=part.schema.names)
+                if not back.replace_schema_metadata(part.schema.metadata).to_pandas().equals(part.to_pandas()):
                     raise ValueError(f"{out.name}: row group {g}, batch {b} differs from its checked part; "
                                      "nothing written")
         files.clear()
