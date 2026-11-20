@@ -11,6 +11,8 @@ columns asked for, since the files are often much wider than a repo's records.
                                            a blank numeric field is Stata's missing -> Code(".")
     read_sas_input(dat, input_sas, columns)    fixed-width text laid out by a SAS input program;
                                            `$` columns stay text (blanks too), numeric "." or blank -> Code(".")
+    read_sav(path, columns, rows=None)     SPSS .sav (pyreadstat); user-missing codes stay numbers,
+                                           system missing -> Code(".")
 """
 
 import io
@@ -122,6 +124,7 @@ def read_stata_dictionary(dat, dct, columns, encoding="latin-1"):
 
 SAS_INPUT_LINE = re.compile(r"^\s*(\w+)\s+(\$)?\s*(\d+)\s*-\s*(\d+)\s*$", re.MULTILINE)
 SAS_LABEL_LINE = re.compile(r'^\s*(\w+)\s*=\s*"([^"]*)"\s*$', re.MULTILINE)
+SAS_LENGTH_TEXT = re.compile(r"^\s*(\w+)\s+\$\s*\d+\s*$", re.MULTILINE)
 
 
 def _sas_statement(text, keyword):
@@ -135,12 +138,22 @@ def parse_sas_input(path):
 
     Reads the column ranges of its `input` statement (`q26 $ 281-281`, `weight 125-134`)
     and the labels of its `label` statement, as CDC's YRBSS and BRFSS programs write them.
+    A column is text when the input statement marks it `$`, or when a `length` statement
+    does (`CNT $3`), as the OECD's PISA 2012 program does. A label is matched by name, or
+    ignoring case when that's unambiguous (PISA 2012 labels `STIDSTD` for input `StIDStd`).
     """
     text = open(path, encoding="latin-1").read()
     labels = dict(SAS_LABEL_LINE.findall(_sas_statement(text, "label")))
+    by_upper = {}
+    for name, label in labels.items():
+        by_upper.setdefault(name.upper(), []).append(label)
+    texts = {m.group(1).upper() for m in SAS_LENGTH_TEXT.finditer(_sas_statement(text, "length"))}
     out = {}
     for name, dollar, first, last in SAS_INPUT_LINE.findall(_sas_statement(text, "input")):
-        out[name] = (int(first) - 1, int(last), bool(dollar), labels.get(name))
+        label = labels.get(name)
+        if label is None and len(by_upper.get(name.upper(), [])) == 1:
+            label = by_upper[name.upper()][0]
+        out[name] = (int(first) - 1, int(last), bool(dollar) or name.upper() in texts, label)
     if not out:
         raise ValueError(f"{path}: no column ranges in an input statement")
     return out
@@ -169,4 +182,35 @@ def read_sas_input(dat, input_sas, columns, encoding="latin-1"):
         else:
             out[name] = pd.Series([Code(".") if c.strip() in ("", ".") else _number(c.strip()) for c in cells],
                                   dtype=object)
+    return pd.DataFrame(out)
+
+
+def read_sav(path, columns, rows=None):
+    """An SPSS .sav file's columns as a raw frame (needs pyreadstat).
+
+    User-missing values (PISA's 95-99, an SPSS missing range) stay numbers: they're codes
+    the records list as missing, with the data file as their origin when nothing else marks
+    them. System missing is a token, Code("."). Whole numbers come back as int, others as
+    float; string columns as text.
+
+    rows: {column: [values]} keeps only the rows whose column holds one of the values
+    (PISA's countries, `data_rows` in dataset.yaml). The column needn't be one asked for.
+    """
+    import pyreadstat
+    rows = rows or {}
+    use = list(dict.fromkeys(list(columns) + list(rows)))
+    frame, meta = pyreadstat.read_sav(str(path), usecols=use, user_missing=True)
+    missing = [c for c in columns if c not in frame.columns]
+    if missing:
+        raise KeyError(f"{path}: no column(s) {missing}")
+    for col, keep in rows.items():
+        frame = frame[frame[col].isin(keep)]
+    frame = frame.reset_index(drop=True)
+    out = {}
+    for name in columns:
+        if meta.readstat_variable_types.get(name) == "string":
+            out[name] = pd.Series(frame[name].tolist(), dtype=object)
+        else:
+            out[name] = pd.Series([Code(".") if v != v else (int(v) if float(v).is_integer() else float(v))
+                                   for v in frame[name].tolist()], dtype=object)
     return pd.DataFrame(out)
