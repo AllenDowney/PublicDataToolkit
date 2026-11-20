@@ -266,7 +266,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 ### Task 62 — An NCVS slice, metadata only
 
-`TODO`. The National Crime Victimization Survey (BJS, through ICPSR/NACJD) in `~/pdt-ncvs`: household, person and incident tables for a few years. ICPSR doesn't allow redistribution, so this tests the metadata-only path: no data ships, and a download script fetches the files. Record the terms for Allen. Memory cap applies. Take the next task file, `planning/tasks/task-62.md`, when you claim it.
+`DOING (blue)`. The National Crime Victimization Survey (BJS, through ICPSR/NACJD) in `~/pdt-ncvs`: household, person and incident tables, metadata only (no data ships; a download script with --accept-terms). Details: [`planning/tasks/task-62.md`](planning/tasks/task-62.md).
 
 ### Task 63 — A HINTS slice
 
