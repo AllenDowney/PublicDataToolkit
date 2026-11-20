@@ -1,5 +1,5 @@
 """Command line: `pdt check [PATH]`, `pdt views [PATH] [--only agent|site|export]`, `pdt search PATH --filter JSON [--release ID|all] [--names] [--limit N --offset N]`, `pdt search --catalog PATHS --filter JSON`,
-`pdt catalog PATHS --out DIR`."""
+`pdt catalog PATHS --out DIR`, `pdt export daaf [PATH] --domain D`."""
 
 import argparse
 import json
@@ -47,6 +47,10 @@ def main(argv=None):
     dif.add_argument("rest", nargs=argparse.REMAINDER)
     pkg = sub.add_parser("package", help="assemble the data release asset in data/release/ (ship data only)")
     pkg.add_argument("path", nargs="?", default=".", help="the dataset repo (default: .)")
+    exp = sub.add_parser("export", help="export a dataset repo for another tool: `pdt export daaf -h`",
+                         add_help=False)
+    exp.add_argument("format", choices=["daaf"], help="daaf: a DAAF data-source skill in export/daaf/")
+    exp.add_argument("rest", nargs=argparse.REMAINDER)
     download = sub.add_parser("download", help="fetch a dataset repo's sources (see pdt download -h)",
                               add_help=False)
     download.add_argument("rest", nargs=argparse.REMAINDER)
@@ -64,6 +68,9 @@ def main(argv=None):
             return 1
         print(f"wrote {out}; publish it as a GitHub release by hand")
         return 0
+    if args.command == "export":
+        from .daaf import main as daaf_main
+        return daaf_main(args.rest)
     if args.command == "download":
         from .download import main as download_main
         return download_main(args.rest)

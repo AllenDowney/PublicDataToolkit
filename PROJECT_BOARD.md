@@ -289,9 +289,9 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 
 `DONE (green)`. `pdt.ranges` (one valid range or a list) in check, diff, site, export and derived; `geography` in the `available` filter and the views; `values[].note` on site pages; a label lint under C6 (2 real hits, ATUS, fixed); `pdt.xport.read_sas_xport`; a `pdt search` bug fixed (`name` with `available` matched nothing). pdt-brfss uses all of them (ee3c818). Every repo's views need regenerating. Details: [`planning/tasks/task-67.md`](planning/tasks/task-67.md).
 
-### Task 68 — Design: `pdt export daaf`
+### Task 68 — `pdt export daaf`
 
-`DOING (purple)`. A design for `pdt export daaf` ([`planning/daaf.md`](planning/daaf.md), next step 1): a dataset repo's records and agent views as a skill in DAAF's data-source template, with our terms in a Terms of Use section and refused unless the metadata and documentation ship and LLM processing is allowed. Design only, until the coordinator has read it. Details: [`planning/tasks/task-68.md`](planning/tasks/task-68.md).
+`DOING (purple)`. A dataset repo as a DAAF data-source skill (`export/daaf/<domain>-data-source-<id>/`), refused unless the metadata and documentation ship and LLM processing is allowed. Design approved; prototype built and tested on pdt-nhis and pdt-gss; DAAF's lint passes. A load test inside DAAF waits for Allen. Details: [`planning/tasks/task-68.md`](planning/tasks/task-68.md).
 
 ### Task 69 — Panel responses spread across rounds (NLSY)
 
