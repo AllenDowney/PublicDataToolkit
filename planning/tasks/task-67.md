@@ -46,4 +46,21 @@ Tests: `lib/tests/test_ranges_geography.py`, `lib/tests/test_xport.py` (254 pass
 ## Left for others
 
 - orange: re-export `read_sas_xport` from `pdt.readers` when Task 58's changes are committed.
-- Every other dataset repo needs `make views`, since the generated SKILL.md and site pages changed.
+
+## Views refresh (2026-11-20)
+
+Asked by the coordinator after Task 67. `make views` and `make check`, under the memory cap, in each dataset repo except pdt-gss (orange, Task 58). All eleven were clean beforehand, and all give 0 failures. Only `agent/` and `docs/` changed:
+
+| Repo | Commit |
+|---|---|
+| anes-cdf | 5eb099b |
+| nsfg | 972e550 |
+| fars | 326829a |
+| chicago-crimes | 151a399 |
+| yrbss | d834bf1 |
+| cps-asec | 8b3399f |
+| pisa | 1230dea |
+| nhis | d4bcaf8 |
+| brfss, atus, nsduh | nothing to change: already generated with the current library |
+
+pdt-gss still needs `make views` when Task 58 frees it.
