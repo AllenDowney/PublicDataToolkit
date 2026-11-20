@@ -4,13 +4,15 @@ A raw frame holds, in every cell, either a value or a `pdt.data.Code` for the
 publisher's own missing tokens (STANDARD.md §8). Each reader reads only the
 columns asked for, since the files are often much wider than a repo's records.
 
-    read_stata(path, columns)              Stata .dta or .dta.gz; extended missing (.d, .i, .) -> Code
+    read_stata(path, columns)              Stata .dta or .dta.gz (pyreadstat, only the columns asked for);
+                                           extended missing (.d, .i, .) -> Code
     read_sas(path, columns)                SAS .sas7bdat; system missing -> Code(".")
     read_csv_zip(path, member, columns)    a CSV inside a zip; empty cells stay null
     read_stata_dictionary(dat, dct, columns)   fixed-width text described by a Stata .dct;
                                            a blank numeric field is Stata's missing -> Code(".")
     read_sas_input(dat, input_sas, columns)    fixed-width text laid out by a SAS input program;
                                            `$` columns stay text (blanks too), numeric "." or blank -> Code(".")
+    read_sas_xport(path, columns)          SAS transport (.xpt, also inside a zip); from pdt.xport (Task 67)
     read_sav(path, columns, rows=None)     SPSS .sav (pyreadstat); user-missing codes stay numbers,
                                            system missing -> Code(".")
 """
@@ -18,10 +20,12 @@ columns asked for, since the files are often much wider than a repo's records.
 import io
 import re
 import zipfile
+from pathlib import Path
 
 import pandas as pd
 
 from .data import Code
+from .xport import read_sas_xport  # noqa: E402,F401  (re-exported; Task 67)
 
 
 def _pick(available, columns, path):
@@ -31,19 +35,69 @@ def _pick(available, columns, path):
     return list(columns)
 
 
+_DECOMPRESSED = {}   # (path, size, mtime) -> uncompressed temporary copy, reused across batches
+
+
+def _uncompressed(path):
+    """A .gz file's uncompressed copy in a temporary directory, made once per file and process
+    (pyreadstat can't read compressed files); any other path as it is."""
+    import atexit
+    import gzip
+    import shutil
+    import tempfile
+    path = Path(path)
+    if path.suffix != ".gz":
+        return path
+    stat = path.stat()
+    key = (str(path.resolve()), stat.st_size, stat.st_mtime)
+    if key not in _DECOMPRESSED:
+        tmp = Path(tempfile.mkdtemp(prefix="pdt-stata-"))
+        atexit.register(shutil.rmtree, tmp, True)
+        out = tmp / path.stem
+        with gzip.open(path, "rb") as src, open(out, "wb") as dst:
+            shutil.copyfileobj(src, dst, 1 << 24)
+        _DECOMPRESSED[key] = out
+    return _DECOMPRESSED[key]
+
+
+def _read_dta(path, **kwargs):
+    """pyreadstat.read_dta, in the file's own encoding, else latin-1 (as pandas falls back)."""
+    import pyreadstat
+    try:
+        return pyreadstat.read_dta(str(path), **kwargs)
+    except UnicodeDecodeError:
+        return pyreadstat.read_dta(str(path), encoding="latin1", **kwargs)
+
+
 def read_stata(path, columns):
-    """Stata file as a raw frame. Extended missing values (.a-.z) and system missing (.) become Codes."""
-    with pd.io.stata.StataReader(path, compression="infer") as reader:
-        available = list(reader.variable_labels())
-    columns = _pick(available, columns, path)
-    frame = pd.read_stata(path, columns=columns, convert_missing=True, convert_categoricals=False,
-                          compression="infer")
+    """Stata file as a raw frame. Extended missing values (.a-.z) and system missing (.) become Codes.
+
+    pyreadstat reads only the columns asked for, so memory follows the batch, not the file:
+    300 of the GSS's 6,943 columns take 0.5 GB (pandas.read_stata parsed the whole file, 2.9 GB).
+    The cells are the same as pandas.read_stata(convert_missing=True) gave: numbers in an
+    integer storage type are ints, extended missing .x is Code(".x"), system missing is
+    Code("."), and string variables keep their text.
+    """
+    plain = _uncompressed(path)
+    _, meta = _read_dta(plain, metadataonly=True)
+    columns = _pick(meta.column_names, columns, path)
+    frame, meta = _read_dta(plain, usecols=columns, user_missing=True)
+    types = meta.readstat_variable_types
     out = {}
     for name in columns:
-        cells = frame[name].tolist()
-        out[name] = pd.Series(
-            [Code(str(c)) if isinstance(c, pd.io.stata.StataMissingValue) else c for c in cells],
-            dtype=object)
+        kind = types[name]
+        numeric = kind in ("int8", "int16", "int32", "float", "double")
+        integer = kind.startswith("int")
+        cells = []
+        for c in frame[name].tolist():
+            if numeric and isinstance(c, str):
+                c = Code("." + c)                      # extended missing value, e.g. "d" -> .d
+            elif numeric and isinstance(c, float) and c != c:
+                c = Code(".")                          # system missing
+            elif integer and isinstance(c, float):
+                c = int(c)                             # read as float only because of missing values
+            cells.append(c)
+        out[name] = pd.Series(cells, dtype=object)
     return pd.DataFrame(out)
 
 
@@ -52,7 +106,10 @@ def read_sas(path, columns, encoding="latin-1"):
     frame = pd.read_sas(path, format="sas7bdat", encoding=encoding)
     columns = _pick(frame.columns, columns, path)
     frame = frame[columns]
-    return frame.astype(object).where(frame.notna(), Code("."))
+    # Built column by column: DataFrame.where() would turn Code(".") into a plain "." (Task 58,
+    # found by purple on the Household Pulse Survey's INCOME).
+    return pd.DataFrame({c: pd.Series([Code(".") if v != v else v for v in frame[c].tolist()], dtype=object)
+                         for c in columns})
 
 
 def zip_member(path, pattern):

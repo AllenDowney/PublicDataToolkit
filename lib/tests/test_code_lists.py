@@ -115,7 +115,7 @@ def test_data_file_built_from_another_list_is_stale(tmp_path):
     expanded = Repo.load(root).tables["r1"]["crash"]
     data.write(data.split(CRASH.astype(object), {r["name"]: r for r in expanded}),
                root / "data" / "processed" / "toy-r1-crash.parquet",
-               {"dataset": "toy", "release": "r1", "metadata_sha256": data.metadata_sha256(rec_path),
+               {"dataset": "toy", "release": "r1", "round_trip": "verified", "metadata_sha256": data.metadata_sha256(rec_path),
                 "code_lists_sha256": data.metadata_sha256(lists)})
     result = run(root)
     assert result.ok, result.failures

@@ -765,6 +765,12 @@ def load_data(repo, result):
                 result.report("C3-C5, C12", f"skipped {name}: built from other records, corrections or code lists; "
                                             "rebuild it (make data)")
                 continue
+            if ident.get("round_trip") != "verified":
+                # pdt.release names a file only after its round trip passes (Task 58); without the
+                # marker, it's from an older pdt or a run that stopped before the check finished.
+                result.report("C3-C5, C12", f"skipped {name}: no record of a verified round trip; "
+                                            "rebuild it (make data)")
+                continue
             fixed = [apply_corrections(r, release, table, repo.corrections)[0] for r in records]
             frames[(release, table)] = (data.read(path), fixed)
     if missing:

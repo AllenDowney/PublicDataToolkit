@@ -77,7 +77,7 @@ def make_data_repo(root, crash=CRASH, person=PERSON, crash_recs=None, tables=TAB
             out.parent.mkdir(parents=True, exist_ok=True)
             raw = frames[table].astype(object)
             data.write(data.split(raw, {r["name"]: r for r in recs}), out,
-                       {"dataset": "toy", "release": "r1", "metadata_sha256": data.metadata_sha256(path)})
+                       {"dataset": "toy", "release": "r1", "round_trip": "verified", "metadata_sha256": data.metadata_sha256(path)})
     return root
 
 
@@ -128,7 +128,7 @@ def test_c3_record_without_column(tmp_path):
     write_jsonl(rec_path, recs)
     frame = data.read(root / "data" / "processed" / "toy-r1-crash.parquet")
     data.write(frame, root / "data" / "processed" / "toy-r1-crash.parquet",
-               {"dataset": "toy", "release": "r1", "metadata_sha256": data.metadata_sha256(rec_path)})
+               {"dataset": "toy", "release": "r1", "round_trip": "verified", "metadata_sha256": data.metadata_sha256(rec_path)})
     assert any("EXTRA" in f for f in failures(run(root), "C3"))
 
 
@@ -140,7 +140,7 @@ def test_c4_code_not_in_values(tmp_path):
     write_jsonl(rec_path, recs)
     path = root / "data" / "processed" / "toy-r1-crash.parquet"
     frame = data.read(path)
-    data.write(frame, path, {"dataset": "toy", "release": "r1", "metadata_sha256": data.metadata_sha256(rec_path)})
+    data.write(frame, path, {"dataset": "toy", "release": "r1", "round_trip": "verified", "metadata_sha256": data.metadata_sha256(rec_path)})
     assert any("LIGHT: codes not in values: 9" in f for f in failures(run(root), "C4"))
 
 
@@ -204,7 +204,7 @@ def test_checks_use_corrected_records(tmp_path):
     path = root / "data" / "processed" / "toy-r1-crash.parquet"
     rec_path = root / "metadata" / "releases" / "r1" / "crash" / "variables.jsonl"
     data.write(data.split(CRASH.assign(LIGHT=[1, 2, 3, 1]).astype(object), {r["name"]: r for r in corrected}), path,
-               {"dataset": "toy", "release": "r1", "metadata_sha256": data.metadata_sha256(rec_path)})
+               {"dataset": "toy", "release": "r1", "round_trip": "verified", "metadata_sha256": data.metadata_sha256(rec_path)})
     result = run(root)
     assert result.ok, result.failures
     assert not reports(result, "C4")

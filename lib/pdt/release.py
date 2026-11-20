@@ -106,9 +106,32 @@ def write_one(root, repo, release, table, raw, source_id, log=print):
     if missing:
         raise ValueError(f"{release}/{table}: variables with records but not in the data: {missing}")
     raw = raw[list(records)]
-    table_df = data.split(raw, records)
-    # A code column for every variable whose records list missing or unresolved codes, even
-    # when none occurs in this file, so every release has the same columns as its dictionary.
+    table_df = add_empty_code_columns(data.split(raw, records), records)
+    identity = release_identity(root, repo, release, table, source_id, sources, applied, refusal)
+    identity["round_trip"] = ROUND_TRIP
+    out = root / PROCESSED / file_name(repo.dataset["id"], release, table)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp = out.with_name(f".{out.name}.tmp")     # the file gets its name only after the round trip
+    try:
+        data.write(table_df, tmp, identity)
+        back = data.read(tmp)
+        rebuilt = data.rebuild(back, records)
+        if not data.same_cells(raw.reset_index(drop=True), rebuilt.reset_index(drop=True)):
+            raise ValueError(f"{out.name}: the round trip changed some cells; nothing written")
+        tmp.replace(out)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
+    codes = sum(1 for c in back.columns if c.endswith(data.CODE_SUFFIX))
+    log(f"  {out.relative_to(root)}: {len(back):,} rows, {len(records)} variables, "
+        f"{codes} code columns, {len(applied)} corrections; round trip exact"
+        + (f"; local only, not for release: {refusal}" if refusal else ""))
+    return out
+
+
+def add_empty_code_columns(table_df, records):
+    """A code column for every variable whose records list missing or unresolved codes, even
+    when none occurs in this file, so every release has the same columns as its dictionary."""
     for name, rec in records.items():
         col = name + data.CODE_SUFFIX
         if col not in table_df.columns and any(v.get("kind") != "valid" for v in rec.get("values") or []):
@@ -116,6 +139,11 @@ def write_one(root, repo, release, table, raw, source_id, log=print):
             texts = [data.code_text(v["code"]) for v in rec["values"] if v.get("kind") != "valid"]
             table_df.insert(at, col, pd.Series(pd.Categorical([None] * len(table_df), categories=texts),
                                                index=table_df.index))
+    return table_df
+
+
+def release_identity(root, repo, release, table, source_id, sources, applied, refusal):
+    """The file's identity (STANDARD.md §8): what it was built from, so a stale file can be told."""
     identity = {
         "dataset": repo.dataset["id"],
         "release": release,
@@ -134,24 +162,232 @@ def write_one(root, repo, release, table, raw, source_id, log=print):
         identity["local_only"] = refusal
     if table:
         identity["table"] = table
+    return identity
+
+
+BATCH_COLUMNS = 300     # variables per batch: 300 GSS columns read in about 0.5 GB
+CHUNK_CELLS = 25_000_000   # cells per row chunk (and per row group, which spans every column)
+MIN_ROWS, MAX_ROWS = 1024, 65536
+
+
+def chunk_rows(n_variables):
+    """Rows per chunk: about CHUNK_CELLS cells, counting a code column per variable. The full GSS
+    (6,943 variables) gets 1,800 rows; ATUS activity (9) gets 65,536; ATUS summary (456), 27,412."""
+    return max(MIN_ROWS, min(MAX_ROWS, CHUNK_CELLS // max(1, 2 * n_variables)))
+
+
+ROUND_TRIP = "verified"  # identity["round_trip"]: the file was checked cell by cell before it got its name
+
+
+def row_chunks(got, rows):
+    """Consecutive row chunks of exactly `rows` rows (the last may be shorter), from a whole
+    frame or from an iterator of frames (a reader that streams rows, e.g. read_csv(chunksize=))."""
+    if isinstance(got, pd.DataFrame):
+        for start in range(0, len(got), rows):
+            yield got.iloc[start:start + rows].reset_index(drop=True)
+        if len(got) == 0:
+            yield got
+        return
+    buffer = None
+    for frame in got:
+        frame = frame.reset_index(drop=True)
+        buffer = frame if buffer is None else pd.concat([buffer, frame], ignore_index=True)
+        while len(buffer) >= rows:
+            yield buffer.iloc[:rows].reset_index(drop=True)
+            buffer = buffer.iloc[rows:].reset_index(drop=True)
+    if buffer is not None and (len(buffer) or rows):
+        yield buffer
+
+
+def combined_dtype(name, dtypes):
+    """The dtype split() would give the whole column, from the dtypes it gave each chunk."""
+    found = set(dtypes) - {"object"}
+    if not found:
+        return "object"
+    if found == {"Int64", "Float64"}:
+        return "Float64"         # some chunk has a number that isn't whole (or too big for Int64)
+    if len(found) == 1:
+        return found.pop()
+    raise ValueError(f"{name}: values of mixed types across the file; give its record a storage_type")
+
+
+def write_batched(root, repo, release, table, read, log=print, batch_size=BATCH_COLUMNS, rows=None):
+    """Write one release's (or table's) common-format file in column batches and row chunks,
+    so memory follows a batch, not the file (Task 58: the full GSS as one frame needed 13-15 GB;
+    ATUS activity has 5 million rows).
+
+    read(names) -> (raw, source id), or None from the first call when the reader can't read the
+    source (then nothing is written). raw is a frame of those columns, or an iterator of frames,
+    consecutive rows, for a reader that streams.
+
+    Pass 1, per column batch: the rows are split in chunks of about CHUNK_CELLS cells, each chunk
+    checked by a round trip against its raw cells and written to a part file in row groups of
+    `rows` rows (default chunk_rows(): a row group spans every column, so a wide file gets short
+    ones). Pass 2: each column gets the dtype and code categories split() gives the whole column,
+    and the parts are written as one file, row group by row group, then compared with the parts.
+    The file is written under a temporary name and renamed only then, with
+    identity["round_trip"] = "verified". It has the same columns, order, types and metadata as
+    write_one gives.
+    """
+    import json
+    import shutil
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    root = Path(root)
+    sources = {s["id"]: s for s in yaml.safe_load((root / "sources.yaml").read_text())["sources"]}
+    records, applied = corrected_records(repo, release, table)
+    names = list(records)
+    rows = rows or chunk_rows(len(names))
     out = root / PROCESSED / file_name(repo.dataset["id"], release, table)
     out.parent.mkdir(parents=True, exist_ok=True)
-    data.write(table_df, out, identity)
+    work = out.with_name(f".{out.name}.parts")
+    tmp = out.with_name(f".{out.name}.tmp")
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir()
+    n_batches = -(-len(names) // batch_size)
+    try:
+        tokens, source_id, n_rows = {}, None, None
+        batches = []   # per column batch: column order, chunk size, dtypes and codes seen
+        for b, start in enumerate(range(0, len(names), batch_size)):
+            cols = names[start:start + batch_size]
+            got = read(cols)
+            if got is None:
+                if b == 0:
+                    return None
+                raise ValueError(f"{release}/{table}: the reader gave nothing for batch {b}")
+            raw_all, source_id = got
+            del got
+            batch_records = {n: records[n] for n in cols}
+            # Pass-1 chunks are a whole number of row groups, so pass 2 reads whole row groups.
+            split_rows = max(rows, CHUNK_CELLS // (2 * len(cols)) // rows * rows)
+            info = {"order": None, "split_rows": split_rows, "parts": 0, "dtypes": {}, "codes": {}, "observed": {}}
+            offset = 0
+            for c, raw in enumerate(row_chunks(raw_all, split_rows)):
+                missing = [n for n in cols if n not in raw.columns]
+                if missing:
+                    raise ValueError(f"{release}/{table}: variables with records but not in the data: {missing}")
+                raw = raw[cols]
+                part_df = add_empty_code_columns(data.split(raw, batch_records), batch_records)
+                part_df[data.ROW] = part_df[data.ROW] + offset
+                chunk_tokens = part_df.attrs.get("pdt_tokens", {})
+                rebuilt = data.rebuild(part_df, batch_records, chunk_tokens)
+                if not data.same_cells(raw, rebuilt.reset_index(drop=True)):
+                    raise ValueError(f"{out.name}: the round trip changed some cells in batch {b}, rows "
+                                     f"{offset} to {offset + len(raw) - 1} ({cols[0]} to {cols[-1]}); nothing written")
+                del rebuilt
+                for name, texts in chunk_tokens.items():
+                    tokens[name] = sorted(set(tokens.get(name, [])) | set(texts))
+                for col in part_df.columns:
+                    if col == data.ROW:
+                        continue
+                    if col.endswith(data.CODE_SUFFIX):
+                        info["observed"].setdefault(col, set()).update(part_df[col].dropna().astype(str).tolist())
+                        info["codes"].setdefault(col, [str(x) for x in part_df[col].cat.categories])
+                    else:
+                        info["dtypes"].setdefault(col, set()).add(str(part_df[col].dtype))
+                if info["order"] is None:
+                    info["order"] = list(part_df.columns)
+                else:   # a code column a later chunk has, placed after its variable
+                    for col in part_df.columns:
+                        if col not in info["order"]:
+                            info["order"].insert(info["order"].index(col[:-len(data.CODE_SUFFIX)]) + 1, col)
+                pq.write_table(pa.Table.from_pandas(part_df, preserve_index=False),
+                               work / f"{b:05d}-{c:06d}.parquet", row_group_size=rows)
+                offset += len(raw)
+                info["parts"] = c + 1
+                del raw, part_df
+            del raw_all
+            if n_rows is None:
+                n_rows = offset
+            elif offset != n_rows:
+                raise ValueError(f"{release}/{table}: batch {b} has {offset} rows, not {n_rows}")
+            if b > 0:
+                info["order"].remove(data.ROW)     # _row once, first, as write_one has it
+            batches.append(info)
+            if n_batches > 1:
+                log(f"    batch {b + 1}/{n_batches}: {len(cols)} variables, {n_rows:,} rows, round trip exact")
 
-    back = data.read(out)
-    rebuilt = data.rebuild(back, records)
-    if not data.same_cells(raw.reset_index(drop=True), rebuilt.reset_index(drop=True)):
-        out.unlink()
-        raise ValueError(f"{out.name}: the round trip changed some cells; file removed")
-    codes = sum(1 for c in back.columns if c.endswith(data.CODE_SUFFIX))
-    log(f"  {out.relative_to(root)}: {len(back):,} rows, {len(records)} variables, "
+        # The dtype and categories split() gives each whole column.
+        final = {}
+        for info in batches:
+            for col, dtypes in info["dtypes"].items():
+                final[col] = combined_dtype(col, dtypes)
+            for col in info["codes"]:
+                observed = info["observed"].get(col, set())
+                final[col] = sorted(observed) if observed else info["codes"][col]
+
+        files = {}
+
+        def finished(b, g):
+            """Row group g of column batch b, with the whole column's dtypes and categories."""
+            info = batches[b]
+            part, k = divmod(g * rows, info["split_rows"])
+            key = (b, part)
+            if key not in files:
+                files.clear()     # one batch's file open at a time is enough
+                files[key] = pq.ParquetFile(work / f"{b:05d}-{part:06d}.parquet")
+            frame = files[key].read_row_group(k // rows).to_pandas()
+            out_cols = {}
+            for col in info["order"]:
+                if col == data.ROW:
+                    out_cols[col] = frame[col]
+                elif col.endswith(data.CODE_SUFFIX):
+                    cells = frame[col].astype(object) if col in frame else [None] * len(frame)
+                    out_cols[col] = pd.Series(pd.Categorical(cells, categories=final[col]), index=frame.index)
+                else:
+                    out_cols[col] = frame[col].astype(object).where(frame[col].notna(), None).astype(final[col])
+            return pa.Table.from_pandas(pd.DataFrame(out_cols, index=frame.index), preserve_index=False)
+
+        tokens = {n: tokens[n] for n in names if n in tokens}     # in column order, as split() lists them
+        refusal = check_terms(repo.dataset, sources.get(source_id, {"id": source_id}))
+        identity = release_identity(root, repo, release, table, source_id, sources, applied, refusal)
+        identity["round_trip"] = ROUND_TRIP
+        first = [finished(b, 0) for b in range(len(batches))]
+        pandas_meta = json.loads(first[0].schema.metadata[b"pandas"])
+        pandas_meta["columns"] = [col for t in first for col in json.loads(t.schema.metadata[b"pandas"])["columns"]]
+        pandas_meta["attributes"] = {"pdt_tokens": tokens}
+        metadata = {b"pandas": json.dumps(pandas_meta).encode(),
+                    data.META_KEY: json.dumps({**identity, "tokens": tokens,
+                                               "pdt_version": data.__version__}).encode()}
+        schema = pa.schema([f for t in first for f in t.schema], metadata=metadata)
+        del first
+        n_groups = max(1, -(-n_rows // rows))
+        with pq.ParquetWriter(tmp, schema) as writer:
+            for g in range(n_groups):
+                parts = [finished(b, g) for b in range(len(batches))]
+                writer.write_table(pa.Table.from_arrays([col for t in parts for col in t.columns], schema=schema))
+                del parts
+        # The file holds what the checked parts hold, row group by row group.
+        written = pq.ParquetFile(tmp)
+        for g in range(n_groups):
+            for b in range(len(batches)):
+                part = finished(b, g)
+                if not written.read_row_group(g, columns=part.schema.names).to_pandas().equals(part.to_pandas()):
+                    raise ValueError(f"{out.name}: row group {g}, batch {b} differs from its checked part; "
+                                     "nothing written")
+        files.clear()
+        tmp.replace(out)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+        if tmp.exists():
+            tmp.unlink()
+    codes = sum(1 for f in schema if f.name.endswith(data.CODE_SUFFIX))
+    log(f"  {out.relative_to(root)}: {n_rows:,} rows, {len(records)} variables, "
         f"{codes} code columns, {len(applied)} corrections; round trip exact"
+        + (f" in {len(batches)} column batches" if len(batches) > 1 else "")
         + (f"; local only, not for release: {refusal}" if refusal else ""))
     return out
 
 
-def write_release(root, reader, releases=None, log=print):
-    """Write every release (and table) the reader can read. Returns the paths written."""
+def write_release(root, reader, releases=None, log=print, batch_size=BATCH_COLUMNS):
+    """Write every release (and table) the reader can read. Returns the paths written.
+
+    reader(release, table, names) -> (raw frame, source id), or None to skip. It's called
+    once per batch of `batch_size` variables (write_batched), so a reader that reads only the
+    columns asked for keeps memory to a batch.
+    """
     root = Path(root)
     repo = Repo.load(root)
     written = []
@@ -159,12 +395,13 @@ def write_release(root, reader, releases=None, log=print):
         if releases and release not in releases:
             continue
         names = [r["name"] for r in repo.tables[release][table]]
-        got = reader(release, table, names)
-        if got is None:
+        path = write_batched(root, repo, release, table,
+                             lambda cols, release=release, table=table: reader(release, table, cols),
+                             log=log, batch_size=batch_size)
+        if path is None:
             log(f"  skipped {release}" + (f"/{table}" if table else "") + ": the reader can't read its source")
             continue
-        raw, source_id = got
-        written.append(write_one(root, repo, release, table, raw, source_id, log=log))
+        written.append(path)
     return written
 
 

@@ -14,7 +14,7 @@ dependencies = ["jsonschema>=4.18", "referencing", "pyyaml"]
 [project.optional-dependencies]
 # pdt.data, pdt.release, pdt.readers and pdt.extract read and write the common-format
 # parquet files. Metadata tools (pdt views, check, search, diff, catalog) don't need these.
-data = ["pandas>=2", "numpy", "pyarrow"]
+data = ["pandas>=2", "numpy", "pyarrow", "pyreadstat"]
 test = ["pytest"]
 
 [project.scripts]
