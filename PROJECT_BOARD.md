@@ -186,7 +186,7 @@ One short block per task, numbered for good. The board is short on purpose: each
 `DOING (orange)`. A read-only audit for Allen's decision on labeling agent-made judgments: every `origin: hand` fact, who made it and when. [`planning/attribution_audit.md`](planning/attribution_audit.md). Details: [`planning/tasks/task-46.md`](planning/tasks/task-46.md).
 ### Task 47 — Large sites: docs/ built for Pages
 
-`DOING (red)`. C8 checks `docs/` only where it exists; a GitHub Pages workflow in the template builds and deploys `docs/` without the data; a proposal for fewer site files on large releases. Details: [`planning/tasks/task-47.md`](planning/tasks/task-47.md).
+`DONE (red)`. C8 checks `docs/` only where it exists (and says when it's gitignored); a Pages workflow in the template builds `docs/` at the repo's toolkit tag without data (checked locally); a proposal to cut the GSS site from 14,546 files to about 7,000 with one page per variable across releases. Details: [`planning/tasks/task-47.md`](planning/tasks/task-47.md).
 
 ### Task 48 — What the codebooks trip over
 
