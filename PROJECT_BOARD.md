@@ -210,6 +210,10 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 `DONE (red)`. `pdt diff --ignore` (NHIS's "* ": the three variables now agree with their links), across tables (samadult → adult, merges by `--table-map`) and `--gaps` (14 NHIS gap pairs, all agreeing with the links). Details: [`planning/tasks/task-54.md`](planning/tasks/task-54.md).
 
+### Task 55 — A Household Pulse Survey slice
+
+`DOING (purple)`. Census's Household Pulse Survey (weekly and biweekly, 2020–2024, questionnaire changing by phase) in `~/pdt-pulse`: demographics, anxiety and depression, food sufficiency, weights and replicate weights, in every wave they appear. Details: [`planning/tasks/task-55.md`](planning/tasks/task-55.md).
+
 
 
 
