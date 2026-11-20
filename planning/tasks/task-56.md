@@ -171,7 +171,7 @@ Each one has a proposal, the ATUS case, and what changes if it's accepted.
 
 - **Proposal:** let `design` be set per wave in a multi-wave release (`design.by_wave`), or let each entry in `weights` carry `waves`.
 - **ATUS case:** in the 2003–2025 file, the weight is TUFNWGTP in every year except 2020, where it is -1 and TU20FWGT is the weight. Today `weights` lists both, and the note explains which year uses which. A program reading `design` can't tell.
-- **If accepted:** `weights: [{name: TUFNWGTP, waves: {except: [2020]}}, {name: TU20FWGT, waves: [2020]}]` or similar. The same shape fits the GSS's weight changes across years.
+- **If accepted:** `weights: [{name: TUFNWGTP, waves: {except: [2020]}}, {name: TU20FWGT, waves: [2020]}]` or similar. Whether another repo's weights change by wave isn't checked here.
 
 ### P4. `design.replicates.table`: replicates in another table (§2.1)
 
@@ -185,6 +185,6 @@ Each one has a proposal, the ATUS case, and what changes if it's accepted.
 - **ATUS case:** the Interview Data Dictionary (p. 7) says: "Many ATUS variables have the following possible valid values: -1 Blank, -2 Don't know, -3 Refused. Because so many variables have these possible values, they are not shown as valid entries for each variable."
   - Today a repo rule (`atus_general_codes`) adds each code to the records whose column holds it.
   - Weights write -1 as "-1.000000", so the rule compares by value.
-- **If accepted:** the rule goes; `dataset.yaml` holds the three codes once. Other publishers with the same convention (CPS-based files) could reuse it.
+- **If accepted:** the rule goes; `dataset.yaml` holds the three codes once. Whether other publishers declare codes this way isn't checked here.
 
 Sent separately, to Task 58: `write_release` should batch by rows as well as columns, and should write to a temporary name and rename only after the round trip passes.
