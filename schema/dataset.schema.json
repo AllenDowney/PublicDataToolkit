@@ -41,6 +41,11 @@
     "description": {
       "type": "string"
     },
+    "domain": {
+      "description": "Broad subject area, one lowercase word (health, social, labor, education, election, crime), for exports and catalogs that group datasets.",
+      "type": "string",
+      "pattern": "^[a-z]+$"
+    },
     "kind": {
       "description": "survey: answers to questions. administrative: records kept for another purpose (FARS). portal: a table on an open-data portal. Optional; it tunes C6's report, which expects question text only for surveys.",
       "enum": [

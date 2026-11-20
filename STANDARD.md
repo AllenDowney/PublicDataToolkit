@@ -89,6 +89,8 @@ A release whose data describe an earlier period than the collection, such as ASE
 
 Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A release with one file lists no tables and keeps its records in `metadata/releases/<release>/variables.jsonl`. A reference can also point to a table in another dataset, such as a code list published separately.
 
+`domain` names its broad subject area in one word (`health`, `social`, `labor`, `education`, `election`, `crime`), for exports and catalogs that group datasets. It's optional.
+
 `kind` says what sort of dataset it is: `survey`, `administrative` (FARS) or `portal` (a table on an open-data portal). It's optional, and tunes what C6 reports.
 
 **Partial data files.** When a release's or table's common-format file holds only some waves, because the table is too large or keeps growing, `data_waves` lists them, and C5 checks availability only for those. When it holds only some rows of each wave, such as some countries, `data_rows` names the `column` and the codes it keeps (`in`), and C3–C5 read it the same way.
