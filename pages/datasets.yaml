@@ -107,6 +107,8 @@ datasets:
   - hints6
   - hints7
 - id: pulse
+  repo: https://github.com/AllenDowney/pdt-pulse
+  site: https://allendowney.github.io/pdt-pulse/
   title: Household Pulse Survey (HPS)
   publisher: U.S. Census Bureau
   kind: survey
