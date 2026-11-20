@@ -1,0 +1,32 @@
+name: Bug
+description: Something in the pdt library, the template or the instructions doesn't work.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The command or code, and the dataset repo if it's public.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: The output or traceback.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      description: The toolkit's commit or tag, and your Python version.

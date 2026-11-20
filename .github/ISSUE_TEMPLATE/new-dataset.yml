@@ -1,0 +1,41 @@
+name: New dataset
+description: Suggest a public dataset for a PublicDataToolkit repository.
+title: "New dataset: "
+labels: ["new dataset"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A dataset repository holds one public dataset's metadata, and its data when the terms allow. See the [standard](https://github.com/AllenDowney/PublicDataToolkit/blob/main/STANDARD.md) for what that involves.
+  - type: input
+    id: dataset
+    attributes:
+      label: Dataset
+      description: Its name, and the publisher.
+      placeholder: "Monitoring the Future, 12th-grade survey (University of Michigan)"
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where the documentation and data are
+      description: Links to the codebooks, questionnaires, release notes and data files.
+    validations:
+      required: true
+  - type: textarea
+    id: terms
+    attributes:
+      label: Terms of use
+      description: The publisher's terms as they state them, with a link. A person decides what can be redistributed; quoting them here helps that review.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it's worth doing
+      description: Who uses it, and what makes it hard to use now (renamed variables, PDF-only codebooks, missing-code conventions, ...).
+  - type: textarea
+    id: existing
+    attributes:
+      label: Existing work
+      description: Packages, crosswalks or harmonized files that already cover it.

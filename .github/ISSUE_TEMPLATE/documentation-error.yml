@@ -1,0 +1,41 @@
+name: Documentation error
+description: Report an error in a publisher's documentation (a codebook, questionnaire or release notes).
+title: "Documentation error: "
+labels: ["documentation error"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report what the publisher's documentation says and why it's wrong. A dataset repo can then record a correction that cites this issue, and the report to the publisher.
+  - type: input
+    id: where
+    attributes:
+      label: Dataset, release and variable
+      placeholder: "GSS 7224r3a, variable abany"
+    validations:
+      required: true
+  - type: textarea
+    id: published
+    attributes:
+      label: What the documentation says
+      description: Quote it exactly, with the document and page or section.
+    validations:
+      required: true
+  - type: textarea
+    id: correct
+    attributes:
+      label: What it should say
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: How you know. Counts from the data file, another of the publisher's documents, the questionnaire, or the publisher's own statement. Include enough for someone else to check it.
+    validations:
+      required: true
+  - type: textarea
+    id: reported
+    attributes:
+      label: Reported to the publisher?
+      description: If you've reported it, say where and when (a public link if there is one).

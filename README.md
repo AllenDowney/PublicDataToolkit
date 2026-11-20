@@ -30,6 +30,10 @@ The metadata is published in three forms, generated from the same records so the
 
 The approach generalizes work on the GSS and ANES in [CultureWar](https://github.com/AllenDowney/CultureWar). It takes inspiration from [gssrdoc](https://github.com/kjhealy/gssrdoc) and relates to [data-dict](https://data-dict.tidyverse.org/). The earlier design is in [`planning/survey_metadata_packages_plan.md`](planning/survey_metadata_packages_plan.md).
 
+## Taking part
+
+Review of the proposal and the standard is the most useful contribution now. [`CONTRIBUTING.md`](CONTRIBUTING.md) lists the kinds of contribution (a new dataset, an error in a publisher's documentation, a correction, a proposal for the standard, library code), the rules that matter, and how to run `pdt check` and the tests.
+
 ## License
 
 Code (lib/, schema/, scripts) is under the MIT License ([`LICENSE`](LICENSE)). The standard, the instructions, the skills and the planning documents are under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Each dataset repository has the same split, and keeps its publisher's terms for the publisher's files.

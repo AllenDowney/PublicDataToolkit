@@ -26,3 +26,6 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# The generated site (pages/build.py)
+_site/

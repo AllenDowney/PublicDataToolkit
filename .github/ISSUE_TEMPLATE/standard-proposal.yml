@@ -1,0 +1,34 @@
+name: Standard proposal
+description: Propose a change to the standard for dataset repositories, or to the record schemas.
+title: "Standard: "
+labels: ["standard"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The standard is [STANDARD.md](https://github.com/AllenDowney/PublicDataToolkit/blob/main/STANDARD.md), and the record formats are the JSON Schemas in [schema/](https://github.com/AllenDowney/PublicDataToolkit/tree/main/schema). Proposals that come from a real dataset are the easiest to evaluate.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What the standard can't express, or expresses badly.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Where it shows up
+      description: A dataset, release and variable where it matters, with what its documentation says.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The change you propose
+      description: The new or changed field, rule or check, with an example record if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
