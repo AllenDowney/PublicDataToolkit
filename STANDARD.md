@@ -403,7 +403,7 @@ Before anything built from a dataset ships, `dataset.yaml` records the terms of 
 Rules:
 
 - Data is never committed to git. When `terms.data` is `ship`, it goes in a GitHub release with SHA-256 sums, and `download.py` can fetch the release. When it is `build-only`, `download.py` fetches it from the publisher or explains the manual steps.
-- A data release holds two things: the publisher's files, unchanged, so anyone can verify them against the publisher; and the same data in the common format, written by the build, so the shared library reads every dataset the same way.
+- A data release holds two things: the publisher's files, unchanged, so anyone can verify them against the publisher; and the same data in the common format, written by the build, so the shared library reads every dataset the same way. By default it holds only the releases whose `status` is `current`. Earlier releases keep their records, links and views, and anyone can build their data locally (`make data RELEASES=<id>`); a repo ships them too only when there's a reason, and its README says which.
 - **The common format** is one parquet file per release ([design](planning/missing_codes_design.md)):
   - There is one file per release, or one per table for a release with tables; the file metadata names the table.
   - The file holds the variables the repo has records for, not every column of the publisher's file. When the terms allow, the publisher's file ships unchanged beside it, with the rest.
