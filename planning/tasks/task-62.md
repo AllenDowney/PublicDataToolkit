@@ -83,3 +83,9 @@ Allen downloaded the Stata version, about 795 MB. It's in `data/raw/ICPSR_38603-
 - `metadata/corrections.jsonl` makes 99 missing (inap), with confidence `inferred` and upstream `not_filed`. Reporting it to ICPSR is Allen's call.
 
 **What ICPSR counts as missing:** only "Out of universe" and blank codes. "Residue" (8/98, 692 codes), "Don't know" (95) and "Refused" (19) are listed as valid. The records follow the codebook; a user who wants them treated as missing has to recode them.
+
+## make data and pdt check (2026-11-20)
+
+pdt-ncvs 6d83d7f: `make data` writes `data/processed/ncvs-2022-<table>.parquet` locally (`terms.data` is build-only, so nothing ships). The household and person files are 740 and 790 MB, so `scripts/build_data.py` streams row chunks of 25,000. Every round trip was exact. The build took 21 minutes, with a peak of 1.7 GB.
+
+`pdt check` passes with 0 failures, and its data checks run: C3–C5, the counts check (Task 71) and C12. Its one warning was V4400's count of valid cases. The codebook's 9,545 includes the 6,303 cases of code 99, which the first correction makes missing. So a second inferred correction, `v4400-availability-n`, sets it to 3,242.
