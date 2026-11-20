@@ -402,6 +402,75 @@ def check_code_lists(repo, result):
                     result.fail("C2", f"{where}: codes both in list {cl['id']} and in values: {listed(both)}")
 
 
+def check_code_of(repo, result):
+    """C2 for code_of (STANDARD.md §4.1): the record's code list exists and has the code."""
+    from .common_format import code_text
+    lists = {cl["id"]: {code_text(c["code"]) for c in cl.get("codes", [])} for cl in repo.code_lists}
+    for rel, ts in repo.stored.items():
+        for tab, recs in ts.items():
+            for r in recs:
+                if "code_of" not in r:
+                    continue
+                where = f"{rel}/" + (f"{tab}/" if tab else "") + r["name"]
+                ref = r["code_of"]
+                if ref["code_list"] not in lists:
+                    result.fail("C2", f"{where}: code_of names unknown code list {ref['code_list']}")
+                elif code_text(ref["code"]) not in lists[ref["code_list"]]:
+                    result.fail("C2", f"{where}: code_of code {ref['code']} isn't in code list {ref['code_list']}")
+
+
+def data_columns(repo, release, table):
+    """The column names of a table's common-format file, read from its parquet schema, or None."""
+    path = repo.root / "data" / "processed" / processed_name(repo.dataset.get("id"), release, table)
+    if not path.exists():
+        return None
+    try:
+        import pyarrow.parquet as pq
+    except ImportError:
+        return None
+    return list(pq.read_schema(path).names)
+
+
+def check_replicate_tables(repo, result):
+    """C2 for design.replicates (STANDARD.md §2.1): for each table whose design has replicates,
+    the table that holds them exists, its key has records in both tables, and the replicate
+    columns are found there: among its records, or, when they have no records, in its data file."""
+    from .design import effective_design, replicate_columns, replicate_key
+    for r in repo.dataset.get("releases", []):
+        tables = [t["id"] for t in r.get("tables") or []] or [None]
+        for tab in tables:
+            design = effective_design(repo.dataset, r["id"], tab)
+            rep = (design or {}).get("replicates")
+            if not rep:
+                continue
+            where = f"{r['id']}" + (f"/{tab}" if tab else "")
+            target = rep.get("table") or tab
+            if target not in repo.tables.get(r["id"], {}):
+                result.fail("C2", f"{where}: design.replicates.table {target} isn't a table of release {r['id']}")
+                continue
+            names = {x["name"] for x in repo.tables[r["id"]][target]}
+            if target != tab:
+                key = replicate_key(design)
+                if not key:
+                    result.fail("C2", f"{where}: design.replicates.table {target} needs a key to join on")
+                own = {x["name"] for x in repo.tables[r["id"]].get(tab, [])}
+                for col in key:
+                    for t, have in ((tab, own), (target, names)):
+                        if col not in have:
+                            result.fail("C2", f"{where}: replicate key column {col} has no record in table {t}")
+            want = rep.get("n") or len(rep.get("variables") or [])
+            _, found = replicate_columns(design, sorted(names))
+            found = [c for c in found if c in names]
+            if len(found) < want:
+                columns = data_columns(repo, r["id"], target)
+                if columns is not None:
+                    _, found = replicate_columns(design, columns)
+                    found = [c for c in found if c in columns]
+            if len(found) < want:
+                result.fail("C2", f"{where}: design.replicates names {want} columns; found {len(found)} in table "
+                                  f"{target} (records, or its data file when there is one)")
+
+
 def check_corrections(repo, result):
     """C7: each correction's original value still appears in its target."""
     lists = {cl["id"]: cl for cl in repo.code_lists}
@@ -838,7 +907,8 @@ def check_views(repo, result):
                                 f"this is {__version__}")
 
 
-CHECKS = [check_schemas, check_references, check_code_lists, check_provenance, check_corrections,
+CHECKS = [check_schemas, check_references, check_code_lists, check_code_of, check_replicate_tables,
+          check_provenance, check_corrections,
           check_terms, check_extensions, check_docs, check_data, check_views]
 
 

@@ -69,7 +69,8 @@ def religion_full(base, cm):
 def gss_ballot_a_1988_full(base, cm):
     repo = base / "pdt-gss"
     design = yaml.safe_load((repo / "dataset.yaml").read_text()).get("design", {})
-    admin = {"year", "id", "ballot", *design.get("weights", []), design.get("strata"), design.get("psu")}
+    weights = [w if isinstance(w, str) else w["name"] for w in design.get("weights", [])]  # a name or {name, waves}
+    admin = {"year", "id", "ballot", *weights, design.get("strata"), design.get("psu")}
     items = []
     for rec in records(repo / "metadata/releases/7224r3a/variables.jsonl"):
         forms = {a.get("form") for a in rec.get("availability", []) if a["wave"] == 1988}

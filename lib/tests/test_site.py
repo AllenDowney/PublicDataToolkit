@@ -215,3 +215,23 @@ def test_change_of_meaning_is_a_separate_cross_linked_page(tmp_path):
     new, old = read(root, "variables/q1.html"), read(root, "variables/q1%40r1.html")
     assert "Related variables" in new and 'href="../variables/q1%40r1.html"' in new and "(earlier)" in new
     assert 'href="../variables/q1.html"' in old and "(later)" in old and "codes_changed" in old
+
+
+def test_code_of_links_column_and_code(tmp_path):
+    """A variable with code_of links to its code's row; the code's row links back to the column."""
+    lexicon = {"id": "lex", "label": "Lexicon", "origin": PUBLISHER,
+               "codes": [{"code": "010101", "label": "Sleeping", "kind": "valid"},
+                         {"code": "010102", "label": "Sleeplessness", "kind": "valid"}]}
+    variables = [{"dataset": "toy", "release": "r1", "name": "TRCODEP", "label": "Activity code",
+                  "code_list": "lex", "provenance": {"record": PUBLISHER}},
+                 {"dataset": "toy", "release": "r1", "name": "t010101", "label": "Sleeping",
+                  "code_of": {"code_list": "lex", "code": "010101"}, "provenance": {"record": PUBLISHER}}]
+    root = make_repo(tmp_path, variables=variables, groups=[])
+    write_jsonl(root / "metadata" / "code_lists.jsonl", [lexicon])
+    site.build(root)
+    column = read(root, "variables/t010101.html")
+    assert "Stands for" in column and "Sleeping" in column
+    assert 'href="../variables/TRCODEP.html#code-010101"' in column
+    codes = read(root, "variables/TRCODEP.html")
+    assert 'id="code-010101"' in codes
+    assert 'Column: <a href="../variables/t010101.html">t010101</a>' in codes

@@ -81,6 +81,16 @@ class Site:
         from . import chains as chains_mod
         self.chains, self.order = chains_mod.build(self.repo)
         self.records = {(rel, tab, rec["name"]): rec for rel, tab, rec in self.index.entries}
+        # code_of (STANDARD.md §4.1): (code list, code) -> the variables that stand for that code,
+        # and code list -> the variables whose values come from it, for links both ways.
+        self.code_of = {}
+        self.uses_list = {}
+        for (rel, tab, name), rec in self.records.items():
+            if rec.get("code_of"):
+                key = (rec["code_of"]["code_list"], str(rec["code_of"]["code"]))
+                self.code_of.setdefault(key, []).append((rel, tab, name))
+            if rec.get("code_list"):
+                self.uses_list.setdefault(rec["code_list"], []).append((rel, tab, name))
         pos = {r: i for i, r in enumerate(self.order)}
         self.page_of, self.chain_of, taken = {}, {}, set()
         for chain in sorted(self.chains, key=lambda c: -pos[c.last[0]]):
@@ -307,6 +317,30 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             text += f", when {col}{esc(when_text(when)[len(str(when.get('column', ''))):])}"
         return text
 
+    def code_of_text(self, here, rec):
+        """'code 010101, Sleeping, in list atus-lexicon-0325', linked to the code's row on the page
+        of a variable whose values come from that list."""
+        ref = rec["code_of"]
+        cl = next((c for c in self.repo.code_lists if c["id"] == ref["code_list"]), None)
+        label = next((c.get("label") for c in (cl or {}).get("codes", []) if str(c["code"]) == str(ref["code"])), None)
+        text = f"code <code>{esc(ref['code'])}</code>" + (f", {esc(label)}" if label else "") \
+            + f", in code list <code>{esc(ref['code_list'])}</code>"
+        users = self.uses_list.get(ref["code_list"], [])
+        if users:
+            rel, tab, name = users[0]
+            text += " (see " + self.link(here, f"{self.var_path(rel, tab, name)}#code-{ref['code']}", name) + ")"
+        return text
+
+    def columns_for_code(self, here, code_list, code):
+        """Links to the variables that stand for this code of a shared list (code_of)."""
+        if not code_list:
+            return ""
+        found = self.code_of.get((code_list, str(code)), [])
+        if not found:
+            return ""
+        return '<br><span class="origin">Column: ' + ", ".join(
+            self.link(here, self.var_path(rel, tab, name), name) for rel, tab, name in found) + "</span>"
+
     def variable_page(self, chain):
         rel, tab, name = chain.last
         rec = self.records[chain.last]
@@ -325,6 +359,8 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             facts.append((prop.replace("_", " ").capitalize(),
                           f"{esc(d['value'])} <span class=\"origin\">rule {esc(d['rule'])} "
                           f"{esc(d['rule_version'])}</span>"))
+        if rec.get("code_of"):
+            facts.append(("Stands for", self.code_of_text(here, rec)))
         loc = rec.get("source_location") or {}
         if loc.get("url"):
             facts.append(("Publisher's page", f'<a href="{esc(loc["url"])}">{esc(loc["url"])}</a>'))
@@ -366,8 +402,10 @@ metadata. Corrected values are marked <span class="corrected">corrected</span>.<
             rows = []
             for i, v in enumerate(values):
                 origin = v.get("origin") or (default if v.get("kind") != "valid" else None)
-                row = [f"<code>{esc(v.get('code'))}</code>",
+                anchor = f' id="code-{esc(v.get("code"))}"' if cl is not None else ""  # code_of links here
+                row = [f"<code{anchor}>{esc(v.get('code'))}</code>",
                        esc(v.get("label")) + mark(applied, f"/values/{i}/label") + retired_note(v)
+                       + self.columns_for_code(here, rec.get("code_list"), v.get("code"))
                        + (f'<br><span class="origin">Note: {esc(v["note"])}</span>' if v.get("note") else ""),
                        f'<span class="kind-{esc(v.get("kind"))}">{esc(v.get("kind"))}</span>',
                        esc(", ".join(v.get("missing_types") or [])),
