@@ -16,8 +16,8 @@ ORIGINS = [
     ("data_file", "read from the data file's own metadata: Stata or SPSS labels, extended missing values"),
     ("rule", "computed by a named rule from other fields"),
     ("hand", "a judgment entered through a hand-written build input, by a person or an agent. `author` names who "
-             "made it: a person, or the agent and its task (\"Claude (PublicDataToolkit Task 35)\"), never a person "
-             "who didn't make or check it"),
+             "made it: a person, or the agent and the work it was doing (\"Claude (PublicDataToolkit Task 35)\", "
+             "naming the task in the toolkit's planning files), never a person who didn't make or check it"),
     ("model", "drafted by an LLM"),
 ]
 
