@@ -308,3 +308,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 72 — Make `pdt check` fast on the full GSS
 
 `DONE (blue)`. Profiled on the full GSS: C1 resolved every schema `$ref` at each use, and C2's `Repo.resolve` scanned every record for each of 26,000 references. Schemas are now inlined once, and names indexed. Output is identical on four repos, and GSS takes 18–27 s, down from 76 s. The reported 40 minutes didn't reproduce. Details: [`planning/tasks/task-72.md`](planning/tasks/task-72.md).
+
+### Task 74 — "About" and "Using this site" pages on every dataset site
+
+`DOING (purple)`. site.py generates two pages for every dataset site, from the standard's vocabularies. About covers what the repository is and isn't, its three forms, the terms notice and citation, a link to the toolkit, and how to report errors. Using this site covers how to read a variable page, the missing types, completeness labels, lineages and availability, how to get and use the data and records, and agent/ with an LLM. The terms notice goes in every page's footer. Details: [`planning/tasks/task-74.md`](planning/tasks/task-74.md).
