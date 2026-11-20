@@ -188,3 +188,7 @@ Each one has a proposal, the ATUS case, and what changes if it's accepted.
 - **If accepted:** the rule goes; `dataset.yaml` holds the three codes once. Whether other publishers declare codes this way isn't checked here.
 
 Sent separately, to Task 58: `write_release` should batch by rows as well as columns, and should write to a temporary name and rename only after the round trip passes.
+
+### 2026-11-20: terms decided
+
+Allen decided: data, documentation and metadata ship, and LLM processing is allowed, with a notice citing BLS. The coordinator committed it in `~/pdt-atus` 5a75e90 (dataset.yaml, README, views); `pdt check` gives 0 failures. Still open: the coordinator's answers to P1–P5, the five single-year lexicons, and `make data` for `activity` and `summary` (Task 58).
