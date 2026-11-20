@@ -85,3 +85,74 @@ The design:
 - **The 2020 weight:** `design` can be set for the dataset, a release or a table (schema/dataset.schema.json), but not for a wave. With one multi-year release, TU20FWGT for 2020 can't be an override; it goes in the note.
   - **Finding:** a multi-year release whose weight differs by wave has no way to say so. This will be a proposal: `design` by wave, or `weights` entries that carry `waves`.
 - **Summary columns named by the lexicon:** built by a rule, each record pointing to its lexicon code. A proposal for §4.5 will follow; the coordinator decides the standard change after the build.
+
+### 2026-11-20: the slice is built
+
+`~/pdt-atus` 25ba1ff (no remote). Release `2003-2025`; wave TUYEAR. `pdt check` gives 0 failures.
+
+| Table | Rows | Records | Source of the records |
+|---|---|---|---|
+| `respondent` | 258,954 | 15 | Interview Data Dictionary |
+| `summary` | 258,954 | 456 | 25 from the two dictionaries; 431 activity columns from the lexicon, by rule `atus_summary_from_lexicon` |
+| `activity` | 4,994,172 | 9 | Interview Data Dictionary; TRCODEP, TRTIER2P and TRTIER1P name code lists |
+| `replicates` | 258,954 | 161 | TUCASEID, and TUFNWGTP001–160 by rule `atus_replicate_weights`, from the zip's Repl0325_info.txt |
+
+- **Every column is documented except two:** TRWBMODR (respondent) and TRWBELIG (activity) aren't in the 2003-25 dictionaries; they're not in the slice. Every code in the slice's columns is covered (C4).
+- **`make data`:**
+  - `respondent` passes the round trip (peak 0.6 GB);
+  - `replicates` passes too (peak 5.6 GB, near the 6 GB cap);
+  - `activity` (5 million rows) and `summary` (456 columns) are killed at the cap by the current `write_release`, which holds the whole table as Python objects. They wait for Task 58's batched writer.
+  - A killed run left those two parquet files unverified in `data/processed/`, and `pdt check` accepted them; I deleted them and told the coordinator (for Task 58).
+- **Sources:** 11, all `acquisition: manual` with sha256: four data zips, two dictionaries, the multi-year lexicon, `lexiconchanges.pdf`, the 2003 and 2025 single-year lexicons, and the User's Guide.
+- **Terms:** `unknown`, with BLS's copyright page quoted; pending Allen.
+
+**The weights, from the data.** TUFNWGTP is -1 ("-1.000000") for all 8,782 cases in 2020; TU20FWGT has values only in 2019 and 2020 and is -1 elsewhere. That matches the dictionary. The replicate weights are -1 for 2020. Weights write -1 as "-1.000000", so the build compares -1, -2 and -3 by value, not as text.
+
+## How the lexicon fits §4.5
+
+**Three lists, from `lexiconnoex0325.pdf`:**
+
+| List | Codes | Named by |
+|---|---|---|
+| `atus-lexicon-0325` | 431 six-digit codes, with `attributes` tier1, tier2 and BLS's note (72 codes have one) | TRCODEP |
+| `atus-lexicon-0325-tier2` | 107 second-tier categories (4 digits) | TRTIER2P |
+| `atus-lexicon-0325-tier1` | 18 first-tier categories (no 17: travel is 18 in the multi-year files) | TRTIER1P |
+
+What worked:
+- **One list for many uses.** The 431 codes are stored once. TRCODEP's own `values` are empty; the expanded list covers every code in 5 million rows. Codes are strings ("010101"); the data keeps the leading zeros (read as text).
+- **Missing codes inside the publisher's list.** Tier 50, "Data Codes", is BLS's own list, so it's `kind: missing` in the list (rule `atus_data_codes`: uncodeable, refused for 500105, dk for 500106 "Gap/can't remember"), not in each record's `values`. §4.5 says a record's `values` "usually" hold the missing codes; here the list does, and nothing broke.
+- **`waves` and `attributes`.** `waves` is set where BLS's note says when a code was in use: 500104 (2003–2012) and 140105 (from 2007). The data agree with both: 500104 occurs only in 2003–2012 and 140105 from 2007.
+- **The list's notes are BLS's crosswalk.** Pooled codes ending in 8x (020681 "includes 020601 (all years), 020602 (2008 and later years)") say which single-year codes they combine. They're kept as each code's `note` attribute.
+
+What didn't fit, or needed work:
+1. **A list that names variables, not values.** The summary file has a column per code: t010101 is minutes on code 010101. §4.5 has no way for a record to say "this variable is that code". Each of the 431 records points to its code in an extension, `atus.activity_code` and `atus.activity_code_list` (EXTENSIONS.md), and groups (§5.1) by first tier make the columns browsable.
+2. **The multi-year list isn't any single year's list.** It's BLS's harmonized list for the pooled files.
+   - The 2025 single-year lexicon has 465 codes: 405 in the multi-year list, and 60 only in single-year files (020601, 050104 …).
+   - All 26 multi-year codes not in 2025 are pooled codes (8x) or the retired 500104.
+   - 2003 has 440 codes, 80 of them single-year only; travel was 17xxxx.
+
+   So §4.5's "a list that changes is a new list" holds, but each single-year version would be its own list, and the multi-year list is a third kind: a harmonization across them.
+3. **`waves` for every code needs the single-year lexicons.** 109 of the 426 codes that occur don't span 2003–2025 in the data, but most are rare codes. The data can't tell "not in use" from "not used", and only BLS's lists can.
+   - `lexiconchanges.pdf` has crosswalks at 2003/04, 2004/05, 2006/07, 2007/08, 2012/13 and 2023/24, so the code set changes only in 2004, 2005, 2007, 2008, 2013 and 2024.
+   - With 2003 and 2025 in hand, five more files would give every code's years from BLS's own lists: **lexiconwex2004.xls, lexiconwex2005.xls, lexiconwex2007.xls, lexiconwex2008.xls and lexiconwex2013.xls**.
+4. **The Notes column needed the page layout.** A note longer than a line is centered vertically on its code's row, so text order gives it to the wrong code (180280's note landed on 180199). `build/atus_lexicon.py` reads `pdftotext -bbox-layout` and assigns each note to the nearest code row.
+5. **The XLS lexicons need LibreOffice** (`soffice --convert-to csv`): the environment has no .xls reader for pandas (xlrd or calamine).
+
+## What ATUS tests that the other datasets didn't
+
+1. **A shared code list at scale,** used by a 5-million-row variable and by 431 variable names; above.
+2. **A long, narrow table.** The activity file breaks `make data` by rows, not columns: Task 58's column batches alone won't fix it.
+3. **Weights that change by wave in one multi-year release.** TUFNWGTP except 2020, TU20FWGT in 2020. `design` can't say that per wave, so it's in the note.
+4. **Replicate weights in their own file and table.** `design.replicates` names a prefix with no table, and `pdt check` doesn't check that the columns exist. Here they're in `replicates`, joined on TUCASEID; the note says so.
+5. **A derived replication factor.** Fay's factor 0.5 comes from the guide's formula, not a statement.
+6. **General missing codes declared once.** BLS lists -1 Blank, -2 Don't know and -3 Refused once ("Many ATUS variables have the following possible valid values ... not shown as valid entries for each variable"). A record gets the ones that occur in its column (rule `atus_general_codes`, origin publisher). "Blank" gives no reason, so its type is `unspecified`. Extra valid codes declared in a note ("-4 (Hours vary) is also valid for TEHRUSLT") need a rule too (`atus_codes_from_notes`).
+7. **A blocked publisher.** Every source is manual: bls.gov returns 403 to any script without a contact. `download.py` can only list what to fetch.
+
+## Proposals (not edits to STANDARD.md or schema/)
+
+1. **§4.5: a code that a variable stands for.** Add an optional record field, e.g. `code_of: {code_list, code}`, for variables that each hold one code's value (ATUS t010101; the same shape as one-hot or count columns elsewhere, such as GSS multiple-mention items). It would replace the `atus.activity_code` extension and let views link a column to its code and back.
+2. **§4.5: a harmonized list.** Let a code list say it harmonizes other lists (`harmonizes: [ids]`) and let a code carry `includes: [{list, code, waves}]` from the publisher's notes. ATUS's notes give exactly that, now kept as free text.
+3. **`design` by wave,** or `weights` entries with `waves`, so TU20FWGT for 2020 can be stated, not only noted.
+4. **`design.replicates.table`,** naming the table the replicate weights are in, and a check that the named columns exist there.
+5. **General missing codes at the dataset level.** A dataset-level list of codes the publisher declares for "many variables" (ATUS -1/-2/-3), applied where they occur, instead of each repo's own rule.
+6. **`write_release`: write to a temporary name, rename after the round trip** (sent to the coordinator for Task 58), and batch by rows as well as columns.
