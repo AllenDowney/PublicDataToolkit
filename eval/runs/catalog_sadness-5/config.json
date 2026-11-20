@@ -1,0 +1,9 @@
+{
+ "run_id": "catalog_sadness-5",
+ "question": "catalog_sadness",
+ "commits": null,
+ "budget": 40000,
+ "corpus_tokens": {
+  "catalog": 319559
+ }
+}

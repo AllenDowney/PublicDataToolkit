@@ -103,3 +103,30 @@ The Census Bureau's Household Pulse Survey (HPS), an online survey of adults run
 **Open questions:**
 - Is 12 the right threshold for switching agent shards?
 - Should a lineage page also cover `renamed` chains? It does already, since a chain includes renames.
+
+### Follow-up done (purple, 2026-11-20): the views (proposal 4)
+
+The coordinator approved the design with notes. All of it is done, toolkit `c3215ee` and `7eed66f`; pytest 274 passed, 1 skipped.
+
+- **Lineage pages for every dataset** (`site.py`, `chains.py`).
+  - A page per variable lineage: chains joined by one-to-one links, as `chains.py` already does, now including `range_changed`. It's named after the latest name.
+  - Older names get alias pages, which redirect there.
+  - "Releases" shows each run with its span and names, and between runs the link's relations, origin, note and evidence.
+  - The search index has one row per lineage, with every run's names.
+  - `chains.Chain.links` keeps the link objects, and `chains.lineages()` groups the chains.
+- **Change pages only where something changed.** The home page lists the unchanged pairs in one line. In Pulse every adjacent pair differs (WEEK's label and value change each cycle), so it still has 71.
+- **Agent table shards across releases** when a dataset has more than `--release-shards` releases (default 12; `pdt views --release-shards N`, through `VIEWS_ARGS`).
+  - There is one shard per table, with one line and one JSONL entry per lineage: its runs, and the change between them.
+  - `index.md` says so.
+  - The shard's header counts toward the 20k budget.
+- **`release_order` follows `dimensions.wave.values`** when every release id is a listed wave. Pulse's `cycle01`–`cycle09` sorted before `week01` in natural order; pdt-pulse now lists the 72 waves.
+- **pdt-pulse** (`9d18181`, `5171227`; check 0 failures):
+  - `design.replicates` names `table: repwgt` and `key: [SCRAM]`, as yellow's new C2 check asks.
+  - Every cycle is `current`: the catalog showed only cycle 09 while the others were `superseded`.
+  - The site has 24 respondent-variable pages instead of 102.
+  - The agent has 2 cross-release table shards (`puf`: 31 lines, 2,136 tokens as text) instead of 288 per-release files.
+  - The 5,904 replicate-weight pages and shard parts go when the replicate records are dropped. That waits for the `pdt.release` change after orange's Task 58 commit.
+- **Eval rerun:** `catalog_sadness-5`, a fresh agent under the protocol. It searched with the new `pdt.chains` across the live repos; the catalog's `agent/` is red's build.
+  - **Recall 1.0:** every keyed item found, including `shakeblu`. The label (`approximate`) was right. It read 35,457 tokens in 10 calls.
+  - **Precision 0.462**, because the key predates MEPS, NHANES, NHIS, NSDUH and Pulse. Its 14 "false positives" are real items in those datasets (NHIS SAD_A and HOPELESS_A, NSDUH DSTHOP30, Pulse DOWN, …), not errors. The key needs those datasets added.
+  - The catalog's index lists 8 datasets but its search covers 15. The agent noticed, and the catalog needs rebuilding.
