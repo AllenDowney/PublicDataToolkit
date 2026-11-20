@@ -28,3 +28,16 @@ Yellow's library proposals from the NHIS slice ([`task-50.md`](task-50.md), "Pro
 All three are additive. The existing `pdt diff A B` output keeps its fields, and a table pair with the same id reads as before.
 
 **Files:** `lib/pdt/compare.py`, `lib/pdt/diff.py` and their tests; the `release-diff` skill; this file. Not `lib/pdt/search.py`, `lib/pdt/catalog.py` or `lib/pdt/cli.py` (blue, Task 53).
+
+### 2026-11-20: blocked on downloads from bls.gov
+
+- `~/pdt-atus` was created from the template (v0.1.0; 5ff6c8a, terms URL fixed in 1fa2d76). The single release is `2003-2023`, BLS's multi-year files, with year as the wave.
+- **bls.gov refuses scripts.** These requests got 403 "Access Denied" on 2026-11-20:
+  - urllib's and curl's default User-Agents;
+  - a browser User-Agent;
+  - headless Chromium (Playwright);
+  - a generic script name.
+
+  The data page is https://www.bls.gov/tus/data/datafiles-0323.htm. The refusal page says bot activity "that doesn't conform to BLS usage policy is prohibited". BLS's terms (https://www.bls.gov/bls/blsterms.htm) reserve "the right to block robots that do not contain information that can be used to contact the owner".
+- **What's needed:** a script would need contact information in its User-Agent. That means Allen's email, which I won't send without his explicit OK. The other way is for Allen to download the files in a browser.
+- **Nothing else has started:** no sources, no records.
