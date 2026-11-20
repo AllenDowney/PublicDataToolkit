@@ -52,10 +52,10 @@ def test_fresh_repo_fails_only_on_the_unfetched_source(tmp_path):
     assert run([sys.executable, "build/build_records.py"], repo).returncode == 0
     out = pdt_check(repo).stdout
     failures = [line for line in out.splitlines() if line.startswith("FAIL")]
-    # C8 (Task 31): a fresh repo has no generated views yet.
+    # C8 (Task 31): a fresh repo has no generated views yet. docs/ may be built for Pages
+    # instead of committed (Task 47), so a missing docs/ is reported, not failed.
     assert failures == ["FAIL   C6: source testdata-codebook has no sha256 or fetched_on",
                         "FAIL   C8: agent/ hasn't been generated; run `make views`",
-                        "FAIL   C8: docs/ hasn't been generated; run `make views`",
                         "FAIL   C8: export/data-dict/ hasn't been generated; run `make views`"], out
     dataset = yaml.safe_load((repo / "dataset.yaml").read_text())
     assert dataset["title"] == "Test Data: A Survey"          # quoted, despite the colon

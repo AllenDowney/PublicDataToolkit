@@ -12,9 +12,10 @@ download:
 build:
 	$(PYTHON) build/build_records.py
 
-## Generate agent/, docs/ and export/ from the records (pdt views)
+## Generate agent/, docs/ and export/ from the records (pdt views).
+## VIEWS_ARGS="--only site" builds docs/ alone, as the Pages workflow does.
 views:
-	PYTHONPATH=$(PDT)/lib $(PYTHON) -m pdt views .
+	PYTHONPATH=$(PDT)/lib $(PYTHON) -m pdt views . $(VIEWS_ARGS)
 
 ## Check the repo against the PublicDataToolkit standard (pdt check)
 check:
