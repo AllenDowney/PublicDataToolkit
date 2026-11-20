@@ -93,7 +93,7 @@ Its records go in `metadata/releases/<release>/<table>/variables.jsonl`. A relea
 
 **Partial data files.** When a release's or table's common-format file holds only some waves, because the table is too large or keeps growing, `data_waves` lists them, and C5 checks availability only for those. When it holds only some rows of each wave, such as some countries, `data_rows` names the `column` and the codes it keeps (`in`), and C3–C5 read it the same way.
 
-`design` names the survey design variables: `weights`, `strata` and `psu`, and `replicates` when variance comes from replicate weights. `replicates` names the weights, as a list of `variables` or a `prefix` and a count `n`, and the `method` (`brr`, `fay`, `jk1`, `jkn`, `bootstrap`, `sdr`, `other`), with `fay_factor` for Fay's method: PISA's 80 weights `W_FSTURWT1`–`W_FSTURWT80` use Fay's method. A release or table can override it. It's descriptive: which weight suits an analysis is the user's choice.
+`design` names the survey design variables: `weights`, `strata` and `psu`, and `replicates` when variance comes from replicate weights. `replicates` names the weights, as a list of `variables` or a `prefix` and a count `n`, and the `table` that holds them when it's another table (with the `key` it joins on), and the `method` (`brr`, `fay`, `jk1`, `jkn`, `bootstrap`, `sdr`, `other`), with `fay_factor` for Fay's method: PISA's 80 weights `W_FSTURWT1`–`W_FSTURWT80` use Fay's method. A weight used only in some waves is an object with its `name` and `waves` (ATUS: `{name: TU20FWGT, waves: [2020]}`); the others apply to every wave. A release or table can override it. A variable named in `replicates` needs no record of its own: C3 accepts it. It's descriptive: which weight suits an analysis is the user's choice.
 
 `dimensions` says what availability's `wave`, `form`, `sample`, `mode`, `phase` and `geography` mean for this dataset. `geography` is where a question was asked when that varies, such as a BRFSS state module (`{"wave": 2022, "geography": "25"}`, Massachusetts); `dimensions.geography.label` names the unit. For the GSS, a wave is a year and a form is a ballot; for MTF, a form is a questionnaire form. The library treats them all the same way; the labels are for people and for rendered pages.
 
@@ -170,7 +170,7 @@ One line per variable in `metadata/releases/<release>/variables.jsonl`, or `.../
 | `label` | The publisher's short label |
 | `description` | The publisher's definition or description, verbatim. For data without questions, such as FARS, this is the main text |
 | `questions` | Question text. Usually one entry. When the wording differs by wave, form or mode, one entry per wording, each saying where it applies (`waves`, `forms`, `modes`). A wording used only under a condition ("if R is married") says so in `condition`, in the publisher's words. When the publisher separates a battery's shared stem, the item text and interviewer instructions, keep them in `stem`, `item` and `instructions` as well as the full `text`. The questionnaire's item number (AD-7b, Q26) goes in the wording's `number`, or, when the same wording is numbered differently by wave, in `numbers`, each with its waves. A wording from a different document than the record's other facts carries its own `origin` |
-| `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other`. A flag variable (allocation, imputation, top-code, swapping) names what it flags in `flag_for` |
+| `variable_type` | How the variable was produced, when the publisher says: `response` (a direct answer or observation), `recode`, `computed`, `imputation_flag`, `weight`, `design`, `administrative` (paradata, records added by the publisher), `other`. A flag variable (allocation, imputation, top-code, swapping) names what it flags in `flag_for`. A variable that stands for one code in a list, such as ATUS's `t010101` (minutes on lexicon code 010101, "Sleeping"), names it in `code_of` (`{code_list, code}`) |
 | `storage_type` | How the value is stored: integer, float, string, date, datetime, boolean, geometry |
 | `measure` | What kind of quantity the valid values are: categorical, ordinal, continuous, count, identifier, weight, text, date |
 | `values` | Every documented code, valid and missing, in the publisher's order (§4.2). A code's `n` is its count of cases, when the codebook prints one. A code's `note` is the publisher's note on that code, verbatim, such as how a calculated variable's code is derived |
@@ -268,6 +268,8 @@ When the publisher publishes a list of codes separately (Chicago's IUCR codes), 
 
 The library expands a record's list when it loads a repo, so every check and view sees the full set of codes. Only identical lists are shared; a list that changes is a new list with a new id. A list published as a table of data can also be a table in the release (§2.1) for joins in the data; the code list is its metadata.
 
+**Harmonized lists.** When the publisher builds one list from others, as BLS's multi-year ATUS lexicon pools the single-year lexicons, the list names them in `harmonizes`, and a code says which of their codes it includes, and when, in `includes` (`[{code_list, code, waves}]`), from the publisher's own statement (020681 "includes 020601 (all years), 020602 (2008 and later years)").
+
 ## 5. Groups, links and corrections
 
 ### 5.1 Groups
@@ -290,12 +292,15 @@ Groups the publisher defines have `origin: publisher` or `upstream_package`. Gro
 | `renamed` | The name changed |
 | `wording_changed` | The question text changed |
 | `codes_changed` | The value set changed |
+| `range_changed` | The valid range or a top code moved while every code kept its meaning (Pulse TBIRTH_YEAR's yearly top code; THHLD_NUMPER 1–10 → 1–40) |
 | `labels_changed` | The variable label or value labels changed (e.g. a corrected label). When the codes changed too, the link also lists `codes_changed` |
 | `universe_changed` | Who was asked changed |
 | `data_revised` | The same item, but its values in the data were revised between releases: recoded missing codes, restored or corrected data, reassigned cases. Release notes are the usual source |
 | `derived_from` | `from` is built from `to`, as a cumulative-file variable is built from single-year items |
 | `split_from`, `merged_into` | One variable became several, or several became one |
 | `rescaled` | The same construct, but the scale was re-estimated, so values aren't comparable across the pair without the publisher's trend or linking file. PISA's ESCS and BELONG are re-estimated each cycle |
+
+A link the publisher states can carry `evidence`, as corrections do (§5.3): a citation, URL and verbatim quote.
 
 Every link names a `source`: a crosswalk, release notes, or a documented naming convention (`origin: rule`, for "the GSS keeps a name when the item is unchanged"). Links never come from a model (rule 8).
 

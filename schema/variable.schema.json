@@ -80,6 +80,16 @@
       },
       "minItems": 1
     },
+    "code_of": {
+      "description": "For a variable that stands for one code in a shared list (ATUS t010101: minutes on lexicon code 010101).",
+      "type": "object",
+      "properties": {
+        "code_list": {"$ref": "common.schema.json#/$defs/id"},
+        "code": {"$ref": "common.schema.json#/$defs/code"}
+      },
+      "required": ["code_list", "code"],
+      "additionalProperties": false
+    },
     "values": {
       "description": "Every documented code, valid and missing, in the publisher's order.",
       "type": "array",
@@ -198,6 +208,7 @@
               "description",
               "variable_type",
               "flag_for",
+              "code_of",
               "implied_decimals",
               "code_list"
             ]
@@ -328,6 +339,20 @@
         "label": {
           "description": "The publisher's label, verbatim.",
           "type": "string"
+        },
+        "includes": {
+          "description": "In a harmonized code list: the codes of other lists this code includes, and when, from the publisher's statement (STANDARD.md \u00a74.5).",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code_list": {"$ref": "common.schema.json#/$defs/id"},
+              "code": {"$ref": "common.schema.json#/$defs/code"},
+              "waves": {}
+            },
+            "required": ["code_list", "code"],
+            "additionalProperties": false
+          }
         },
         "note": {
           "description": "The publisher's note on this code, verbatim, such as how a calculated variable's code is derived (BRFSS: \"SMOKE100 = 1 and SMOKEDAY = 1\").",

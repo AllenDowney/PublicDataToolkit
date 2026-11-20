@@ -19,6 +19,7 @@
           "wording_changed",
           "codes_changed",
           "labels_changed",
+          "range_changed",
           "universe_changed",
           "data_revised",
           "derived_from",
@@ -36,6 +37,7 @@
         { "required": ["source"] }
       ]
     },
+    "evidence": { "$ref": "correction.schema.json#/properties/evidence" },
     "note": { "type": "string" }
   },
   "required": ["from", "to", "relations", "origin"],

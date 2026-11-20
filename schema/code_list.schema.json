@@ -23,6 +23,12 @@
         "$ref": "variable.schema.json#/$defs/value"
       }
     },
+    "harmonizes": {
+      "description": "The ids of the lists this one was built from, when the publisher harmonized several (STANDARD.md \u00a74.5).",
+      "type": "array",
+      "items": {"$ref": "common.schema.json#/$defs/id"},
+      "minItems": 1
+    },
     "columns": {
       "description": "The publisher's other columns, carried in each code's attributes: name -> description.",
       "type": "object",

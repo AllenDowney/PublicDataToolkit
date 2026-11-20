@@ -176,9 +176,13 @@
       "type": "object",
       "properties": {
         "weights": {
+          "description": "A name, or {name, waves} for a weight used only in some waves (ATUS TU20FWGT in 2020).",
           "type": "array",
           "items": {
-            "$ref": "common.schema.json#/$defs/name"
+            "oneOf": [
+              {"$ref": "common.schema.json#/$defs/name"},
+              {"type": "object", "properties": {"name": {"$ref": "common.schema.json#/$defs/name"}, "waves": {"type": "array", "minItems": 1}, "note": {"type": "string"}}, "required": ["name", "waves"], "additionalProperties": false}
+            ]
           },
           "minItems": 1
         },
@@ -195,6 +199,8 @@
             "variables": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/name"}, "minItems": 1},
             "prefix": {"type": "string"},
             "n": {"type": "integer", "minimum": 1},
+            "table": {"description": "The table that holds the replicate weights, when it isn't this one.", "$ref": "common.schema.json#/$defs/id"},
+            "key": {"description": "The columns it joins on.", "type": "array", "items": {"$ref": "common.schema.json#/$defs/name"}, "minItems": 1},
             "method": {"enum": ["brr", "fay", "jk1", "jkn", "bootstrap", "sdr", "other"]},
             "fay_factor": {"type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1},
             "note": {"type": "string"}
