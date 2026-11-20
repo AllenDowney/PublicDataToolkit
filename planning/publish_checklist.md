@@ -117,26 +117,52 @@ git log -p 63739da..publish | grep -c -f ~/pdt-private/publish_phrases.txt      
 git rev-list --objects 63739da..publish | grep -c d1212fb34722a05724a179709dc58a24fe039e6d   # 0
 ```
 
-**C. Push from the clone,** and tag on the rewritten history:
+**C. Turn on Pages, then push from the clone, and tag on the rewritten history** (Allen). Pages comes first, so the workflow's first run can deploy:
 
 ```bash
-git remote set-url origin https://github.com/AllenDowney/PublicDataToolkit.git
+gh api -X POST repos/AllenDowney/PublicDataToolkit/pages -f build_type=workflow     # Pages source: GitHub Actions
+cd ~/pdt-publish
+git remote set-url origin git@github.com:AllenDowney/PublicDataToolkit.git
+git fetch origin
+git merge-base --is-ancestor origin/main publish && echo "fast-forward"             # must print
 git push origin publish:main
-git tag -a v0.2.0 publish -m "PublicDataToolkit 0.2.0"     # after the version commit (step 1 below), made on publish
+git tag -a v0.2.0 publish -m "PublicDataToolkit 0.2.0"
 git push origin v0.1.0 v0.2.0
+gh run list --repo AllenDowney/PublicDataToolkit --workflow pages.yml --limit 1      # then https://allendowney.github.io/PublicDataToolkit/
 ```
 
-**D. Bring the working repo onto the published history,** with the other threads paused. Their commits since the snapshot are replayed unchanged on top. The trees at the snapshot are identical, so there are no conflicts.
+**D. Bring the working repo onto the published history,** with the other threads paused. Their commits since the snapshot are replayed unchanged on top. The trees at the snapshot are identical, so there are no conflicts:
 
 ```bash
 cd ~/PublicDataToolkit
-git fetch origin
-git rebase --onto origin/main $SNAP main
+git status                                                # other threads paused; their uncommitted edits are stashed and restored
+git fetch origin --tags
+SNAP=$(cat ~/pdt-publish/.git/SNAPSHOT)
+git rebase --autostash --onto origin/main $SNAP main
 git log --oneline origin/main..main                       # only the commits made after the snapshot
-git rev-list --objects origin/main | grep -c d1212fb      # 0
+git rev-list --objects main | grep -c d1212fb34722a05724a179709dc58a24fe039e6d   # 0
+git push origin main                                      # a fast-forward now
+rm -rf ~/pdt-publish
 ```
 
-Until step D, a plain `git push` from `~/PublicDataToolkit` is refused as non-fast-forward, which is a useful guard. Don't force it. The original commits stay in the working repo's reflog and in `~/pdt-publish`'s `refs/original`, which are never pushed. Delete `~/pdt-publish` after step D.
+Until step D, a plain `git push` from `~/PublicDataToolkit` is refused as non-fast-forward, which is a useful guard. Don't force it. The original commits stay in the working repo's reflog, which is never pushed.
+
+**E. The pilot dataset repos: pdt-nsfg, pdt-fars, pdt-anes-cdf** (after C). Each commits `docs/`, so Pages serves `main:/docs`. A dataset site's links to its repository and issues come from the git remote, so the views are regenerated after the remote is added and before the push. The toolkit link on each site's About page is the toolkit's GitHub repo (`pdt.vocab.TOOLKIT_URL`), which is right once C is done:
+
+```bash
+for r in nsfg fars anes-cdf; do
+  ( cd ~/pdt-$r && git status --short && \
+    gh repo create AllenDowney/pdt-$r --public --source . --remote origin \
+       --description "$(python -c 'import yaml; print(yaml.safe_load(open("dataset.yaml"))["title"])'): metadata, built with PublicDataToolkit" && \
+    gh repo edit AllenDowney/pdt-$r --add-topic publicdatatoolkit && \
+    make views && make check && \
+    git add agent docs export && git commit -m "Views with the repository's URL" ; \
+    git push -u origin main && \
+    gh api -X POST repos/AllenDowney/pdt-$r/pages -f "source[branch]=main" -f "source[path]=/docs" )
+done
+```
+
+`make check` must print 0 failures before the push (C9 now runs as for a published repo; all three have terms ship). Then add each repo to the toolkit's Datasets page, in `pages/datasets.yaml`: `repo: https://github.com/AllenDowney/pdt-<id>` and `site: https://allendowney.github.io/pdt-<id>/`, commit and push the toolkit.
 
 ## The steps, in order
 
