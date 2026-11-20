@@ -596,14 +596,23 @@ def value_columns(frame):
     return [c for c in frame.columns if c != ROW and not c.endswith(CODE_SUFFIX)]
 
 
-def check_coverage(name, frame, records, result):
+def check_coverage(name, frame, records, result, replicates=()):
     """C3: every record has a column and every column a record (in the repo's data file, which
-    holds the variables it has records for)."""
+    holds the variables it has records for). A column that `design.replicates` names for this
+    table needs no record (STANDARD.md §2.1)."""
     names, columns = [r["name"] for r in records], value_columns(frame)
     if missing := [n for n in names if n not in columns]:
         result.fail("C3", f"{name}: records without a column: {listed(missing)}")
-    if extra := [c for c in columns if c not in names]:
+    if extra := [c for c in columns if c not in names and c not in set(replicates)]:
         result.fail("C3", f"{name}: columns without a record: {listed(extra)}")
+
+
+def replicate_names(repo, release, table, columns):
+    """The columns of (release, table) that its effective design.replicates names: those of the
+    design's replicates when they're in this table (replicates.table is this table, or unset)."""
+    from .design import effective_design, replicate_columns
+    rep_table, names = replicate_columns(effective_design(repo.dataset, release, table), columns)
+    return names if rep_table in (None, table) else []
 
 
 def check_codes(name, frame, records, result):
@@ -747,7 +756,8 @@ def check_data(repo, result):
     wave_column = ((repo.dataset.get("dimensions") or {}).get("wave") or {}).get("column")
     for (release, table), (frame, records) in frames.items():
         name = release + (f"/{table}" if table else "")
-        check_coverage(name, frame, records, result)
+        check_coverage(name, frame, records, result,
+                       replicate_names(repo, release, table, value_columns(frame)))
         check_codes(name, frame, records, result)
         rows = data_rows(repo, release, table)
         if rows:
