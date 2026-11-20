@@ -2,7 +2,7 @@
 
 A [Copier](https://copier.readthedocs.io/) template for starting a dataset repo (STANDARD.md §2, §2.4). Its files are in [`template/`](template/); its questions are in [`copier.yml`](../copier.yml), at the toolkit's root (below). It holds what the four existing repos share:
 - `dataset.yaml` and `sources.yaml` skeletons that pass the schemas, with every term `unknown`;
-- the Makefile targets `download`, `build`, `views` and `check`, with `scripts/download.py` (a wrapper for `pdt.download`, Task 18);
+- the Makefile targets `download`, `build`, `data`, `views` and `check`, with `scripts/download.py` (a wrapper for `pdt.download`, Task 18), `scripts/build_data.py` and `scripts/extract.py` (a wrapper for `pdt.extract`, Task 19, reading the releases and tables from `dataset.yaml`);
 - README and CLAUDE.md skeletons, with the README sections of §2.3;
 - `EXTENSIONS.md` and `.gitignore`;
 - a `build/` stub: `build_records.py`, with the C3–C5 checks and the report, and `slice.yaml`.
@@ -24,7 +24,7 @@ It asks for the dataset id, title, publisher, terms URL, first release and first
 1. **A person decides the terms.** Until then, records may be committed locally but not published. With no git remote, C9 reports tracked records whose terms are `unknown`; once the repo has a remote, it fails on them (STANDARD.md §9).
 2. **Write the parser.** `build/build_records.py` raises `NotImplementedError` in `parse_documentation()` and `read_data()` until you do ([`skills/`](../skills/)).
 3. **Add tables** to `dataset.yaml` by hand if a release has several files (§2.1; see pdt-nsfg and pdt-fars).
-4. **Run `make data`** (the common-format files in `data/processed/`) under the memory cap. `scripts/build_data.py` reads Stata, SAS and SPSS files by their `format` in `sources.yaml`; for another format (a CSV in a zip, fixed-width text), write the reader call there using `pdt.readers`. `pdt check` then runs the data checks (C3–C5, C12) on the files.
+4. **Run `make data`** (the common-format files in `data/processed/`) under the memory cap. `scripts/build_data.py` reads Stata, SAS and SPSS files by their `format` in `sources.yaml`; for another format (a CSV in a zip, fixed-width text), write the reader call there using `pdt.readers`. `pdt check` then runs the data checks (C3–C5, C12) on the files, and `scripts/extract.py` writes extracts from them.
 
 ## Updating a repo from a newer template
 

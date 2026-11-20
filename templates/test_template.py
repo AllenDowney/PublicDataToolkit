@@ -132,3 +132,42 @@ def test_make_data_runs_the_build_and_skips_a_release_without_data(tmp_path):
     result = run([sys.executable, "scripts/build_data.py"], repo)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "skipped 2024" in result.stdout, result.stdout
+
+
+def test_extract_refuses_without_data_and_extracts_with_it(tmp_path):
+    # scripts/extract.py (Task 19's wrapper, generalized): it reads dataset.yaml's releases,
+    # refuses with the fix before reading anything, then hands off to pdt.extract.
+    pd = pytest.importorskip("pandas")
+    pytest.importorskip("pyarrow")
+    repo = render(tmp_path / "pdt-testdata")
+    run([sys.executable, "build/build_records.py"], repo)
+    record = {"dataset": "testdata", "release": "2024", "name": "x", "storage_type": "integer",
+              "values": [{"code": 1, "label": "Yes", "kind": "valid"}, {"code": 2, "label": "No", "kind": "valid"},
+                         {"code": 8, "label": "Don't know", "kind": "missing", "missing_types": ["dk"]}],
+              "provenance": {"record": {"origin": "hand", "author": "Test", "date": "2026-11-20"}}}
+    (repo / "metadata" / "releases" / "2024" / "variables.jsonl").write_text(json.dumps(record) + "\n")
+    extract = [sys.executable, "scripts/extract.py"]
+
+    result = run(extract + ["--release", "2024", "--vars", "x", "--out", "x.csv"], repo)
+    assert result.returncode != 0 and "data/processed/ has no data files" in result.stderr, result.stderr
+
+    sys.path.insert(0, str(LIB))
+    from pdt.check import Repo
+    from pdt.release import write_one
+    write_one(repo, Repo.load(repo), "2024", None, pd.DataFrame({"x": [1, 2, 8, 1]}), "testdata-codebook",
+              log=lambda *a: None)
+    result = run(extract + ["--release", "1999", "--vars", "x", "--out", "x.csv"], repo)
+    assert result.returncode != 0 and "No release '1999'" in result.stderr and "2024" in result.stderr
+    result = run(extract + ["--vars", "x", "--out", "x.csv"], repo)
+    assert result.returncode != 0 and "Name a release" in result.stderr
+    result = run(extract + ["--release", "2024", "--table", "person", "--vars", "x", "--out", "x.csv"], repo)
+    assert result.returncode != 0 and "has no table 'person'" in result.stderr
+
+    result = run(extract + ["--release", "2024", "--vars", "x", "--missing", "dk=DK", "--codes",
+                            "--out", "x.csv"], repo)
+    assert result.returncode == 0, result.stdout + result.stderr
+    out = pd.read_csv(repo / "x.csv", dtype=str, keep_default_na=False)
+    assert out["x"].tolist() == ["1", "2", "DK", "1"], out
+    assert "x__code" in out.columns
+    help_out = run(extract + ["--help"], repo)
+    assert help_out.returncode == 0 and "Releases in dataset.yaml" in help_out.stdout and "--vars" in help_out.stdout
