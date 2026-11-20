@@ -292,3 +292,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 ### Task 68 — Design: `pdt export daaf`
 
 `DOING (purple)`. A design for `pdt export daaf` ([`planning/daaf.md`](planning/daaf.md), next step 1): a dataset repo's records and agent views as a skill in DAAF's data-source template, with our terms in a Terms of Use section and refused unless the metadata and documentation ship and LLM processing is allowed. Design only, until the coordinator has read it. Details: [`planning/tasks/task-68.md`](planning/tasks/task-68.md).
+
+### Task 69 — Panel responses spread across rounds (NLSY)
+
+`TODO (yellow, after Task 65)`. In a panel like the NLSY, a given respondent isn't interviewed in every round, and many questions ask about the time "since the date of last interview", so the answer for a person at a given age, or about a given year, may be in any of several rounds. Investigate how NLS documents this and what practice it recommends, describe it in the metadata, and design (not yet build) a layer on top that answers "this question, for this person, at age A or in year Y". Details: [`planning/tasks/task-69.md`](planning/tasks/task-69.md).
