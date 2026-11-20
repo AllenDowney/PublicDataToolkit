@@ -135,3 +135,12 @@ Replace the per-cycle readers with one loader over pdt-nsfg's common-format file
 5. **Then** the extracts MarriageNSFG publishes (FemMarriageData.parquet) can be rebuilt from pdt-nsfg's, with their checksums compared.
 
 **Runbook:** [`instructions/09-add-a-release.md`](../../instructions/09-add-a-release.md), for Task 76.
+
+### 2026-11-20: follow-up, 2002's codes
+
+At the coordinator's request, the 21 unresolved 2002 codes are resolved from NCHS's 2002 codebooks (`Cycle6Codebook-Female.pdf` and `-Male.pdf` on ftp.cdc.gov), added as sources, in `~/pdt-nsfg` e78ee1a.
+- The build reads them as a supplement: only for codes the setup program doesn't label, with origin the codebook and missing types by the same label rule.
+- All 21 are labeled there (2002's scheme: 9997 Not ascertained, 9998 Refused, 9999 Don't know; 8 Refused, 9 Don't know), and every count matches the data.
+- Four 2002 blanks are labeled there too, so 47 inferred corrections remain (was 51).
+- With the codes documented, 9 more 2002 → 2006-2010 links pass the rule: 183 links in all.
+- `pdt check` gives 0 failures.
