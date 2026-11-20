@@ -1,6 +1,6 @@
 # Task 50 — An NHIS slice
 
-**Status:** `DONE (yellow)` on 2026-11-20, except the terms, which are pending Allen's decision. Started 2026-11-19 by the thread "yellow".
+**Status:** `DONE (yellow)` on 2026-11-20. Started 2026-11-19 by the thread "yellow".
 
 The National Health Interview Survey (NCHS) is on Twenge's list (planning/twenge_catalog.md): adults 18+, 1997–2021 in her table. The task:
 
@@ -12,11 +12,11 @@ The National Health Interview Survey (NCHS) is on Twenge's list (planning/twenge
 
 **Files:** `~/pdt-nhis/` (new, no remote); this file; the Task 50 block on the board.
 
-## Terms: pending Allen's decision
+## Terms: decided
 
-`dataset.yaml` quotes the NCHS Data User Agreement (https://www.cdc.gov/nchs/policy/data-user-agreement.html, dated September 17, 2024), and every terms field is `unknown`. Nothing is shipped or packaged. The data in `data/processed/` is local and untracked.
+Allen decided on 2026-11-20, as for the NSFG: data, documentation and metadata ship, and LLM processing is allowed. The notice restates the NCHS Data User Agreement's restrictions. The coordinator committed this in `~/pdt-nhis`: 71bbf37 (dataset.yaml) and 7837c82 (README and views). `pdt check` gives 0 failures.
 
-**Summary for Allen.** The NHIS public-use files are on ftp.cdc.gov with no registration. The only terms are the NCHS Data User Agreement. It says the data "may be used only for statistical reporting and analysis", and users agree to:
+What was put to him: The NHIS public-use files are on ftp.cdc.gov with no registration. The only terms are the NCHS Data User Agreement. It says the data "may be used only for statistical reporting and analysis", and users agree to:
 - make no attempt to learn anyone's identity;
 - not link the data with individually identifiable data;
 - not research disclosure methods or re-identification.
@@ -81,6 +81,8 @@ Every other variable is unlinked across 2019. That includes K6 (ASISAD… in 201
 8. **Imputation in separate files.** From 2019, family income is multiply imputed in a separate file, `adultincYYcsv.zip`, and the main file carries only the flag. This slice uses POVRATTC_A and RATCAT_A, which are on the main file, and doesn't use the imputed files.
 
 ## Proposals (not edits to STANDARD.md or schema/)
+
+Proposals 1–3 went to red as library work; the coordinator decides 4 and 5.
 
 1. **`pdt diff` across tables.**
    - Let diff follow links whose ends are in different tables, or take `--table-map samadult=adult`.

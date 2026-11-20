@@ -197,7 +197,8 @@ One short block per task, numbered for good. The board is short on purpose: each
 
 ### Task 50 — An NHIS slice
 
-`DONE (yellow)`; terms pending Allen. The National Health Interview Survey (NCHS, adults) in `~/pdt-nhis`, 2016–2024: 231 records and 170 links, four of them stated by NCHS (three across the 2019 redesign); `pdt check` 0 failures, data round trip exact and local. Findings and proposals: [`planning/tasks/task-50.md`](planning/tasks/task-50.md).
+`DONE (yellow)`. The National Health Interview Survey (NCHS, adults) in `~/pdt-nhis`, 2016–2024: 231 records and 170 links, four of them stated by NCHS (three across the 2019 redesign); `pdt check` 0 failures. Terms: everything ships, as for the NSFG (Allen, 2026-11-20). Findings and proposals: [`planning/tasks/task-50.md`](planning/tasks/task-50.md).
+
 ### Task 52 — Pre-publish review
 
 `DONE (red)`. Read only. Toolkit: clean except §5's history (a verified rewrite plan); 7 dataset repos ready, nsfg after a terms confirmation, brfss and nhis not yet; commands in order. [`planning/publish_checklist.md`](planning/publish_checklist.md). Details: [`planning/tasks/task-52.md`](planning/tasks/task-52.md).
@@ -228,3 +229,7 @@ Several Claude threads work at once. The coordinator is the thread named **"main
 - **Report** to the coordinator with SendMessage (find it with ListAgents): questions, proposals for the standard, record changes that need the views regenerated, and a short report when a task is done.
 - **Drafts of emails** go outside every repo (`~/pdt-private/`). **The web:** on a 403, try a headless browser, and stop at a bot check.
 - **Environment:** the `CultureWar` conda env; R, DuckDB and Polars are in `pdt-xlang`.
+
+### Task 54 — An ATUS slice
+
+`DOING (yellow)`. The American Time Use Survey (BLS) in `~/pdt-atus`, 2003–2023: the respondent file, the activity summary and the activity file's codes. The activity codes are the first real test of shared code lists (`metadata/code_lists.jsonl`, STANDARD.md §4.5). Details: [`planning/tasks/task-54.md`](planning/tasks/task-54.md).
